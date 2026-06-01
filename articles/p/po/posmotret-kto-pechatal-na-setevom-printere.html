@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как узнать кто печатал на сетевом принтере: 5 способов проверки — Принтер Мастер</title>
+    <meta name="description" content="Пошаговая инструкция: как найти историю печати на сетевом принтере, настроить логирование и отслеживать пользователей в офисе. Анализ журналов Windows и серверов.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/p/po/posmotret-kto-pechatal-na-setevom-printere.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как узнать кто печатал на сетевом принтере: 5 способов проверки">
+    <meta property="og:description" content="Пошаговая инструкция: как найти историю печати на сетевом принтере, настроить логирование и отслеживать пользователей в офисе. Анализ журналов Windows и серверов.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как узнать кто печатал на сетевом принтере: 5 способов проверки</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как узнать, кто печатал на сетевом принтере: полное руководство по аудиту</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#анализ-журналов-событий-windows-server">Анализ журналов событий Windows Server</a></li><li><a href="#использование-встроенных-веб-интерфейсов-мфу">Использование встроенных веб-интерфейсов МФУ</a></li><li><a href="#настройка-аутентификации-на-принтере">Настройка аутентификации на принтере</a></li><li><a href="#третий-party-решения-для-аудита">Третий-party решения для аудита</a></li><li><a href="#локальная-история-на-клиентских-компьютерах">Локальная история на клиентских компьютерах</a></li><li><a href="#анализ-трафика-и-сетевых-протоколов">Анализ трафика и сетевых протоколов</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body">
+
+<p>Многие администраторы офисных сетей сталкиваются с необходимостью отследить, какой сотрудник отправил на печать конфиденциальный документ или просто потребовал много чистой бумаги. Проблема усугубляется тем, что современные сетевые принтеры по умолчанию часто не ведут детальный журнал действий пользователей, скрывая имена отправителей за IP-адресами.</p>
+
+<p>Однако, при правильном подходе к настройке серверов печати и локальных рабочих станций, вы можете получить полную картину того, кто, когда и что распечатал. Это важно не только для контроля расходов, но и для обеспечения информационной безопасности организации.</p>
+
+<p>В зависимости от инфраструктуры, существуют разные методы: от анализа простых логов в Windows до использования специализированного ПО для мониторинга. Рассмотрим наиболее эффективные способы, которые работают для большинства корпоративных сред.</p>
+
+<h2 id="анализ-журналов-событий-windows-server">Анализ журналов событий Windows Server</h2>
+
+<p>Если ваш офис использует <strong>Windows Server</strong> в качестве узла печати, то самый надежный источник информации уже встроен в операционную систему. Стандартные логи могут быть отключены по умолчанию, поэтому их необходимо активировать вручную в разделе инструментов администрирования.</p>
+
+<p>Для начала откройте <code>Настройка локальной групповой политики</code> или <code>Диспетчер событий</code> и перейдите в раздел <code>Журналы Windows → Система</code>. Здесь вы найдете события с кодом <code>1000</code> или <code>307</code>, которые фиксируют начало и завершение процесса печати.</p>
+
+<p>Важно отметить, что без включения политики аудита эти данные могут быть пустыми. Вам нужно зайти в настройки <code>Локальной политики безопасности</code> и включить <strong>Аудит событий печати</strong>. Только после этого система будет записывать имена пользователей в журнал.</p>
+
+<blockquote>
+<p>⚠️ Внимание: Включение аудита печати может значительно увеличить объем записей в системном журнале на сервере, что потребует более частого архивирования логов или расширения дискового пространства.</p>
+</blockquote>
+
+<p>При просмотре события <code>Event ID 307</code> (Print) вы увидите поле <strong>Мастер печати</strong>, где указано имя пользователя, отправившего задание. Если пользователь отправил документ с локальной машины через принтер без очереди, имя может отсутствовать, поэтому настройка сетевого сервера печати критична для точности данных.</p>
+
+<p>Часто администраторы ищут способ быстро отфильтровать эти записи, так как событий может быть тысячи. Использование фильтрации по имени принтера или диапазону дат позволит вам мгновенно найти интересующее задание.</p>
+
+<h2 id="использование-встроенных-веб-интерфейсов-мфу">Использование встроенных веб-интерфейсов МФУ</h2>
+
+<p>Современные сетевые устройства от брендов <em>HP</em>, <em>Xerox</em>, <em>Brother</em> и <em>Kyocera</em> обладают мощными веб-интерфейсами, доступными через адресную строку браузера. Введя IP-адрес принтера, вы попадете в панель управления, где часто скрыты разделы с историей печати.</p>
+
+<p>Обычно этот раздел называется <code>Журнал печати</code>, <strong>Activity Log</strong> или <code>Job History</code>. Однако, во многих моделях эта функция по умолчанию отключена или показывает только последние 50-100 задач, что может быть недостаточно для глубокого анализа.</p>
+
+<p>Для доступа к расширенным отчетам часто требуется войти в режим администратора. Пароль по умолчанию обычно указан в документации к устройству или на наклейке на корпусе, но в корпоративных сетях он часто меняется.</p>
+
+<table border="1" cellpadding="10">
+<thead>
+<tr>
+<th>Бренд устройства</th>
+<th>Раздел меню</th>
+<th>Максимум записей (по умолчанию)</th>
+<th>Требует админ-доступа</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HP LaserJet Enterprise</td>
+<td>Reports > Print Job Log</td>
+<td>200</td>
+<td>Да</td>
+</tr>
+<tr>
+<td>Xerox WorkCentre</td>
+<td>Properties > Logs > Print Log</td>
+<td>500</td>
+<td>Да</td>
+</tr>
+<tr>
+<td>Kyocera TaskAlfa</td>
+<td>System Menu > User Log</td>
+<td>1000</td>
+<td>Да</td>
+</tr>
+<tr>
+<td>Brother MFC</td>
+<td>Network > Print Log</td>
+<td>50</td>
+<td>Часто нет</td>
+</tr>
+</tbody>
+</table>
+
+<p>Обратите внимание, что просматривая эти логи, вы можете увидеть не только имя пользователя, но и количество страниц, статус задачи (удачно/ошибка) и иногда даже название файла. Это помогает понять, кто именно создал нагрузку на устройство.</p>
+
+<blockquote>
+<p>⚠️ Внимание: В некоторых моделях <em>Xerox</em> и <em>Kyocera</em> поле "Имя пользователя" может отображаться как <strong>Unknown</strong> или <strong>Guest</strong>, если принтер не настроен на прием аутентификационных данных от сервера Active Directory.</p>
+</blockquote>
+
+<div class="poll-widget" id="poll-ae1d54e4"><div class="poll-widget-question">📊 Какой метод проверки вы использовали чаще всего?</div><div class="poll-widget-option" data-poll="ae1d54e4" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Журналы Windows</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="ae1d54e4" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Веб-интерфейс принтера</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="ae1d54e4" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Сторонний софт</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="ae1d54e4" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Не проверяли никогда</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="настройка-аутентификации-на-принтере">Настройка аутентификации на принтере</h2>
+
+<p>Самый надежный способ гарантировать, что вы будете знать, кто печатает — это заставить каждого сотрудника проходить авторизацию перед отправкой задания. Это реализуется через системы <strong>Secure Print</strong> или <strong>Card Access</strong>.</p>
+
+<p>В этом сценарии пользователь не может просто нажать "Print" на своем компьютере. Документ попадает в очередь, но не отправляется на бумагу, пока сотрудник не подойдет к устройству и не введет PIN-код, приложит карту или не подтвердит задание через веб-интерфейс.</p>
+
+<p>Такая настройка требует интеграции принтера с доменом Windows или использования специализированного ПО, поставляемого производителем, например, <em>HP Sure Start</em> или <em>Kyocera Fleet Services</em>. Это меняет привычный рабочий процесс, но дает 100% точность данных.</p>
+
+<p>Даже если вы не внедряете полную систему защиты, можно просто включить <strong>Аутентификацию пользователей</strong> в настройках сети принтера. В меню веб-интерфейса найдите раздел <code>Security</code> или <code>Access Control</code> и активируйте проверку учетных данных.</p>
+
+<p>После активации в логах будет отображаться не просто IP-адрес, а конкретное имя <strong>Active Directory</strong>. Это полностью исключает возможность анонимной печати и упрощает поиск виновников нецелевого использования ресурсов.</p>
+
+<div class="checklist-block"><h4>☑️ Подготовка к настройке аутентификации</h4><label class="check-item"><input type="checkbox"><span>Скачать драйвер с поддержкой аутентификации</span></label><label class="check-item"><input type="checkbox"><span>Настроить LDAP на сервере</span></label><label class="check-item"><input type="checkbox"><span>Создать код доступа для сотрудников</span></label><label class="check-item"><input type="checkbox"><span>Протестировать печать от имени другого пользователя</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<details class="faq-item"><summary>Что делать, если сотрудник забыл пароль?</summary><div class="faq-answer"><p>В большинстве корпоративных систем печати, если пользователь забыл PIN-код, администратор может сбросить его через консоль управления принтером или панель управления сервером печати, не выключая само устройство.</p></div></details>
+
+<h2 id="третий-party-решения-для-аудита">Третий-party решения для аудита</h2>
+
+<p>Если стандартные средства Windows и встроенные логи принтера не дают нужной информации, на помощь приходят специализированные программы аудита. Такие утилиты, как <em>PaperCut</em>, <em>PrintFleet</em> или <em>NetSpot</em>, перехватывают все задания печати на уровне сервера.</p>
+
+<p>Эти программы позволяют не только видеть, кто печатал, но и видеть содержимое документа (в некоторых лицензиях), считать стоимость печати для каждого отдела и даже блокировать печать цветных документов для определенных пользователей.</p>
+
+<p>Установка такого ПО обычно требует установки агента на сервер печати и настройки перенаправления всех заданий через этот агент. Это создает центральный узел сбора статистики, независимый от конкретного принтера.</p>
+
+<p>Преимуществом таких решений является детализированная аналитика: вы сможете узнать, кто печатает в нерабочее время, какие файлы занимают больше всего места и как часто пользователи используют двустороннюю печать. Это ключевой инструмент для оптимизации <strong>расходов на канцелярию</strong>.</p>
+
+<blockquote>
+<p>⚠️ Внимание: Лицензирование ПО для аудита печати часто зависит от количества пользователей или печатающих устройств в сети, поэтому перед установкой внимательно изучите тарифную сетку вендора.</p>
+</blockquote>
+
+<p>Некоторые решения также предоставляют отчеты в реальном времени, что позволяет администратору мгновенно реагировать на подозрительную активность, например, массовую печать конфиденциальных данных в нерабочее время.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Перед установкой стороннего ПО проверьте совместимость драйверов с вашей версией Windows Server, так как новые версии утилит могут не поддерживать старые драйверы принтеров.</p></div>
+
+<h2 id="локальная-история-на-клиентских-компьютерах">Локальная история на клиентских компьютерах</h2>
+
+<p>Иногда нет доступа к серверу или принтер подключен напрямую к конкретному ПК. В этом случае можно попытаться найти следы в локальной истории печати самого компьютера. Это работает через реестр Windows, но данные там хранятся лишь до перезагрузки или очистки очереди.</p>
+
+<p>Для просмотра истории откройте редактор реестра <code>regedit</code> и перейдите по пути <code>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Print\Printers</code>. Здесь можно увидеть список последних заданий, но имя пользователя часто заменяется на SID (идентификатор безопасности).</p>
+
+<p>Это метод менее надежен, чем анализ серверных логов, так как пользователь может легко очистить очередь печати, не оставляя следов. Однако для разовых проверок на конкретном рабочем месте это может быть единственным выходом.</p>
+
+<p>Также стоит проверить папку <code>C:\Windows\System32\spool\PRINTERS</code>. Здесь могут оставаться временные файлы заданий, хотя Windows по умолчанию удаляет их сразу после завершения печати. Наличие файлов в этой папке может свидетельствовать о ошибке печати или преднамеренном удержании заданий.</p>
+
+<p>Если вы видите здесь файлы, их расширение может помочь определить тип документа, но содержимое часто зашифровано или недоступно для чтения в текстовом виде без использования спецсредств.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Локальная история в реестре Windows — кратковременное решение, которое исчезает при очистке очереди или перезагрузке, поэтому для постоянного контроля лучше использовать серверные методы.</p></div>
+
+<h2 id="анализ-трафика-и-сетевых-протоколов">Анализ трафика и сетевых протоколов</h2>
+
+<p>Для продвинутых администраторов существует возможность анализа трафика, идущего к принтеру, с помощью утилит типа <em>Wireshark</em>. Это метод требует глубоких знаний сетевых протоколов, таких как <strong>SMB</strong>, <strong>IPP</strong> или <strong>LPD</strong>.</p>
+
+<p>При использовании протокола IPP (Internet Printing Protocol) в заголовках пакетов часто передается имя пользователя в открытом виде. Пакетный анализ может показать, кто инициировал соединение, даже если логирование на самом устройстве отключено.</p>
+
+<p>Однако, если используется шифрование (HTTPS или защищенный SMB), расшифровать трафик будет невозможно без ключей шифрования. Этот метод подходит скорее для расследования инцидентов, чем для постоянного мониторинга.</p>
+
+
+
+<details class="faq-item"><summary>Какие протоколы лучше всего для анализа?</summary><div class="faq-answer"><p>Протокол IPP обычно передает метаданные о пользователе в заголовках пакета, что делает его самым информативным для анализа трафика без шифрования.</p></div></details>
+
+<p>Резюмируя, лучший способ узнать, кто печатал — это превентивная настройка системы. Вместо того чтобы искать решения постфактум, внедрите правила именования заданий, используйте сервер печати Windows с включенным аудитом или специализированное ПО для управления печатью.</p>
+
+<p>Это не только решит проблему идентификации пользователя, но и даст вам мощный инструмент для контроля расходов и повышения безопасности корпоративной сети.</p>
+
+<details>
+<summary>Можно ли узнать имя пользователя, если печать была отправлена с телефона?</summary>
+<p>Да, если мобильное устройство подключено к сети через корпоративный Wi-Fi с авторизацией (802.1x) или если используется сервер печати, который перехватывает задания и сопоставляет IP-адрес мобильного устройства с именем учетной записи пользователя в домене.</p>
+</details>
+
+<details>
+<summary>Почему в логах принтера иногда вместо имени написано "GUEST"?</summary>
+<p>Это происходит, когда принтер настроен на аутентификацию, но отправитель не ввел учетные данные или отправил задание как анонимный пользователь. Также это может означать, что драйвер принтера на компьютере отправителя не передается корректно параметр имени пользователя в пакет печати.</p>
+</details>
+
+<details>
+<summary>Нужно ли перезагружать принтер после включения аудита?</summary>
+<p>Обычно нет. Включение аудита в веб-интерфейсе принтера или в групповых политиках Windows применяется мгновенно или после перезапуска службы печати (Spooler Service), но полная перезагрузка самого устройства (жесткий сброс) чаще всего не требуется.</p>
+</details>
+
+<details>
+<summary>Сохраняется ли история печати после выключения принтера?</summary>
+<p>Если принтер имеет встроенную память или жесткий диск (что характерно для большинства офисных МФУ), то история печати сохраняется даже после выключения питания. В простых офисных моделях без диска данные могут очищаться при перезагрузке, если они не были отправлены в облачный журнал или на сервер.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#анализ-журналов-событий-windows-server">Анализ журналов событий Windows Server</a></li><li><a href="#использование-встроенных-веб-интерфейсов-мфу">Использование встроенных веб-интерфейсов МФУ</a></li><li><a href="#настройка-аутентификации-на-принтере">Настройка аутентификации на принтере</a></li><li><a href="#третий-party-решения-для-аудита">Третий-party решения для аудита</a></li><li><a href="#локальная-история-на-клиентских-компьютерах">Локальная история на клиентских компьютерах</a></li><li><a href="#анализ-трафика-и-сетевых-протоколов">Анализ трафика и сетевых протоколов</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-ustanovit-besprovodnoe-podklyuchenie-k-printeru.html" class="related-card">Как подключить принтер к Wi-Fi: полное руководство по настройке</a></li><li><a href="/articles/k/ka/kak-ustanavlivat-printer-k-kompyuteru.html" class="related-card">Как установить принтер на компьютер: Полная инструкция по настройке</a></li><li><a href="/articles/g/gd/gde-skachat-drajver-dlya-printera-xerox.html" class="related-card">Где скачать драйвер для принтера Xerox: официальные источники и безопасные способы</a></li><li><a href="/articles/k/ka/kak-posmotret-set-printera.html" class="related-card">Как посмотреть сеть принтера: IP-адрес и настройки Wi-Fi</a></li><li><a href="/articles/c/ca/canon-d1100-kak-nastroit.html" class="related-card">Canon D1100: Полная инструкция по настройке сканера штрих-кода</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-ustanovit-besprovodnoe-podklyuchenie-k-printeru.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить принтер к Wi-Fi: полное руководство по настройке</span><span class="related-bottom-desc">Пошаговая инструкция по настройке беспроводного подключения принтера. Методы WPS, прямое соединение </span></a><a href="/articles/k/ka/kak-ustanavlivat-printer-k-kompyuteru.html" class="related-bottom-card"><span class="related-bottom-title">Как установить принтер на компьютер: Полная инструкция по настройке</span><span class="related-bottom-desc">Узнайте, как правильно подключить принтер к ПК через USB или Wi-Fi. Пошаговая установка драйверов, н</span></a><a href="/articles/g/gd/gde-skachat-drajver-dlya-printera-xerox.html" class="related-bottom-card"><span class="related-bottom-title">Где скачать драйвер для принтера Xerox: официальные источники и безопасные способы</span><span class="related-bottom-desc">Пошаговая инструкция, как найти и установить оригинальные драйверы для принтеров Xerox с официальног</span></a><a href="/articles/k/ka/kak-posmotret-set-printera.html" class="related-bottom-card"><span class="related-bottom-title">Как посмотреть сеть принтера: IP-адрес и настройки Wi-Fi</span><span class="related-bottom-desc">Узнайте, как узнать IP-адрес принтера, проверить подключение к сети и настроить беспроводное соедине</span></a><a href="/articles/c/ca/canon-d1100-kak-nastroit.html" class="related-bottom-card"><span class="related-bottom-title">Canon D1100: Полная инструкция по настройке сканера штрих-кода</span><span class="related-bottom-desc">Пошаговое руководство по настройке Canon D1100. Настройка интерфейсов, декодеров, индикаторов и режи</span></a><a href="/articles/k/ka/kak-sbrosit-nastrojki-printera-canon-mg3140.html" class="related-bottom-card"><span class="related-bottom-title">Как сбросить настройки принтера Canon MG3140: полный гайд</span><span class="related-bottom-desc">Пошаговая инструкция по сбросу принтера Canon MG3140 до заводских параметров. Устранение ошибок, очи</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

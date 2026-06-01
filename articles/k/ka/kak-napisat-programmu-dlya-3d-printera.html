@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как написать программу для 3D принтера: от модели до G-кода — Принтер Мастер</title>
+    <meta name="description" content="Полное руководство по слайсингу и генерации кода для 3D печати. Разбор программ Cura, PrusaSlicer, настройки параметров и создание G-кода с нуля.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-napisat-programmu-dlya-3d-printera.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как написать программу для 3D принтера: от модели до G-кода">
+    <meta property="og:description" content="Полное руководство по слайсингу и генерации кода для 3D печати. Разбор программ Cura, PrusaSlicer, настройки параметров и создание G-кода с нуля.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как написать программу для 3D принтера: от модели до G-кода</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как написать программу для 3D принтера: создание G-кода и настройка слайсера</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#выбор-слайсера-и-подготовка-рабочего-пространства">Выбор слайсера и подготовка рабочего пространства</a></li><li><a href="#импорт-модели-и-базовая-ориентация">Импорт модели и базовая ориентация</a></li><li><a href="#настройка-параметров-печати-и-слайсинг">Настройка параметров печати и слайсинг</a></li><li><a href="#генерация-g-кода-и-предпросмотр">Генерация G-кода и предпросмотр</a></li><li><a href="#создание-g-кода-с-нуля-и-ручное-редактирование">Создание G-кода с нуля и ручное редактирование</a></li><li><a href="#сохранение-и-запуск-печати">Сохранение и запуск печати</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body">
+
+<p>Процесс создания физической детали с помощью аддитивного производства начинается не с включения самого устройства, а с подготовки цифрового файла. Многие новички ошибочно полагают, что для запуска печати достаточно просто открыть файл модели, однако 3D принтер не понимает форматы .STL или .OBJ напрямую. Ему требуется язык инструкций, который преобразует геометрическую сетку в последовательность движений экструдера и стола.</p>
+
+<p>Этот процесс преобразования называется слайсингом, а программы, выполняющие его, именуются слайсерами. Главная задача пользователя — правильно интерпретировать геометрические данные и задать параметры физики печати: температуру, скорость, заполнение. Ошибки на этом этапе приведут к браку, даже если аппаратная часть устройства исправна.</p>
+
+<h2 id="выбор-слайсера-и-подготовка-рабочего-пространства">Выбор слайсера и подготовка рабочего пространства</h2>
+
+<p>Первым шагом является выбор программного обеспечения, которое будет служить мостом между вашим компьютером и принтером. На рынке существует множество решений, от простых утилит до профессиональных комплексов. Для большинства задач отлично подходят <strong>Ultimaker Cura</strong> и <strong>PrusaSlicer</strong>, которые поддерживают широкий спектр оборудования и обладают открытым кодом.</p>
+
+<p>При установке программы необходимо внимательно указать модель вашего принтера. Встроенные базы данных содержат настройки для тысяч устройств, включая популярные модели <em>Ender 3</em>, <em>Creality CR-10</em> или <em>Bambu Lab</em>. Если нужной модели нет в списке, создайте профиль вручную, задав размеры рабочего стола и механику машины.</p>
+
+<p>Интерфейс большинства слайсеров интуитивно понятен и разделен на три зоны: область просмотра модели, панель настроек и превью слоев. Правильная ориентация детали в виртуальном пространстве критически влияет на прочность и качество поверхности. Часто требуется повернуть объект на 45 градусов или поставить его на бок для уменьшения площади поддержки.</p>
+
+<ul>
+<li>🛠️ Скачайте последнюю версию слайсера с официального сайта производителя ПО.</li>
+<li>🖥️ Проверьте совместимость ваших драйверов принтера с выбранной версией программы.</li>
+<li>⚙️ Создайте отдельный профиль настроек для каждого типа используемого пластика.</li>
+</ul>
+
+<blockquote>⚠️ Внимание: Некоторые проприетарные принтеры требуют использования только фирменного ПО, так как они не читают стандартные G-коды без цифровой подписи или специфических заголовков. Внимательно изучите документацию производителя перед установкой сторонних слайсеров.</blockquote>
+
+<h2 id="импорт-модели-и-базовая-ориентация">Импорт модели и базовая ориентация</h2>
+
+<p>После запуска программы необходимо импортировать файл с 3D-моделью. Обычно это делается перетаскиванием файла в окно приложения или через меню <code>File → Import</code>. Слайсери автоматически предложит разместить деталь в центре рабочей области, но это не всегда оптимальное решение. Положение объекта определяет направление слоев и расположение поддерживающих структур.</p>
+
+<p>Управление моделью осуществляется с помощью мыши: вращение, перемещение и масштабирование. Важно убедиться, что модель стоит на плоской поверхности, иначе печать начнется с зависания в воздухе. Используйте функцию <code>Auto-orient</code>, если программа предлагает автоматически найти оптимальное положение для минимизации поддержек.</p>
+
+<p>Масштабирование позволяет изменить размер детали в соответствии с требованиями проекта. Если вы планируете печатать несколько копий одного объекта, используйте функцию <code>Multiple copies</code> для размещения их в ряд или сетку. Это экономит время и позволяет оценить, поместится ли весь тираж на столе за один цикл.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Перед началом печати всегда проверяйте, чтобы модель не выходила за пределы виртуальной границы рабочего стола принтера. Если деталь частично висит в воздухе, слайсер выдаст ошибку или создаст некорректный G-код.</p></div>
+
+<div class="poll-widget" id="poll-ef6a32b2"><div class="poll-widget-question">📊 Какой слайсер вы используете чаще всего?</div><div class="poll-widget-option" data-poll="ef6a32b2" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Ultimaker Cura</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="ef6a32b2" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">PrusaSlicer</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="ef6a32b2" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Cura Slicer</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="ef6a32b2" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Simplify3D</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="ef6a32b2" data-idx="4" onclick="pbPollVote(this)"><span class="poll-widget-label">Другой</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="настройка-параметров-печати-и-слайсинг">Настройка параметров печати и слайсинг</h2>
+
+<p>Самый ответственный этап — настройка параметров, от которых зависит физическое качество готового изделия. Основные настройки включают высоту слоя, толщину стенок, заполнение и скорость движения головки. Эти параметры напрямую влияют на прочность, детализацию и время изготовления детали.</p>
+
+<p>Высота слоя (Layer Height) определяет разрешение печати по вертикали. Значение <code>0.12 мм</code> дает высокую детализацию, но увеличивает время работы в два раза по сравнению с <code>0.28 мм</code>. Толщина стенок должна быть кратна диаметру сопла, например, при сопле <code>0.4 мм</code> стенка должна составлять <code>0.8 мм</code> или <code>1.2 мм</code> для обеспечения целостности.</p>
+
+<p>Заполнение (Infill) создает внутреннюю структуру детали. Для декоративных моделей достаточно <code>10-15%</code>, тогда как для функциональных узлов требуется <code>40-60%</code> и более. Форма заполнения (паттерн) также важна: сетка или треугольники обеспечивают лучшую прочность на сжатие, чем линии.</p>
+
+<div class="checklist-block"><h4>☑️ Проверка параметров печати</h4><label class="check-item"><input type="checkbox"><span>Высота слоя выбрана верно</span></label><label class="check-item"><input type="checkbox"><span>Температура сопла соответствует пластику</span></label><label class="check-item"><input type="checkbox"><span>Охлаждение включено для пластика PLA</span></label><label class="check-item"><input type="checkbox"><span>Скорость печати не превышает 60 мм/с</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<p>Таблица ниже показывает типовые значения параметров для самого популярного пластика PLA:</p>
+
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Рекомендуемое значение</th>
+<th>Влияние на печать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Высота слоя</td>
+<td>0.16 - 0.20 мм</td>
+<td>Баланс между скоростью и детализацией</td>
+</tr>
+<tr>
+<td>Температура сопла</td>
+<td>200 - 210 °C</td>
+<td>Плавление материала без деградации</td>
+</tr>
+<tr>
+<td>Температура стола</td>
+<td>50 - 60 °C</td>
+<td>Качество первого слоя и адгезия</td>
+</tr>
+<tr>
+<td>Скорость печати</td>
+<td>40 - 60 мм/с</td>
+<td>Точность воспроизведения геометрии</td>
+</tr>
+</tbody>
+</table>
+
+<p>Не забывайте о настройках поддержек (Supports). Если модель имеет нависающие элементы более 45 градусов, слайсер автоматически сгенерирует временные структуры. Тип поддержек может быть "Tree" (древовидный) или "Normal" (обычный). Древовидные поддержки легче удаляются и меньше повреждают поверхность модели.</p>
+
+<blockquote>⚠️ Внимание: Слишком высокая скорость печати при малой высоте слоя может привести к перегреву экструдера и появлению артефактов в виде "рожков" или "наплывов" на поверхности детали.</blockquote>
+
+<h2 id="генерация-g-кода-и-предпросмотр">Генерация G-кода и предпросмотр</h2>
+
+<p>После настройки всех параметров необходимо запустить процесс слайсинга. Кнопка <code>Slice</code> запускает алгоритм, который разбивает 3D-модель на сотни или тысячи горизонтальных срезов и рассчитывает траекторию движения сопла для каждого слоя. Результатом этой работы является файл с расширением <code>.gcode</code>.</p>
+
+<p>Перед сохранением файла обязательно просмотрите результат слайсинга. Большинство современных программ имеют режим <code>Preview</code>, где можно прокручивать слои по одному. Это позволяет визуально оценить толщину стенок, качество поддержек и отсутствие ошибок в геометрии.</p>
+
+<p>Особое внимание уделите первому слою. Именно он определяет, прилипнет ли деталь к столу или начнет печататься "в воздухе". Убедитесь, что слайсер настроил правильную скорость и ширину линии для первого слоя. Часто используется функция "Brim" (бортик) для увеличения площади контакта с платформой.</p>
+
+<details class="faq-item"><summary>Что такое G-код? G-код — это текстовый файл, содержащий инструкции для ЧПУ станка или 3D принтера. Он состоит из команд, начинающихся с буквы G (координатное перемещение) или M (вспомогательные функции, например, включение нагрева). Например, G1 X10 Y10 Z0.2 F1000 означает перемещение в точку 10,10,0.2 со скоростью 1000.-->
+
+<h2 id="создание-g-кода-с-нуля-и-ручное-редактирование">Создание G-кода с нуля и ручное редактирование</h2>
+
+<p>Хотя автоматический слайсинг справляется с 99% задач, иногда требуется вмешательство в код для решения специфических проблем. Прямое написание программы для 3D принтера вручную возможно и используется опытными операторами для тонкой настройки или создания спецэффектов.</p>
+
+<p>G-код состоит из строк, каждая из которых содержит одну команду. Базовая команда перемещения выглядит как <code>G1 X... Y... Z... E... F...</code>. Здесь X, Y, Z — координаты, E — количество подаваемого пластика, F — скорость подачи. Изменяя эти параметры, можно заставить принтер двигаться по уникальным траекториям.</p>
+
+<p>Для редактирования используйте текстовые редакторы, поддерживающие подсветку синтаксиса, например, Notepad++ или VS Code. Однако будьте осторожны</summary><div class="faq-answer"><p> одна ошибка в цифрах может привести к столкновению механических частей или порче материала. <mark>Ручное изменение G-кода требует глубокого понимания кинематики вашего конкретного устройства.</mark></p>
+
+<p>Существуют также скрипты пост-процессинга, которые автоматически вставляют команды в сгенерированный файл. Например, вы можете добавить команду паузы для смены цвета или очистки сопла в середине печати без участия человека. Это расширяет возможности автоматизации производственного процесса.</p>
+
+
+
+<h2 id="сохранение-и-запуск-печати">Сохранение и запуск печати</h2>
+
+<p>После проверки и, при необходимости, редактирования, файл необходимо сохранить. Нажмите <code>Save to File</code> и выберите место на компьютере. Формат файла должен быть <code>.gcode</code>. Этот файл можно перенести на SD-карту, USB-накопитель или отправить через сеть, если принтер поддерживает Wi-Fi.</p>
+
+<p>При использовании SD-карты убедитесь, что она отформатирована в файловой системе FAT32. Это стандартное требование для большинства бюджетных и полупрофессиональных моделей. Если принтер подключен к компьютеру, используйте ПО вроде <em>OctoPrint</em> или <em>Repetier-Host</em> для прямого управления.</p>
+
+<p>Перед началом печати на самом устройстве проверьте механику: смажьте направляющие, натяните ремни и очистите стол. Даже идеально написанная программа не даст результата, если аппаратная часть не готова к работе. Запустите процесс и наблюдайте за первым слоем, чтобы убедиться в корректности всех настроек.</p>
+
+<ul>
+<li>💾 Сохраняйте файлы с понятными именами, указывающими на настройки печати.</li>
+<li>🧹 Очищайте рабочую область принтера перед каждой новой сессией печати.</li>
+<li>🔌 Используйте надежные кабели и блоки питания для стабильной работы.</li>
+</ul>
+
+<blockquote>⚠️ Внимание: Не оставляйте 3D принтер без присмотра во время первых минут печати. Большинство проблем с адгезией и калибровкой стола проявляются именно в начале процесса, когда можно быстро остановить устройство и избежать возгорания или повреждения деталей.</blockquote>
+
+<details>
+<summary>Что делать, если слайсер не видит мою модель?</summary>
+<p>Проверьте целостность файла модели. Поврежденные .STL файлы могут не открываться. Попробуйте открыть файл в другом слайсере или использовать онлайн-инструменты для ремонта геометрии. Также убедитесь, что формат файла поддерживается версией вашей программы.</p>
+</details>
+
+<details>
+<summary>Как избежать "плавающего" первого слоя?</summary>
+<p>Обеспечьте идеальную калибровку стола (Leveling). Используйте клей, лак или специализированные спреи для увеличения адгезии. Убедитесь, что температура стола соответствует типу пластика, и что скорость печати первого слоя снижена до минимума.</p>
+</details>
+
+<details>
+<summary>Можно ли печатать без поддержек?</summary>
+<p>Это возможно, если изменить ориентацию модели так, чтобы углы нависания были меньше 45 градусов. Также существуют специальные режимы печати, такие как "Vase mode" (режим вазы), который печатает только наружные стенки без заполнения и поддержек, но подходит только для определенных форм.</p>
+</details>
+
+<details>
+<summary>В чем разница между G-кодом для FDM и SLA печати?</summary>
+<p>FDM (пластиковая нить) использует команды перемещения экструдера и подачи пластика. SLA (фотополимерная смола) использует команды перемещения платформы и экспозиции света. Форматы файлов и команды принципиально разные, слайсеры для этих технологий несовместимы.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#выбор-слайсера-и-подготовка-рабочего-пространства">Выбор слайсера и подготовка рабочего пространства</a></li><li><a href="#импорт-модели-и-базовая-ориентация">Импорт модели и базовая ориентация</a></li><li><a href="#настройка-параметров-печати-и-слайсинг">Настройка параметров печати и слайсинг</a></li><li><a href="#генерация-g-кода-и-предпросмотр">Генерация G-кода и предпросмотр</a></li><li><a href="#создание-g-кода-с-нуля-и-ручное-редактирование">Создание G-кода с нуля и ручное редактирование</a></li><li><a href="#сохранение-и-запуск-печати">Сохранение и запуск печати</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/p/po/pochemu-printer-ne-pechataet-pdf-fajly-a-vord-pechataet.html" class="related-card">Почему принтер не печатает PDF, а Word работает: причины и решения</a></li><li><a href="/articles/k/ka/kak-chasto-nuzhno-polzovatsya-strujnym-printerom.html" class="related-card">Как часто нужно печатать на струйном принтере: полное руководство</a></li><li><a href="/articles/k/ka/kak-ustanovit-drajvera-na-printer-esli-net-interneta.html" class="related-card">Как установить драйвер на принтер без интернета: полные инструкции</a></li><li><a href="/articles/q/q2/q2612a-kartridzh-dlya-kakikh-printerov-canon.html" class="related-card">Картридж Canon Q2612A: список совместимых принтеров и нюансы замены</a></li><li><a href="/articles/k/ke/kenon-pover-shot-ex20-kakoj-obektiv.html" class="related-card">Объектив Canon PowerShot SX720 HS: характеристики и разбор</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/p/po/pochemu-printer-ne-pechataet-pdf-fajly-a-vord-pechataet.html" class="related-bottom-card"><span class="related-bottom-title">Почему принтер не печатает PDF, а Word работает: причины и решения</span><span class="related-bottom-desc">Принтер игнорирует PDF, но печатает Word? Разбираем причины: драйверы, рендеринг, настройки Adobe. П</span></a><a href="/articles/k/ka/kak-chasto-nuzhno-polzovatsya-strujnym-printerom.html" class="related-bottom-card"><span class="related-bottom-title">Как часто нужно печатать на струйном принтере: полное руководство</span><span class="related-bottom-desc">Узнайте, как часто включать струйный принтер, чтобы избежать засыхания чернил. Советы по промывке, х</span></a><a href="/articles/k/ka/kak-ustanovit-drajvera-na-printer-esli-net-interneta.html" class="related-bottom-card"><span class="related-bottom-title">Как установить драйвер на принтер без интернета: полные инструкции</span><span class="related-bottom-desc">Пошаговое руководство: как скачать и установить драйвер принтера на другом ПК, перенести его и настр</span></a><a href="/articles/q/q2/q2612a-kartridzh-dlya-kakikh-printerov-canon.html" class="related-bottom-card"><span class="related-bottom-title">Картридж Canon Q2612A: список совместимых принтеров и нюансы замены</span><span class="related-bottom-desc">Полный перечень моделей Canon и HP, использующих картридж Q2612A. Инструкция по замене, отличия верс</span></a><a href="/articles/k/ke/kenon-pover-shot-ex20-kakoj-obektiv.html" class="related-bottom-card"><span class="related-bottom-title">Объектив Canon PowerShot SX720 HS: характеристики и разбор</span><span class="related-bottom-desc">Полный разбор оптической системы Canon PowerShot SX720 HS. Узнайте про фокусное расстояние, диафрагм</span></a><a href="/articles/k/ka/kak-vytaskivat-kartridzh-iz-printera-pixma.html" class="related-bottom-card"><span class="related-bottom-title">Как извлечь картридж из принтера Canon Pixma: пошаговая инструкция</span><span class="related-bottom-desc">Подробное руководство по замене и извлечению картриджей в МФУ Canon Pixma. Учимся правильно открыват</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

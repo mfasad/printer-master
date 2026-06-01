@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как настроить сетевой принтер в Linux: пошаговая инструкция — Принтер Мастер</title>
+    <meta name="description" content="Пошаговый гайд по подключению сетевых принтеров в Linux. Настройка через CUPS, выбор протоколов IPP и LPD, решение частых проблем с драйверами.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/l/li/linux-kak-nastroit-setevoj-printer.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как настроить сетевой принтер в Linux: пошаговая инструкция">
+    <meta property="og:description" content="Пошаговый гайд по подключению сетевых принтеров в Linux. Настройка через CUPS, выбор протоколов IPP и LPD, решение частых проблем с драйверами.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как настроить сетевой принтер в Linux: пошаговая инструкция</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Полное руководство: настройка сетевого принтера в операционной системе Linux</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#подготовка-рабочего-места-и-проверка-сети">Подготовка рабочего места и проверка сети</a></li><li><a href="#установка-и-настройка-cups">Установка и настройка CUPS</a></li><li><a href="#выбор-протокола-подключения">Выбор протокола подключения</a></li><li><a href="#установка-и-выбор-драйверов">Установка и выбор драйверов</a></li><li><a href="#таблица-протоколов-и-портов">Таблица протоколов и портов</a></li><li><a href="#решение-частых-проблем-и-отладка">Решение частых проблем и отладка</a></li><li><a href="#итоги-и-рекомендации-по-оптимизации">Итоги и рекомендации по оптимизации</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><p>Подключение периферийного оборудования к компьютерам на базе <em>Linux</em> часто вызывает вопросы у пользователей, привыкших к экосистеме Windows. Однако современная операционная система обладает мощным встроенным механизмом управления печатью, который не требует установки сложных пакетов от производителей. <strong>Система CUPS</strong> (Common Unix Printing System) является стандартом де-факто для большинства дистрибутивов и позволяет управлять задачами печати на локальных и сетевых устройствах с высокой эффективностью.</p>
+
+<p>Сетевые принтеры, подключенные напрямую к роутеру или через Ethernet-кабель, становятся доступны всем пользователям в локальной сети сразу после корректной конфигурации. Вам не нужно дублировать драйверы на каждом компьютере, если сервер печати настроен правильно. Главной особенностью работы в <em>Linux</em> является гибкость выбора протоколов передачи данных и возможность тонкой настройки параметров через командную строку или графический интерфейс.</p>
+
+<h2 id="подготовка-рабочего-места-и-проверка-сети">Подготовка рабочего места и проверка сети</h2>
+<p>Перед началом настройки необходимо убедиться, что сетевое оборудование корректно взаимодействует с операционной системой. <strong>Принтер</strong> должен быть физически подключен к сети, и вы должны знать его <code>IP-адрес</code>. Это критически важная информация, так как именно по ней система будет находить устройство. Для получения адреса можно распечатать тестовую страницу конфигурации с панели управления самого принтера.</p>
+
+<p>Проверьте, доступно ли устройство из терминала вашего компьютера. Используйте утилиту <code>ping</code> для отправки пакетов на адрес принтера. Если команда возвращает ответы, значит сетевое соединение установлено. Отсутствие ответов может указывать на проблему с кабелем, настройками Wi-Fi или брандмауэром. <em>Сетевой интерфейс</em> должен быть активен и иметь адрес в той же подсети, что и периферийное устройство.</p>
+
+<p>В некоторых случаях система не видит принтер автоматически, если используется старый протокол или специфические настройки безопасности. Убедитесь, что в настройках роутера не включена изоляция клиентов (Client Isolation), которая запрещает устройствам внутри сети общаться друг с другом. <strong>Локальная сеть</strong> должна позволять обмен пакетами между хостом и целевым оборудованием.</p>
+
+<blockquote>⚠️ Внимание: Некоторые сетевые принтеры по умолчанию имеют пароль на административный доступ, который может блокировать автоматическое обнаружение. Проверьте документацию к вашему устройству, чтобы узнать заводские учетные данные, если автоматическая настройка не сработает.</blockquote>
+
+<h2 id="установка-и-настройка-cups">Установка и настройка CUPS</h2>
+<p>Основой печати в <em>Linux</em> является демон <strong>CUPS</strong>. В большинстве современных дистрибутивов, таких как Ubuntu, Fedora или Debian, эта служба уже установлена и запущена. Однако перед началом работы необходимо убедиться в её статусе. Выполните команду <code>systemctl status cups</code> в терминале, чтобы проверить, активна ли служба. Если она остановлена, запустите её, используя <code>sudo systemctl start cups</code>.</p>
+
+<p>Для удобства настройки часто используется веб-интерфейс, который доступен по адресу <code>http://localhost:631</code> в любом браузере. Этот интерфейс предоставляет полный контроль над очередями печати, драйверами и правами доступа. Вам может потребоваться добавить текущего пользователя в группу <code>lpadmin</code>, чтобы иметь права на добавление принтеров через этот интерфейс. Команда для этого выглядит как <code>sudo usermod -aG lpadmin $USER</code>.</p>
+
+<p>После добавления в группу не забудьте перезагрузить компьютер или выйти из системы и войти снова, чтобы изменения вступили в силу. <strong>Права доступа</strong> к управлению принтерами строго контролируются в Linux, что предотвращает случайные изменения настроек другими учетными записями. Веб-интерфейс CUPS часто оказывается более информативным, чем стандартные системные настройки.</p>
+
+<div class="checklist-block"><h4>☑️ Проверка готовности системы</h4><label class="check-item"><input type="checkbox"><span>Убедиться, что служба CUPS активна</span></label><label class="check-item"><input type="checkbox"><span>Знать IP-адрес принтера</span></label><label class="check-item"><input type="checkbox"><span>Проверить доступность порта 631</span></label><label class="check-item"><input type="checkbox"><span>Добавить пользователя в группу lpadmin</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="выбор-протокола-подключения">Выбор протокола подключения</h2>
+<p>При добавлении сетевого устройства в системе необходимо выбрать правильный протокол обмена данными. Наиболее популярными и современными стандартами являются <strong>IPP</strong> (Internet Printing Protocol) и <code>LPD</code> (Line Printer Daemon). IPP является предпочтительным выбором для современных принтеров, так как он поддерживает шифрование и более широкий спектр функций управления.</p>
+
+<p>Если ваш принтер старый, возможно, потребуется использовать протокол <code>9100</code> (RAW) или <em>AppSocket</em>. Эти протоколы передают данные "как есть", без дополнительных заголовков, что обеспечивает максимальную скорость. Выбор неправильного протокола может привести к тому, что документ будет отправлен, но принтер выдаст непонятный набор символов или ошибку "Data Error".</p>
+
+<p>В веб-интерфейсе CUPS или в графических настройках системы вы увидите список обнаруженных устройств. Если принтер не найден автоматически, используйте опцию "Add Printer" и выберите "Network Printer". В поле адреса укажите протокол и IP, например: <code>ipp://192.168.1.50/ipp/print</code>. Правильный формат адреса критичен для успешного подключения.</p>
+
+<p>Также стоит обратить внимание на поддержку <strong>SNMP</strong> протокола. Он позволяет системе получать информацию о статусе картриджей и уровне бумаги непосредственно с устройства. Однако на некоторых моделях SNMP может быть отключен по соображениям безопасности, что нужно учитывать при диагностике.</p>
+
+<blockquote>⚠️ Внимание: Протокол SNMP требует корректной настройки сообщества (Community String) на принтере. Если вы используете стандартное значение "public", убедитесь, что это соответствует политикам безопасности вашей корпоративной сети.</blockquote>
+
+<div class="poll-widget" id="poll-49ecfdab"><div class="poll-widget-question">📊 Какой протокол вы используете для печати?</div><div class="poll-widget-option" data-poll="49ecfdab" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">IPP (современный)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="49ecfdab" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">LPD (классический)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="49ecfdab" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">9100 RAW (быстрый)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="49ecfdab" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Шлюз (через Windows)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="установка-и-выбор-драйверов">Установка и выбор драйверов</h2>
+<p>Многие пользователи ошибочно полагают, что для работы принтера в Linux обязательно нужны проприетарные драйверы от производителя. На деле система <strong>OpenPrinting</strong> и пакет <em>foomatic</em> содержат тысячи готовых драйверов для популярных моделей. В процессе добавления принтера система часто сама предлагает подходящий PPD-файл (PostScript Printer Description), который описывает все возможности устройства.</p>
+
+<p>Если автоматический выбор не дал результата, зайдите на сайт производителя и скачайте драйвер в формате <code>.deb</code> или <code>.rpm</code>. Установите его стандартными средствами вашего дистрибутива. Для <em>HP</em> принтеров существует отличный пакет <code>hplip</code>, который автоматически конфигурирует большинство моделей. Для <strong>Canon</strong> и <em>Epson</em> также есть официальные репозитории с драйверами.</p>
+
+<p>Важно различать драйверы для печати и драйверы для сканера (если это МФУ). В Linux эти функции часто разделены. Драйвер сканирования может потребовать установки отдельного пакета, такого как <code>sane</code> или <code>xsane</code>. Без правильного драйвера сканирование может работать нестабильно или не работать вовсе.</p>
+
+<p>Для устаревших моделей, где драйверов нет, можно использовать <strong>PCL</strong> или <em>PostScript</em> эмуляцию, которая встроена в большинство принтеров. Выберите в списке "Generic" и попробуйте драйвер "Generic PCL" или "Generic PostScript". Это часто позволяет работать с устройством на базовом уровне, даже без фирменного ПО.</p>
+
+<details class="faq-item"><summary>Где искать драйверы в Linux?</summary><div class="faq-answer"><p>Драйверы часто скрыты в репозиториях. Используйте команды поиска пакетов: 'apt search printer' или 'dnf search printer-driver'. Также проверьте инструмент 'printer-driver-all' в Ubuntu, это мета-пакет, содержащий множество драйверов.</p></div></details>
+
+<h2 id="таблица-протоколов-и-портов">Таблица протоколов и портов</h2>
+<p>Понимание сетевых портов поможет вам быстро диагностировать проблемы с подключением. Ниже приведена таблица наиболее часто используемых протоколов и их соответствующих портов, которые должны быть открыты на маршрутизаторе.</p>
+
+<table>
+<thead>
+<tr>
+<th>Протокол</th>
+<th>Порт</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IPP (HTTP)</td>
+<td>631</td>
+<td>Стандартный протокол CUPS для печати</td>
+</tr>
+<tr>
+<td>LPD</td>
+<td>515</td>
+<td>Старый протокол, используется для совместимости</td>
+</tr>
+<tr>
+<td>AppSocket (RAW)</td>
+<td>9100</td>
+<td>Прямая передача данных, высокая скорость</td>
+</tr>
+<tr>
+<td>SNMP</td>
+<td>161</td>
+<td>Мониторинг состояния устройства</td>
+</tr>
+</tbody>
+</table>
+
+<p>Если вы не можете подключиться через <code>IPP</code>, попробуйте переключиться на <em>RAW</code> порт 9100. Это часто решает проблемы с корпоративными принтерами, которые имеют специфические настройки безопасности. Убедитесь, что брандмауэр на вашем компьютере не блокирует исходящие соединения на эти порты.</p>
+
+<p>В некоторых случаях, особенно при использовании Wi-Fi, может потребоваться ввод имени пользователя и пароля для доступа к админ-панели принтера. Эти данные часто отличаются от стандартных <code>admin/admin</code> и указаны в документации. <strong>Безопасность</em> подключения важна, чтобы посторонние не могли отправлять документы на печать.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Наиболее универсальным и надежным способом подключения является использование протокола IPP на порту 631, так как он поддерживается большинством современных дистрибутивов Linux из коробки.</p></div>
+
+<h2 id="решение-частых-проблем-и-отладка">Решение частых проблем и отладка</h2>
+<p>Даже при правильной настройке иногда возникают ошибки печати. Самой частой проблемой является "застрявшая" задача в очереди, которая блокирует все последующие документы. Для очистки очереди используйте команду <code>cancel -a</code> в терминале. Если это не помогает, перезапустите службу CUPS командой <code>sudo systemctl restart cups</code>.</p>
+
+<p>Если принтер печатает мусор, проверьте выбранный тип драйвера. Часто система по умолчанию выбирает драйвер <em>PDF</em>, который не может корректно обработать текст для физического устройства. Смените драйвер на конкретную модель или на <strong>Generic Text Only</strong>, если печатаете простые документы. Убедитесь, что размер бумаги в настройках драйвера совпадает с фактически загруженным форматом.</p>
+
+<p>Проблемы с доступом могут возникнуть, если вы используете <code>localhost</code> вместо IP-адреса при настройке через веб-интерфейс. Убедитесь, что в адресной строке браузера указан правильный IP принтера, а не адрес вашего компьютера. <strong>Сетевая идентификация</strong> должна быть однозначной.</p>
+
+<p>Также стоит проверить наличие <em>зависающих процессов</em> печати. Используйте команду <code>lpstat -p</code>, чтобы увидеть статус всех принтеров. Если статус показывает "processing" в течение длительного времени, возможно, файл слишком большой или имеет поврежденную структуру.</p>
+
+<blockquote>⚠️ Внимание: Если принтер находится за NAT (например, в гостевой сети Wi-Fi), он может быть недоступен для основного сегмента сети. Убедитесь, что принтер подключен к той же подсети, что и рабочие станции.</blockquote>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Для быстрой диагностики проблем с выводом используйте команду 'lpinfo -v'. Она выведет список всех обнаруженных устройств и их URI, что поможет найти правильный адрес для подключения.</p></div>
+
+<h2 id="итоги-и-рекомендации-по-оптимизации">Итоги и рекомендации по оптимизации</h2>
+<p>Настройка сетевого принтера в Linux — это процесс, который становится рутинным после первого успешного опыта. Использование <strong>CUPS</em> дает вам полный контроль над процессом печати, позволяя настраивать очереди, приоритеты и доступ пользователей. Главное — правильно определить протокол и использовать актуальные драйверы.</p>
+
+<p>Регулярное обновление системы помогает поддерживать совместимость с новыми моделями оборудования. Дистрибутивы Linux постоянно улучшают поддержку <em>OpenPrinting</strong>, добавляя драйверы для новейших устройств. Не игнорируйте обновления пакетов, связанных с печатью, так как они часто содержат исправления критических ошибок.</p>
+
+<p>Для сложных сетей рекомендуется настроить выделенный сервер печати на базе <em>Linux</strong>, к которому будут подключаться все принтеры, а пользователи — только этот сервер. Это упрощает администрирование и централизует управление задачами. <strong>Централизация</em> снижает нагрузку на клиентские машины и облегчает диагностику.</p>
+
+<p>Помните, что в отличие от Windows, где драйверы часто требуют реинсталляции после обновления системы, в Linux настройки принтеров хранятся в конфигурационных файлах и сохраняются даже после переустановки ОС (при условии сохранения папки <code>/etc/cups</code>). Это делает эксплуатацию периферии более предсказуемой и стабильной.</p>
+
+<details>
+<summary>Как добавить принтер через командную строку?</summary>
+<p>Для добавления принтера через терминал используйте команду <code>lpadmin</code>. Пример: <code>sudo lpadmin -p MyPrinter -E -v ipp://192.168.1.100/ipp/print -m driverless:vendor/Model</code>. Эта команда создает очередь, активирует её и привязывает к нужному IP-адресу.</p>
+</details>
+
+<details>
+<summary>Почему принтер видит, но не печатает?</summary>
+<p>Чаще всего проблема в драйвере или неверно указанном URI. Проверьте, что протокол (IPP, LPD, AppSocket) соответствует настройкам самого принтера. Также убедитесь, что брандмауэр не блокирует порт 631 или 9100.</p>
+</details>
+
+<details>
+<summary>Можно ли подключить USB-принтер как сетевой?</summary>
+<p>Да, через утилиту <code>usb:parport</code> или настроив CUPS как сервер, к которому подключен USB-принтер. Другие пользователи в сети смогут печатать на него через сетевой протокол, как на обычный сетевой принтер.</p>
+</details>
+
+<details>
+<summary>Что делать, если драйвер не найден автоматически?</summary>
+<p>Попробуйте выбрать драйвер "Generic" или "PostScript". Если у вас принтер HP, установите пакет <code>hplip</code>. Для Canon и Epson проверьте раздел "Other" в списке драйверов или скачайте PPD с сайта производителя.</p>
+</details>
+
+<details>
+<summary>Как проверить логи печати в Linux?</summary>
+<p>Логи CUPS находятся в <code>/var/log/cups/error_log</code>. Установите уровень логирования в "debug" для детальной информации об ошибках. Используйте команду <code>tail -f /var/log/cups/error_log</code> для просмотра логов в реальном времени.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#подготовка-рабочего-места-и-проверка-сети">Подготовка рабочего места и проверка сети</a></li><li><a href="#установка-и-настройка-cups">Установка и настройка CUPS</a></li><li><a href="#выбор-протокола-подключения">Выбор протокола подключения</a></li><li><a href="#установка-и-выбор-драйверов">Установка и выбор драйверов</a></li><li><a href="#таблица-протоколов-и-портов">Таблица протоколов и портов</a></li><li><a href="#решение-частых-проблем-и-отладка">Решение частых проблем и отладка</a></li><li><a href="#итоги-и-рекомендации-по-оптимизации">Итоги и рекомендации по оптимизации</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-chistit-pampers-v-printere.html" class="related-card">Чистка подушки поглощения чернил (памперса) в принтере: инструкция</a></li><li><a href="/articles/c/ca/canon-80d-skolko-megapikselej.html" class="related-card">Canon 80D сколько мегапикселей: реальные характеристики и разрешение</a></li><li><a href="/articles/k/ka/kak-podklyuchit-printer-esli-net-knopki-wps.html" class="related-card">Как подключить принтер без кнопки WPS: 4 рабочих способа</a></li><li><a href="/articles/p/pr/printer-samsung-m2070-kak-dostat-kartridzh-iz-printera.html" class="related-card">Как достать картридж из принтера Samsung M2070: пошаговая инструкция</a></li><li><a href="/articles/k/ka/kak-polzovatsya-detskim-mini-printerom.html" class="related-card">Как пользоваться детским мини-принтером: Полная инструкция по эксплуатации</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-chistit-pampers-v-printere.html" class="related-bottom-card"><span class="related-bottom-title">Чистка подушки поглощения чернил (памперса) в принтере: инструкция</span><span class="related-bottom-desc">Полное руководство по очистке и сбросу счетчика чистки подушек в принтерах Epson и Canon. Как избежа</span></a><a href="/articles/c/ca/canon-80d-skolko-megapikselej.html" class="related-bottom-card"><span class="related-bottom-title">Canon 80D сколько мегапикселей: реальные характеристики и разрешение</span><span class="related-bottom-desc">Узнайте точное количество пикселей камеры Canon 80D, разницу между эффективными и общими данными, а </span></a><a href="/articles/k/ka/kak-podklyuchit-printer-esli-net-knopki-wps.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить принтер без кнопки WPS: 4 рабочих способа</span><span class="related-bottom-desc">Пошаговая инструкция: настройка Wi-Fi через USB, утилиту WPS Connect, WPS Push Button и прямой режим</span></a><a href="/articles/p/pr/printer-samsung-m2070-kak-dostat-kartridzh-iz-printera.html" class="related-bottom-card"><span class="related-bottom-title">Как достать картридж из принтера Samsung M2070: пошаговая инструкция</span><span class="related-bottom-desc">Пошаговая инструкция по извлечению картриджа из МФУ Samsung M2070. Разбор ошибок замятия, замена тон</span></a><a href="/articles/k/ka/kak-polzovatsya-detskim-mini-printerom.html" class="related-bottom-card"><span class="related-bottom-title">Как пользоваться детским мини-принтером: Полная инструкция по эксплуатации</span><span class="related-bottom-desc">Подробное руководство: как заряжать, подключать и печатать стикеры на детском термопринтере. Разбор </span></a><a href="/articles/k/ka/kak-vyklyuchit-printer-xerox-3020.html" class="related-bottom-card"><span class="related-bottom-title">Как выключить принтер Xerox 3020: безопасное завершение работы</span><span class="related-bottom-desc">Пошаговая инструкция по правильному выключению принтера Xerox 3020. Ошибки при отключении, режимы эн</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

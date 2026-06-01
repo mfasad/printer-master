@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как расшарить принтер по сети в Windows 11: пошаговая инструкция — Принтер Мастер</title>
+    <meta name="description" content="Подробное руководство по настройке общего доступа к принтеру в Windows 11 через локальную сеть. Разберём все способы: через Панель управления, PowerShell и решения для удалённых пользователей.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-rassharit-printer-po-seti-windows-11.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как расшарить принтер по сети в Windows 11: пошаговая инструкция">
+    <meta property="og:description" content="Подробное руководство по настройке общего доступа к принтеру в Windows 11 через локальную сеть. Разберём все способы: через Панель управления, PowerShell и решения для удалённых пользователей.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как расшарить принтер по сети в Windows 11: пошаговая инструкция</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как расшарить принтер по сети в Windows 11: 3 рабочих способа + решение проблем</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#1-подготовка-сети-и-принтера-перед-настройкой">1. Подготовка сети и принтера перед настройкой</a></li><li><a href="#2-способ-1-расшаривание-принтера-через-панель-управления">2. Способ 1: Расшаривание принтера через Панель управления</a></li><li><a href="#3-способ-2-настройка-через-современные-настройки-windows-11">3. Способ 2: Настройка через современные Настройки Windows 11</a></li><li><a href="#4-способ-3-расшаривание-принтера-через-powershell-для-опытных-пользователей">4. Способ 3: Расшаривание принтера через PowerShell (для опытных пользователей)</a></li><li><a href="#5-типичные-ошибки-и-их-решения">5. Типичные ошибки и их решения</a></li><li><a href="#6-дополнительные-настройки-для-улучшения-работы">6. Дополнительные настройки для улучшения работы</a></li><li><a href="#7-безопасность-при-расшаривании-принтера-по-сети">7. Безопасность при расшаривании принтера по сети</a></li><li><a href="#8-альтернативные-решения-для-удалённой-печати">8. Альтернативные решения для удалённой печати</a></li><li><a href="#faq-частые-вопросы-по-расшариванию-принтера-в-windows-11">FAQ: Частые вопросы по расшариванию принтера в Windows 11</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><p>Общий доступ к принтеру по сети в <strong>Windows 11</strong> позволяет нескольким устройствам печатать на одном устройстве без физического подключения. Это особенно актуально для офисов, учебных заведений или домашних сетей, где один <em>MFP</em> (многофункциональное устройство) обслуживает несколько компьютеров. Однако настройка может вызвать сложности: от отсутствия драйверов до проблем с правами доступа.</p>
+
+<p>В этой статье мы разберём <strong>три проверенных метода</strong> расшаривания принтера — через классическую <code>Панель управления</code>, современные <code>Настройки Windows 11</code> и <code>PowerShell</code> для опытных пользователей. Также рассмотрим типичные ошибки (например, <code>0x0000000d</code> или "Windows не может подключиться к принтеру") и способы их устранения. Если вы используете принтеры <em>HP LaserJet</em>, <em>Canon PIXMA</em> или <em>Brother DCP</em>, инструкция подойдёт для всех моделей с поддержкой сетевой печати.</p>
+
+<p>Прежде чем приступить, убедитесь, что:</p>
+<ul>
+  <li>🖨️ Принтер подключён к компьютеру-хосту (или напрямую к роутеру по <code>Ethernet/Wi-Fi</code>).</li>
+  <li>🌐 Все устройства в сети находятся в одной подсети (например, <code>192.168.1.x</code>).</li>
+  <li>🔒 На компьютере-хосте включён <strong>сетевой обнаружение</strong> и отключен брандмауэр (временно).</li>
+</ul>
+
+<div class="poll-widget" id="poll-4c3c0641"><div class="poll-widget-question">📊 Какой тип принтера вы используете?</div><div class="poll-widget-option" data-poll="4c3c0641" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Лазерный (HP, Brother, Xerox)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="4c3c0641" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Струйный (Canon, Epson)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="4c3c0641" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">МФУ (печать+скан+копир)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="4c3c0641" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Сетевой принтер (подключён к роутеру)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="4c3c0641" data-idx="4" onclick="pbPollVote(this)"><span class="poll-widget-label">Другой</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="1-подготовка-сети-и-принтера-перед-настройкой">1. Подготовка сети и принтера перед настройкой</h2>
+
+<p>Перед тем как расшаривать принтер, необходимо убедиться, что сеть и устройства готовы к совместной работе. Частая ошибка пользователей — попытка настроить общий доступ, не проверив базовые параметры подключения.</p>
+
+<p>Во-первых, проверьте <strong>физическое подключение</strong> принтера. Если он подключён к компьютеру по <code>USB</code>, убедитесь, что кабель исправен и порт работает (попробуйте подключить другое устройство). Для сетевых принтеров (<em>Ethernet/Wi-Fi</em>) проверьте индикаторы на панели: горящий зелёный светодиод рядом с значком сети означает активное подключение. Если индикатор мигает оранжевым — проблема с кабелем или роутером.</p>
+
+<p>Во-вторых, настройте <strong>сетевое обнаружение</strong> на компьютере-хосте:</p>
+<ol>
+  <li>Откройте <code>Панель управления → Сеть и Интернет → Центр управления сетями и общим доступом</code>.</li>
+  <li>Выберите <code>Изменить дополнительные параметры общего доступа</code>.</li>
+  <li>Включите опции:
+    <ul>
+      <li>🔹 <strong>Сетевое обнаружение</strong> (для всех профилей).</li>
+      <li>🔹 <strong>Общий доступ к файлам и принтерам</strong>.</li>
+      <li>🔹 <strong>Автонастройка сетевых устройств</strong> (если есть).</li>
+    </ol>
+  </li>
+  <li>Сохраните изменения и перезагрузите компьютер.</li>
+</ol>
+
+<blockquote>⚠️ <strong>Внимание:</strong> Если вы используете <em>публичную сеть</em> (например, в кафе или коворкинге), Windows 11 по умолчанию блокирует общий доступ. Переключите профиль сети на <code>Частная</code> в <code>Настройки → Сеть и Интернет → Wi-Fi/Ethernet</code>.</blockquote>
+
+<p>Для принтеров с <em>Wi-Fi Direct</em> (например, <em>HP OfficeJet Pro 9015e</em>) может потребоваться предварительная настройка через веб-интерфейс устройства. Обычно он доступен по IP-адресу принтера (узнать его можно, распечатав <code>Страницу конфигурации сети</code> с панели управления принтера).</p>
+
+
+<p>Убедиться, что принтер включён и подключён к сети|Проверить IP-адрес принтера (для сетевых моделей)|Включить сетевое обнаружение на хост-компьютере|Отключить брандмауэр Windows временно|Обновить драйверы принтера до последней версии--></p>
+
+<h2 id="2-способ-1-расшаривание-принтера-через-панель-управления">2. Способ 1: Расшаривание принтера через Панель управления</h2>
+
+<p>Классический метод через <code>Панель управления</code> остаётся самым надёжным, особенно для старых моделей принтеров. Он работает даже если новые <code>Настройки Windows 11</code> не отображают устройство.</p>
+
+<p>Шаги для настройки:</p>
+<ol>
+  <li>Откройте <code>Панель управления → Устройства и принтеры</code>.</li>
+  <li>Найдите свой принтер в списке, кликните по нему <strong>правой кнопкой мыши</strong> и выберите <code>Свойства принтера</code> (не путать с <code>Свойства</code>!).</li>
+  <li>Перейдите на вкладку <code>Доступ</code> и установите галочку напротив <strong>Общий доступ к данному принтеру</strong>.</li>
+  <li>Задайте <strong>имя общего ресурса</strong> (например, <code>HP_LaserJet_Pro</code>). Избегайте пробелов и кириллицы.</li>
+  <li>Нажмите <code>Применить</code> и <code>OK</code>.</li>
+</ol>
+
+<p>После этого принтер станет доступен в сети. Чтобы подключиться к нему с другого компьютера:</p>
+<ol>
+  <li>Откройте <code>Параметры → Bluetooth и устройства → Принтеры и сканеры</code>.</li>
+  <li>Нажмите <code>Добавить устройство → Добавить вручную</code>.</li>
+  <li>Выберите <code>Выбрать общий принтер по имени</code> и введите путь в формате <code>\\ИМЯ_КОМПЬЮТЕРА\ИМЯ_ПРИНТЕРА</code> (например, <code>\\DESKTOP-PC\HP_LaserJet_Pro</code>).</li>
+  <li>Установите драйверы, если Windows запросит.</li>
+</ol>
+
+<blockquote>⚠️ <strong>Внимание:</strong> Если при подключении появляется ошибка <code>0x0000000d</code>, проверьте, включён ли на хост-компьютере <strong>гостевой доступ</strong> (вкладка <code>Безопасность</code> в свойствах принтера). Также убедитесь, что на целевом ПК установлены драйверы для данной модели.</blockquote>
+
+<p>Для принтеров <em>Canon</em> или <em>Epson</em> может потребоваться дополнительная установка <strong>драйверов для сетевой печати</strong>. Их можно скачать с официального сайта производителя, выбрав модель и раздел <code>Software → Network Drivers</code>.</p>
+
+<details class="faq-item"><summary>Что делать, если принтер не отображается в списке?</summary><div class="faq-answer"><p>
+<p>Если принтер не виден в <code>Устройства и принтеры</code>, попробуйте следующие действия:</p>
+<p>1. Подключите принтер к другому USB-порту (желательно <code>USB 2.0</code>).</p>
+<p>2. Обновите драйверы через <code>Диспетчер устройств</code> (раздел <code>Очереди печати</code>).</p>
+<p>3. Удалите принтер из системы и добавьте заново, выбрав <code>Добавить локальный принтер</code> → <code>Создать новый порт</code> → <code>Standard TCP/IP Port</code>.</p>
+<p>4. Для сетевых принтеров введите IP-адрес вручную (узнать его можно через меню принтера или распечатку тестовой страницы).</p></div></details></p>
+
+<h2 id="3-способ-2-настройка-через-современные-настройки-windows-11">3. Способ 2: Настройка через современные Настройки Windows 11</h2>
+
+<p>В Windows 11 Microsoft перенесла часть функций в новое меню <code>Параметры</code>. Этот способ подходит для пользователей, которые предпочитают современный интерфейс. Однако здесь есть нюанс: не все принтеры отображаются в новом меню, особенно если они подключены через <code>USB</code>.</p>
+
+<p>Инструкция:</p>
+<ol>
+  <li>Откройте <code>Параметры → Bluetooth и устройства → Принтеры и сканеры</code>.</li>
+  <li>Найдите свой принтер в списке и кликните по нему.</li>
+  <li>Выберите <code>Управление → Свойства принтера</code> (откроется классическое окно).</li>
+  <li>Перейдите на вкладку <code>Доступ</code> и настройте общий доступ, как в <strong>Способе 1</strong>.</li>
+</ol>
+
+<p>Если принтер не отображается в списке, попробуйте добавить его вручную:</p>
+<ol>
+  <li>Нажмите <code>Добавить устройство → Добавить вручную</code>.</li>
+  <li>Выберите <code>Локальный принтер</code> или <code>Сетевой принтер</code> (в зависимости от типа подключения).</li>
+  <li>Для сетевых принтеров укажите IP-адрес или имя хоста (например, <code>192.168.1.100</code>).</li>
+  <li>Выберите драйвер из списка или установите его с диска/сайта производителя.</li>
+</ol>
+
+<p><mark>Важно: Принтеры с поддержкой <em>AirPrint</em> (например, многие модели <em>Epson EcoTank</em>) могут не требовать установки драйверов на клиентских устройствах, если те работают под управлением macOS или iOS. Однако для Windows драйверы обязательны.</mark></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Метод подключения</th>
+      <th>Преимущества</th>
+      <th>Недостатки</th>
+      <th>Рекомендации</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Через <code>Панель управления</code></td>
+      <td>Работает со всеми моделями, включая устаревшие</td>
+      <td>Интерфейс может показаться сложным новичкам</td>
+      <td>Лучший выбор для офисных принтеров (<em>Xerox</em>, <em>Kyocera</em>)</td>
+    </tr>
+    <tr>
+      <td>Через <code>Параметры Windows 11</code></td>
+      <td>Более современный и интуитивный интерфейс</td>
+      <td>Не все принтеры отображаются в списке</td>
+      <td>Подходит для домашних сетей с новыми устройствами</td>
+    </tr>
+    <tr>
+      <td>Через <code>PowerShell</code></td>
+      <td>Автоматизация для нескольких принтеров, гибкость</td>
+      <td>Требует знания команд, риск ошибок</td>
+      <td>Для IT-специалистов и массового развёртывания</td>
+    </tr>
+    <tr>
+      <td>Прямое подключение к роутеру</td>
+      <td>Не зависит от хост-компьютера, всегда доступен</td>
+      <td>Требует настройку DHCP или статического IP</td>
+      <td>Идеально для <em>МФУ</em> с <code>Ethernet</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="4-способ-3-расшаривание-принтера-через-powershell-для-опытных-пользователей">4. Способ 3: Расшаривание принтера через PowerShell (для опытных пользователей)</h2>
+
+<p>Если вам нужно настроить общий доступ к нескольким принтерам или автоматизировать процесс, <code>PowerShell</code> станет мощным инструментом. Этот метод полезен для администраторов, развёртывающих принтеры в крупных сетях.</p>
+
+<p>Основные команды:</p>
+<ul>
+  <li>📋 Просмотр списка принтеров:
+    <pre><code>Get-Printer | Format-Table Name, ShareName, DriverName</code></pre>
+  </li>
+  <li>🔧 Включение общего доступа:
+    <pre><code>Set-Printer -Name "ИМЯ_ПРИНТЕРА" -Shared $true -ShareName "ИМЯ_ДЛЯ_СЕТИ"</code></pre>
+  </li>
+  <li>🔒 Настройка прав доступа (например, для группы <code>Everyone</code>):
+    <pre><code>$printer = Get-Printer -Name "ИМЯ_ПРИНТЕРА"
+<p>$acl = $printer.GetPrintDriver().GetPrinterSecurityDescriptor()</p>
+<p>$trustee = New-Object System.Security.Principal.NTAccount("Everyone")</p>
+<p>$acl.AddAccessRule((New-Object System.Security.AccessControl.PrinterAccessRule($trustee, [System.Security.AccessControl.PrinterRights]::Print, "Allow")))</p>
+<p>$printer.SetPrintDriver($acl)</code></pre></p>
+  </li>
+</ul>
+
+<p>Чтобы подключиться к расшаренному принтеру с другого компьютера через PowerShell:</p>
+<pre><code>Add-Printer -ConnectionName "\\ИМЯ_КОМПЬЮТЕРА\ИМЯ_ПРИНТЕРА"</code></pre>
+
+<blockquote>⚠️ <strong>Внимание:</strong> При использовании PowerShell убедитесь, что вы запускаете консоль <strong>от имени администратора</strong>. Ошибки в командах могут привести к сбою печати или потере доступа к принтеру. Перед массовыми изменениями протестируйте команды на одном устройстве.</blockquote>
+
+<p>Для принтеров <em>Brother</em> или <em>Ricoh</em> с поддержкой <code>IPP (Internet Printing Protocol)</code> можно использовать альтернативный метод подключения через URL:</p>
+<pre><code>Add-Printer -ConnectionName "http://IP_АДРЕС_ПРИНТЕРА:631/printers/ИМЯ_ОЧЕРЕДИ"</code></pre>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если принтер после настройки не печатает с клиентских ПК, проверьте очередь печати на хост-компьютере. Часто документы "застревают" из-за конфликта драйверов. Очистите очередь через <code>Панель управления → Устройства и принтеры → Просмотр очереди печати</code> и перезапустите службу <code>Dиспетчер печати</code> командой <code>net stop spooler && net start spooler</code> в CMD.</p></div>
+
+<h2 id="5-типичные-ошибки-и-их-решения">5. Типичные ошибки и их решения</h2>
+
+<p>Даже после правильной настройки могут возникать проблемы. Рассмотрим самые распространённые ошибки и способы их устранения.</p>
+
+<h3>Ошибка 1: "Windows не может подключиться к принтеру" (<code>0x0000000d</code>)</h3>
+<p>Причины:</p>
+<ul>
+  <li>🔌 Отсутствует драйвер на клиентском ПК.</li>
+  <li>🔒 Блокировка брандмауэром или антивирусом.</li>
+  <li>📡 Неправильные настройки сети (разные подсети).</li>
+</ul>
+<p>Решение:</p>
+<ol>
+  <li>Установите драйвер вручную с сайта производителя.</li>
+  <li>Временно отключите брандмауэр и антивирус.</li>
+  <li>Проверьте, что на хост-компьютере включён <code>Общий доступ к файлам и принтерам</code> (см. <strong>Раздел 1</strong>).</li>
+</ol>
+
+<h3>Ошибка 2: Принтер отображается, но не печатает</h3>
+<p>Возможные проблемы:</p>
+<ul>
+  <li>🖨️ Принтер переведён в офлайн-режим на клиентском ПК.</li>
+  <li>📄 Документы застряли в очереди печати.</li>
+  <li>🔄 Конфликт версий драйверов (например, 32-bit vs 64-bit).</li>
+</ul>
+<p>Решение:</p>
+<ul>
+  <li>Откройте очередь печати и удалите все задания.</li>
+  <li>Перезапустите службу <code>Диспетчер печати</code>:</li>
+</ul>
+<pre><code>net stop spooler
+<p>net start spooler</code></pre></p>
+
+<h3>Ошибка 3: "У вас нет разрешения на подключение к этому принтеру"</h3>
+<p>Эта ошибка связана с правами доступа. Исправляем:</p>
+<ol>
+  <li>На хост-компьютере откройте <code>Свойства принтера → Безопасность</code>.</li>
+  <li>Добавьте группу <code>Everyone</code> и установите разрешение <code>Печать</code>.</li>
+  <li>Если используется домен, добавьте соответствующую группу пользователей.</li>
+</ol>
+
+<p>Для принтеров <em>Samsung</em> или <em>Lexmark</em> может потребоваться дополнительная настройка <strong>протокола SNMP</strong> (в свойствах порта принтера). Убедитесь, что параметр <code>SNMP-сообщество</code> установлен в <code>public</code>.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если принтер подключён к роутеру по Wi-Fi, убедитесь, что в настройках роутера отключён <strong>изоляция клиентов (AP Isolation)</strong>. Эта функция блокирует взаимодействие устройств в одной сети, что мешает печати.</p></div>
+
+<h2 id="6-дополнительные-настройки-для-улучшения-работы">6. Дополнительные настройки для улучшения работы</h2>
+
+<p>После успешного расшаривания принтера можно оптимизировать его работу с помощью дополнительных настроек.</p>
+
+<h3>Настройка приоритета печати</h3>
+<p>Если принтером пользуются несколько человек, полезно настроить приоритеты:</p>
+<ol>
+  <li>Откройте <code>Свойства принтера → Дополнительно</code>.</li>
+  <li>Установите <code>Приоритет</code> (например, <code>1</code> для обычных заданий, <code>99</code> для срочных).</li>
+  <li>Настройте <code>Расписание доступности</code>, если принтер должен работать только в определённые часы.</li>
+</ol>
+
+<h3>Использование Google Cloud Print (альтернатива для удалённой печати)</h3>
+<p>Если вам нужно печатать на расшаренный принтер из-за предела локальной сети (например, из дома на работу), можно использовать <em>Google Cloud Print</em>:</p>
+<ol>
+  <li>Установите <em>Chrome</em> на хост-компьютер.</li>
+  <li>Добавьте принтер в <code>настройки Chrome → Дополнительные → Печать</code>.</li>
+  <li>Подключитесь к принтеру с любого устройства через аккаунт Google.</li>
+</ol>
+<blockquote>⚠️ <strong>Внимание:</strong> С 31 декабря 2020 года <em>Google Cloud Print</em> официально закрыт. Альтернативы: <em>Microsoft Universal Print</em> (для организаций) или <em>принтеры с поддержкой ePrint</em> (например, <em>HP</em>).</blockquote>
+
+<h3>Настройка статического IP для сетевого принтера</h3>
+<p>Если принтер подключён напрямую к роутеру, рекомендуется закрепить за ним статический IP-адрес:</p>
+<ol>
+  <li>Узнайте MAC-адрес принтера (распечатайте страницу конфигурации сети).</li>
+  <li>Войдите в веб-интерфейс роутера (обычно <code>192.168.1.1</code>).</li>
+  <li>Найдите раздел <code>DHCP-резервирование</code> и добавьте принтер по MAC-адресу.</li>
+</ol>
+
+<p>Для принтеров <em>Xerox</em> или <em>Konica Minolta</em> с поддержкой <code>LDAP</code> можно настроить аутентификацию пользователей по доменным учётным записям. Это полезно в корпоративных сетях для контроля доступа.</p>
+
+<h2 id="7-безопасность-при-расшаривании-принтера-по-сети">7. Безопасность при расшаривании принтера по сети</h2>
+
+<p>Общий доступ к принтеру создаёт потенциальные уязвимости в сети. Следуйте этим рекомендациям, чтобы минимизировать риски:</p>
+
+<ul>
+  <li>🔐 <strong>Ограничьте доступ по IP</strong>: в свойствах принтера (<code>Безопасность</code>) разрешите печать только доверенным IP-адресам.</li>
+  <li>🔄 <strong>Обновляйте прошивку принтера</strong>: устаревшие версии могут содержать уязвимости (например, <em>CVE-2021-3438</em> для принтеров <em>HP</em>).</li>
+  <li>📡 <strong>Отключите ненужные протоколы</strong>: если принтер поддерживает <code>FTP</code>, <code>Telnet</code> или <code>SNMP v1/v2</code>, отключите их в веб-интерфейсе устройства.</li>
+  <li>🔑 <strong>Используйте сложные пароли</strong> для веб-интерфейса принтера (по умолчанию часто стоит <code>admin/admin</code>).</li>
+</ul>
+
+<p>Для корпоративных сетей рекомендуется:</p>
+<ul>
+  <li>Настроить <strong>VLAN для принтеров</strong>, отделив их от основного трафика.</li>
+  <li>Использовать <strong>IPsec</strong> или <strong>SSL/TLS</strong> для шифрования данных печати.</li>
+  <li>Включить <strong>журналирование</strong> на принтере для отслеживания активности.</li>
+</ul>
+
+<p>Если принтер поддерживает <em>Secure Print</em> (например, <em>Ricoh MP C3004</em>), настройте обязательную аутентификацию перед печатью. Это предотвратит утечку конфиденциальных документов.</p>
+
+<details class="faq-item"><summary>Как проверить, не скомпрометирован ли ваш принтер?</summary><div class="faq-answer"><p>
+<p>Признаки взлома принтера:</p>
+<p>- Неизвестные задания печати в очереди.</p>
+<p>- Изменение настроек (например, DNS-серверов) в веб-интерфейсе.</p>
+<p>- Подозрительная активность в логах (если поддерживается).</p>
+<p>- Принтер отправляет данные на внешние IP-адреса (можно проверить через <em>Wireshark</em>).</p>
+
+<p>Если вы подозреваете взлом:</p>
+<p>1. Сбросьте принтер к заводским настройкам.</p>
+<p>2. Обновите прошивку.</p>
+<p>3. Измените все пароли по умолчанию.</p>
+<p>4. Проверьте сеть на наличие других уязвимых устройств.</p></div></details></p>
+
+<h2 id="8-альтернативные-решения-для-удалённой-печати">8. Альтернативные решения для удалённой печати</h2>
+
+<p>Если стандартное расшаривание принтера по сети не подходит (например, для печати из-за предела офиса), рассмотрите альтернативные методы:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Метод</th>
+      <th>Описание</th>
+      <th>Плюсы</th>
+      <th>Минусы</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><em>Microsoft Universal Print</em></td>
+      <td>Облачное решение для организаций с подпиской <em>Microsoft 365</em></td>
+      <td>Централизованное управление, безопасность</td>
+      <td>Платное, требует облачную инфраструктуру</td>
+    </tr>
+    <tr>
+      <td><em>VPN + локальная сеть</em></td>
+      <td>Подключение к офисной сети через VPN и печать на расшаренный принтер</td>
+      <td>Безопасно, работает с любыми принтерами</td>
+      <td>Требует настройку VPN-сервера</td>
+    </tr>
+    <tr>
+      <td><em>TeamViewer</em> (или <em>AnyDesk</em>)</td>
+      <td>Удалённое подключение к компьютеру с принтером и печать</td>
+      <td>Простота, не требует сложной настройки</td>
+      <td>Низкая скорость, зависимость от ПК-хоста</td>
+    </tr>
+    <tr>
+      <td><em>Приложения производителей</em> (<em>HP Smart</em>, <em>Epson Connect</em>)</td>
+      <td>Фирменные утилиты для удалённой печати через облако</td>
+      <td>Бесплатно, просто в настройке</td>
+      <td>Ограниченная функциональность, зависимость от серверов производителя</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Для принтеров <em>Kyocera</em> или <em>Sharp</em> с поддержкой <code>ICard</code> можно настроить печать по электронной почте: принтер получает уникальный email-адрес, и отправленные на него документы автоматически печатаются.</p>
+
+<p>Если вам нужно печатать с <em>Android</em> или <em>iOS</em>, установите приложение <em>PrinterShare</em> или <em>Mopria Print Service</em> (для <em>Samsung</em> и других поддерживаемых брендов).</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Для максимальной надёжности в корпоративных сетях используйте комбинацию <strong>локального расшаривания</strong> (для внутренних пользователей) + <strong>облачного решения</strong> (например, <em>Microsoft Universal Print</em>) для удалённых сотрудников.</p></div>
+
+<h2 id="faq-частые-вопросы-по-расшариванию-принтера-в-windows-11">FAQ: Частые вопросы по расшариванию принтера в Windows 11</h2>
+
+<details>
+  <summary>🖨️ Можно ли расшарить принтер, подключённый по USB, если хост-компьютер выключен?</summary>
+  <p>Нет. Если принтер подключён к компьютеру по <code>USB</code>, он будет доступен в сети только когда хост-компьютер включён. Для круглосуточного доступа подключите принтер напрямую к роутеру по <code>Ethernet</code> или <code>Wi-Fi</code> (если модель поддерживает сетевое подключение).</p>
+</details>
+
+<details>
+  <summary>🌐 Как узнать имя компьютера для подключения к принтеру?</summary>
+  <p>Чтобы узнать имя хост-компьютера:</p>
+  <ol>
+    <li>Нажмите <code>Win + Pause/Break</code> (или откройте <code>Параметры → Система → О системе</code>).</li>
+    <li>Найдите строку <code>Имя устройства</code>.</li>
+  </ol>
+  <p>Также можно использовать команду в <code>CMD</code>:</p>
+  <pre><code>hostname</code></pre>
+</details>
+
+<details>
+  <summary>🔒 Почему при подключении к принтеру запрашивается логин и пароль?</summary>
+  <p>Это означает, что на хост-компьютере отключён <strong>гостевой доступ</strong>. Чтобы исправить:</p>
+  <ol>
+    <li>Откройте <code>Панель управления → Устройства и принтеры</code>.</li>
+    <li>Кликните правой кнопкой по принтеру → <code>Свойства принтера → Безопасность</code>.</li>
+    <li>Добавьте группу <code>Everyone</code> и установите разрешение <code>Печать</code>.</li>
+  </ol>
+  <p>Если используется домен, укажите учётные данные доменного пользователя.</p>
+</details>
+
+<details>
+  <summary>📡 Можно ли расшарить принтер между Windows 11 и macOS?</summary>
+  <p>Да, но потребуется дополнительная настройка:</p>
+  <ol>
+    <li>На компьютере с Windows 11 расшарьте принтер (см. <strong>Способ 1</strong>).</li>
+    <li>На Mac откройте <code>Системные настройки → Принтеры и сканеры</code>.</li>
+    <li>Нажмите <code>+ → Добавить принтер</code> и выберите вкладку <code>Windows</code>.</li>
+    <li>Введите адрес в формате <code>smb://ИМЯ_КОМПЬЮТЕРА/ИМЯ_ПРИНТЕРА</code> и установите драйвер.</li>
+  </ol>
+  <p>Для принтеров <em>AirPrint</em> (например, многие модели <em>Epson</em> и <em>Canon</em>) драйверы устанавливаются автоматически.</p>
+</details>
+
+<details>
+  <summary>⚡ Почему принтер печатает медленнее по сети, чем при прямом подключении?</summary>
+  <p>Замедление печати по сети может быть вызвано:</p>
+  <ul>
+    <li>📶 Низкой скоростью соединения (например, <code>Wi-Fi 802.11n</code> вместо <code>Ethernet</code>).</li>
+    <li>🖼️ Большим размером отправляемого документа (например, PDF с высоким разрешением).</li>
+    <li>🔄 Конфликтом драйверов на клиентском ПК.</li>
+  </ul>
+  <p>Решения:</p>
+  <ul>
+    <li>Подключите принтер к роутеру по кабелю <code>Ethernet</code>.</li>
+    <li>Настройте принтер на печать в режиме <code>Черновик</code> или <code>Быстрая печать</code>.</li>
+    <li>Обновите драйверы на клиентском ПК.</li>
+  </ul>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#1-подготовка-сети-и-принтера-перед-настройкой">1. Подготовка сети и принтера перед настройкой</a></li><li><a href="#2-способ-1-расшаривание-принтера-через-панель-управления">2. Способ 1: Расшаривание принтера через Панель управления</a></li><li><a href="#3-способ-2-настройка-через-современные-настройки-windows-11">3. Способ 2: Настройка через современные Настройки Windows 11</a></li><li><a href="#4-способ-3-расшаривание-принтера-через-powershell-для-опытных-пользователей">4. Способ 3: Расшаривание принтера через PowerShell (для опытных пользователей)</a></li><li><a href="#5-типичные-ошибки-и-их-решения">5. Типичные ошибки и их решения</a></li><li><a href="#6-дополнительные-настройки-для-улучшения-работы">6. Дополнительные настройки для улучшения работы</a></li><li><a href="#7-безопасность-при-расшаривании-принтера-по-сети">7. Безопасность при расшаривании принтера по сети</a></li><li><a href="#8-альтернативные-решения-для-удалённой-печати">8. Альтернативные решения для удалённой печати</a></li><li><a href="#faq-частые-вопросы-по-расшариванию-принтера-в-windows-11">FAQ: Частые вопросы по расшариванию принтера в Windows 11</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-podklyuchit-printer-canon-i-sensys-lbp-2900.html" class="related-card">Как подключить Canon LBP 2900: драйверы, настройка и исправление ошибок</a></li><li><a href="/articles/k/ka/kak-raspechatat-kartinku-s-telefona-bez-printera.html" class="related-card">Как распечатать фото с телефона без принтера: 10 проверенных способов</a></li><li><a href="/articles/k/ka/kakie-shnury-nuzhny-dlya-podklyucheniya-printera-k-noutbuku.html" class="related-card">Какие кабели для принтера нужны: USB, Ethernet или Wi-Fi?</a></li><li><a href="/articles/k/ka/kak-odin-printer-podklyuchit-k-dvum-kompyuteram-cherez-usb.html" class="related-card">Как подключить один принтер к двум компьютерам через USB: 3 рабочих метода</a></li><li><a href="/articles/k/ka/kak-ustanovit-printer-xprinter-xp-365b.html" class="related-card">Как установить принтер Xprinter XP-365B: драйверы и настройка</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-podklyuchit-printer-canon-i-sensys-lbp-2900.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить Canon LBP 2900: драйверы, настройка и исправление ошибок</span><span class="related-bottom-desc">Пошаговая инструкция по установке принтера Canon i-SENSYS LBP 2900. Решение проблем с драйверами CAP</span></a><a href="/articles/k/ka/kak-raspechatat-kartinku-s-telefona-bez-printera.html" class="related-bottom-card"><span class="related-bottom-title">Как распечатать фото с телефона без принтера: 10 проверенных способов</span><span class="related-bottom-desc">Пошаговые инструкции, как перенести картинку с Android/iPhone на бумагу без принтера: от фотолаборат</span></a><a href="/articles/k/ka/kakie-shnury-nuzhny-dlya-podklyucheniya-printera-k-noutbuku.html" class="related-bottom-card"><span class="related-bottom-title">Какие кабели для принтера нужны: USB, Ethernet или Wi-Fi?</span><span class="related-bottom-desc">Полный гид по выбору кабеля для подключения принтера к ноутбуку. Разбор интерфейсов USB 2.0/3.0, Eth</span></a><a href="/articles/k/ka/kak-odin-printer-podklyuchit-k-dvum-kompyuteram-cherez-usb.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить один принтер к двум компьютерам через USB: 3 рабочих метода</span><span class="related-bottom-desc">Узнайте, как поделиться USB-принтером между двумя ПК. Обзор кабель-свитчей, ПО-серверов и встроенных</span></a><a href="/articles/k/ka/kak-ustanovit-printer-xprinter-xp-365b.html" class="related-bottom-card"><span class="related-bottom-title">Как установить принтер Xprinter XP-365B: драйверы и настройка</span><span class="related-bottom-desc">Пошаговая инструкция по установке термопринтера Xprinter XP-365B. Настройка драйверов, калибровка эт</span></a><a href="/articles/k/ka/kak-podklyuchit-printer-laserjet-pro-m104w.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить принтер HP LaserJet Pro M104w: пошаговая инструкция</span><span class="related-bottom-desc">Полное руководство по подключению и настройке беспроводного и проводного принтера HP LaserJet Pro M1</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

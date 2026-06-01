@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как настроить и настроить очередь печати: полное руководство — Принтер Мастер</title>
+    <meta name="description" content="Инструкция по управлению очередью печати принтера. Удаление зависших заданий, смена приоритетов, сброс службы и настройка через командную строку.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-ustanovit-ochered-pechati-na-printere.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как настроить и настроить очередь печати: полное руководство">
+    <meta property="og:description" content="Инструкция по управлению очередью печати принтера. Удаление зависших заданий, смена приоритетов, сброс службы и настройка через командную строку.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как настроить и настроить очередь печати: полное руководство</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как установить и управлять очередью печати на принтере</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#введение-в-управление-заданиями-печати">Введение в управление заданиями печати</a></li><li><a href="#доступ-к-интерфейсу-диспетчера-очереди">Доступ к интерфейсу диспетчера очереди</a></li><li><a href="#управление-отдельными-заданиями-в-очереди">Управление отдельными заданиями в очереди</a></li><li><a href="#сброс-службы-печати-через-командную-строку">Сброс службы печати через командную строку</a></li><li><a href="#настройка-приоритетов-и-отложенной-печати">Настройка приоритетов и отложенной печати</a></li><li><a href="#решение-частых-ошибок-диспетчера-печати">Решение частых ошибок диспетчера печати</a></li><li><a href="#дополнительные-инструменты-и-утилиты">Дополнительные инструменты и утилиты</a></li><li><a href="#часто-задаваемые-вопросы">Часто задаваемые вопросы</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="введение-в-управление-заданиями-печати">Введение в управление заданиями печати</h2>
+
+<p>Каждый пользователь офисной или домашней техники сталкивался с ситуацией, когда документ не отправляется на печать, а зависает в системе. Очередь печати — это механизм операционной системы, который временно хранит файлы до момента их обработки <strong>драйвером устройства</strong>. Понимание того, как работает этот буфер, позволяет оперативно решать проблемы с задержками или ошибками.</p>
+
+<p>В современных операционных системах, таких как Windows 10 или 11, этот процесс автоматизирован, но ручное вмешательство иногда необходимо для корректной работы. Если вы видите, что документ завис, важно не просто перезагружать компьютер, а разобраться в причинах сбоя <strong>диспетчера печати</strong>. Неправильное управление может привести к потере важных файлов или конфликту между несколькими устройствами.</p>
+
+<p>Существует множество сценариев, когда требуется вмешательство пользователя: от простого удаления ошибочного задания до смены порядка обработки документов. В этой статье мы разберем все доступные способы взаимодействия с <em>очередью печати</em>, чтобы вы могли эффективно управлять своим оборудованием.</p>
+
+<h2 id="доступ-к-интерфейсу-диспетчера-очереди">Доступ к интерфейсу диспетчера очереди</h2>
+
+<p>Первым шагом для управления заданиями является открытие окна очереди печати. Это можно сделать несколькими способами, в зависимости от вашей операционной системы и предпочтений. Самый быстрый путь — через системный трей, где значок принтера может быть скрыт в меню дополнительных элементов.</p>
+
+<p>Для этого кликните правой кнопкой мыши на значке принтера и выберите пункт <code>Открыть очередь печати</code>. В открывшемся окне вы увидите список всех текущих задач, их статус и владельца. Если значка нет на панели задач, перейдите в <code>Пуск → Настройки → Устройства → Принтеры и сканеры</code>.</p>
+
+<p>Выберите необходимое устройство из списка и нажмите кнопку <code>Открыть очередь</code>. Здесь отображаются все активные процессы: <strong>Пауза</strong>, <strong>Ожидание</strong> или <strong>Печать</strong>. Интерфейс позволяет сортировать документы по дате добавления или приоритету, что удобно при работе с большими объемами данных.</p>
+
+<ul>
+<li>📄 Проверьте, не стоит ли принтер в режиме <em>Оффлайн</em> или <em>Пауза</em> в свойствах очереди.</li>
+<li>🔍 Обратите внимание на статус каждого задания, чтобы понять причину задержки.</li>
+<li>🖥️ В Windows 11 интерфейс может отличаться, но основной функционал сохраняется.</li>
+</ul>
+
+<blockquote>⚠️ Внимание: Если очередь заполнена сотнями заданий, открытие окна может занять значительное время из-за нагрузки на диспетчер печати. В таких случаях лучше использовать командную строку для сброса.</blockquote>
+
+<h2 id="управление-отдельными-заданиями-в-очереди">Управление отдельными заданиями в очереди</h2>
+
+<p>Когда окно очереди открыто, у вас есть полный контроль над каждым документом. Вы можете изменить приоритет печати, поставить задачу на паузу или полностью удалить её, если она больше не нужна. Это особенно актуально, если вы случайно отправили большой файл на чужой принтер в офисе.</p>
+
+<p>Для удаления задания кликните по нему правой кнопкой мыши и выберите <code>Удалить</code>. Если документ не удаляется стандартным способом, попробуйте остановить службу печати через <strong>Администрирование</strong>. Иногда система блокирует удаление, если файл используется другим процессом или драйвер завис.</p>
+
+<p>Смена приоритета позволяет важному документу выйти вперед в списке. Выделите задание, нажмите <code>Принтер → Свойства</code> и измените параметр <em>Приоритет</em>. Чем выше число, тем быстрее задача будет обработана механизмом принтера, минуя остальные документы в буфере.</p>
+
+<div class="checklist-block"><h4>☑️ Контроль заданий печати</h4><label class="check-item"><input type="checkbox"><span>Открыть окно очереди</span></label><label class="check-item"><input type="checkbox"><span>Проверить статус документа</span></label><label class="check-item"><input type="checkbox"><span>Удалить зависший файл</span></label><label class="check-item"><input type="checkbox"><span>Настроить приоритет</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="сброс-службы-печати-через-командную-строку">Сброс службы печати через командную строку</h2>
+
+<p>В случаях, когда графический интерфейс не реагирует, эффективным решением становится использование командной строки. Этот метод позволяет принудительно остановить и перезапустить службу диспетчера печати, очищая системный буфер. Для этого потребуется доступ к <strong>административным правам</strong>.</p>
+
+<p>Откройте командную строку от имени администратора и введите последовательность команд. Сначала нужно остановить службу, затем удалить временные файлы, и только потом запустить процесс заново. Это гарантирует полную очистку <em>очереди</em> от блокирующих элементов.</p>
+
+<p>Введите следующие команды по очереди, нажимая Enter после каждой:</p>
+<pre><code>net stop spooler
+<p>del /Q /F /S "%systemroot%\System32\Spool\Printers\<em>.</em>"</p>
+<p>net start spooler</code></pre></p>
+
+<p>После выполнения этих действий очередь печати будет полностью очищена, и служба вернется в рабочее состояние. Это один из самых надежных способов решения проблем с <strong>зависшими заданиями</strong>, которые не поддаются обычному удалению через интерфейс.</p>
+
+<div class="poll-widget" id="poll-25109640"><div class="poll-widget-question">📊 Какая проблема с печатью у вас чаще всего встречается?</div><div class="poll-widget-option" data-poll="25109640" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Зависание документов</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="25109640" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Ошибка драйвера</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="25109640" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Принтер не видит ПК</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="25109640" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Другое</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<blockquote>⚠️ Внимание: Удаление файлов из папки Spool необратимо. Убедитесь, что вы не пытаетесь сохранить важные документы, которые еще не распечатались, прежде чем выполнять команду удаления.</blockquote>
+
+<table>
+<thead>
+<tr>
+<th>Действие</th>
+<th>Команда в CMD</th>
+<th>Служба</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Остановка службы</td>
+<td><code>net stop spooler</code></td>
+<td>Spooler</td>
+</tr>
+<tr>
+<td>Очистка буфера</td>
+<td><code>del ...Spool\Printers\<em>.</em></code></td>
+<td>Системная</td>
+</tr>
+<tr>
+<td>Запуск службы</td>
+<td><code>net start spooler</code></td>
+<td>Spooler</td>
+</tr>
+<tr>
+<td>Проверка статуса</td>
+<td><code>sc query spooler</code></td>
+<td>Spooler</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="настройка-приоритетов-и-отложенной-печати">Настройка приоритетов и отложенной печати</h2>
+
+<p>Для продвинутых пользователей доступна функция установки времени печати. Это позволяет подготовить документы заранее, но запустить их в нужный момент, например, ночью или после окончания рабочего дня. Такая функция полезна для экономии ресурсов или избегания очередей в пиковые часы.</p>
+
+<p>Чтобы установить время печати, откройте свойства документа в очереди и выберите вкладку <code>Расширенные</code>. Здесь можно задать параметр <em>Печатать с</em>, указав конкретную дату и время. Система автоматически удержит задание в буфере до наступления указанного момента.</p>
+
+<p>Также можно вручную изменить приоритет для конкретных документов. Если у вас есть срочный отчет, выделите его в списке и повысьте счетчик приоритета. Это заставит принтер обработать его раньше остальных, даже если они были отправлены раньше по времени.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Перед установкой отложенной печати убедитесь, что принтер подключен к сети и включен в заданное время, иначе задание останется в очереди до следующего включения устройства.</p></div>
+
+<h2 id="решение-частых-ошибок-диспетчера-печати">Решение частых ошибок диспетчера печати</h2>
+
+<p>Иногда проблемы возникают не из-за зависших файлов, а из-за конфликтов системных настроек. Ошибки могут быть связаны с правами доступа, повреждением реестра или устаревшими версиями <strong>драйверов</strong>. В таких случаях стандартное удаление заданий не помогает восстановить работу.</p>
+
+<p>Проверьте настройки службы в <code>services.msc</code>. Убедитесь, что тип запуска для службы <em>Диспетчер печати</em> установлен на <strong>Автоматически</strong>. Если она отключена или работает в ручном режиме, это может вызывать сбои при попытке добавления новых заданий.</p>
+
+<p>Также стоит проверить сетевые настройки, если принтер подключен по LAN или Wi-Fi. Нестабильное соединение может приводить к тому, что статус документа меняется на <strong>Ожидание</strong> или <strong>Ошибка</strong> бесконечно. Перезагрузка маршрутизатора или принтера часто решает эти проблемы.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Регулярная очистка временных файлов и проверка статуса службы Spooler — залог стабильной работы принтера в любой операционной системе.</p></div>
+
+<blockquote>⚠️ Внимание: Если вы используете корпоративный принтер, настройки диспетчера могут управляться групповыми политиками домена. В этом случае самостоятельная смена параметров может быть заблокирована администратором сети.</blockquote>
+
+<h2 id="дополнительные-инструменты-и-утилиты">Дополнительные инструменты и утилиты</h2>
+
+<p>Помимо стандартных средств Windows, существуют специализированные утилиты для управления очередью печати. Такие программы, как Printix или сторонние менеджеры, предоставляют расширенный функционал, включая статистику использования и детальную диагностику.</p>
+
+<p>Некоторые утилиты позволяют создавать скрипты для автоматической очистки очереди по расписанию. Это полезно для мощных офисных серверов печати, где нагрузка высока, и ручное вмешательство неэффективно. Важно выбирать проверенный софт, чтобы избежать конфликтов с драйверами.</p>
+
+<p>При использовании стороннего ПО всегда читайте документацию и проверяйте совместимость с вашей версией операционной системы. Некорректная установка может привести к полной неработоспособности службы печати, что потребует переустановки драйверов.</p>
+
+<details class="faq-item"><summary>Что делать, если очередь не очищается даже после перезагрузки?</summary><div class="faq-answer"><p>Иногда файлы блокируются антивирусом или другими процессами. Попробуйте загрузиться в безопасный режим и удалить содержимое папки Spool вручную через проводник.</p></div></details>
+
+<h2 id="часто-задаваемые-вопросы">Часто задаваемые вопросы</h2>
+
+<details>
+<summary>Почему документ не удаляется из очереди печати?</summary>
+<p>Чаще всего это происходит из-за того, что служба печати зависла или файл заблокирован другим процессом. Попробуйте остановить службу через <code>services.msc</code> или использовать командную строку для принудительной очистки.</p>
+</details>
+
+<details>
+<summary>Можно ли изменить порядок печати документов?</summary>
+<p>Да, вы можете изменить приоритет документа в свойствах очереди. Чем выше значение приоритета, тем раньше задание будет отправлено на печать, обгоняя остальные документы в списке.</p>
+</details>
+
+<details>
+<summary>Как узнать, какой документ сейчас печатается?</summary>
+<p>В окне очереди печати статус активного документа обычно помечается как <em>Печать</em>. Также можно посмотреть на дисплей самого устройства, где часто отображается имя файла и страница, которая в данный момент обрабатывается.</p>
+</details>
+
+<details>
+<summary>Что делать, если принтер работает офлайн?</summary>
+<p>Проверьте подключение кабеля или сети. В окне очереди печати нажмите <code>Принтер</code> и убедитесь, что галочка <em>Использовать принтер автономно</em> снята. Если это не помогает, перезапустите службу диспетчера печати.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#введение-в-управление-заданиями-печати">Введение в управление заданиями печати</a></li><li><a href="#доступ-к-интерфейсу-диспетчера-очереди">Доступ к интерфейсу диспетчера очереди</a></li><li><a href="#управление-отдельными-заданиями-в-очереди">Управление отдельными заданиями в очереди</a></li><li><a href="#сброс-службы-печати-через-командную-строку">Сброс службы печати через командную строку</a></li><li><a href="#настройка-приоритетов-и-отложенной-печати">Настройка приоритетов и отложенной печати</a></li><li><a href="#решение-частых-ошибок-диспетчера-печати">Решение частых ошибок диспетчера печати</a></li><li><a href="#дополнительные-инструменты-и-утилиты">Дополнительные инструменты и утилиты</a></li><li><a href="#часто-задаваемые-вопросы">Часто задаваемые вопросы</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/n/ne/ne-mogu-raspechatat-s-kompyutera-na-printer-chto-delat.html" class="related-card">Не могу распечатать с компьютера на принтер: что делать и как исправить</a></li><li><a href="/articles/k/ka/kak-ustanovit-setevoj-printer-na-mac.html" class="related-card">Как подключить сетевой принтер на Mac: пошаговая инструкция</a></li><li><a href="/articles/u/u-/u-kakikh-printerov-ne-sokhnut-chernila.html" class="related-card">У каких принтеров не сохнут чернила: Выбор системы непрерывной подачи</a></li><li><a href="/articles/k/ka/kak-napechatat-tekst-na-kompe-i-raspechatat-na-printere.html" class="related-card">Как напечатать текст на компьютере и отправить на принтер: полная инструкция</a></li><li><a href="/articles/k/ka/kak-raspechatat-konvert-s5-na-printere.html" class="related-card">Как распечатать конверт C5 на принтере: пошаговая инструкция</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/n/ne/ne-mogu-raspechatat-s-kompyutera-na-printer-chto-delat.html" class="related-bottom-card"><span class="related-bottom-title">Не могу распечатать с компьютера на принтер: что делать и как исправить</span><span class="related-bottom-desc">Принтер не печатает? Полный гайд по диагностике: очистка очереди, проверка драйверов, настройка порт</span></a><a href="/articles/k/ka/kak-ustanovit-setevoj-printer-na-mac.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить сетевой принтер на Mac: пошаговая инструкция</span><span class="related-bottom-desc">Подробный гид по добавлению сетевого принтера на Mac. Настройка по IP, AirPrint и устранение неполад</span></a><a href="/articles/u/u-/u-kakikh-printerov-ne-sokhnut-chernila.html" class="related-bottom-card"><span class="related-bottom-title">У каких принтеров не сохнут чернила: Выбор системы непрерывной подачи</span><span class="related-bottom-desc">Разбираем, какие принтеры не сохнут чернила. Сравнение систем СНПЧ, Печатающие головки Epson, Canon </span></a><a href="/articles/k/ka/kak-napechatat-tekst-na-kompe-i-raspechatat-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Как напечатать текст на компьютере и отправить на принтер: полная инструкция</span><span class="related-bottom-desc">Пошаговое руководство: как создать документ, настроить параметры печати и вывести текст на бумагу. Р</span></a><a href="/articles/k/ka/kak-raspechatat-konvert-s5-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Как распечатать конверт C5 на принтере: пошаговая инструкция</span><span class="related-bottom-desc">Подробное руководство по печати конвертов формата C5 на любом принтере: настройки Word, Excel, парам</span></a><a href="/articles/k/ka/kakoj-bajonet-u-kenon-60d.html" class="related-bottom-card"><span class="related-bottom-title">Байонет Canon EOS 60D: тип крепления, совместимость и особенности</span><span class="related-bottom-desc">Узнайте, какой байонет используется в Canon 60D, какие объективы подходят, и как правильно выбрать о</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

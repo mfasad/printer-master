@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как настроить порты принтера: TCP/IP, LPR и стандартные протоколы — Принтер Мастер</title>
+    <meta name="description" content="Пошаговая инструкция по настройке портов принтера. Изучите TCP/IP, WSD и LPR, исправьте ошибки подключения и обеспечьте стабильную печать в сети.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-nastroit-porty-printera.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как настроить порты принтера: TCP/IP, LPR и стандартные протоколы">
+    <meta property="og:description" content="Пошаговая инструкция по настройке портов принтера. Изучите TCP/IP, WSD и LPR, исправьте ошибки подключения и обеспечьте стабильную печать в сети.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как настроить порты принтера: TCP/IP, LPR и стандартные протоколы</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Полное руководство по настройке портов принтера</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#понимание-типов-портов-и-протоколов-передачи">Понимание типов портов и протоколов передачи</a></li><li><a href="#проверка-сетевого-адреса-и-конфигурации-устройства">Проверка сетевого адреса и конфигурации устройства</a></li><li><a href="#пошаговая-инструкция-создание-нового-tcpip-порта">Пошаговая инструкция: Создание нового TCP/IP порта</a></li><li><a href="#устранение-конфликтов-и-частые-ошибки">Устранение конфликтов и частые ошибки</a></li><li><a href="#настройка-специфических-протоколов-lpr-и-raw">Настройка специфических протоколов: LPR и RAW</a></li><li><a href="#проверка-работоспособности-и-финальная-настройка">Проверка работоспособности и финальная настройка</a></li><li><a href="#часто-задаваемые-вопросы">Часто задаваемые вопросы</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body">
+
+<p>Нередко пользователи сталкиваются с ситуацией, когда принтер физически подключен к компьютеру или сети, но устройство не отвечает на команды печати или работает нестабильно. В большинстве случаев проблема кроется не в поломке «железа», а в некорректно настроенном сетевом порте. Именно через этот логический канал данные передаются от операционной системы к устройству, и сбой на этом этапе делает печать невозможной.</p>
+
+<p>Настройка портов — это критически важный процесс, который часто упускается из виду при первоначальной установке драйверов. Если вы используете автоматическую установку, система может выбрать неоптимальный протокол (например, WSD), который периодически теряет связь с принтером. Ручная конфигурация <strong>стандартного TCP/IP порта</strong> гарантирует стабильность и позволяет избежать множества зависаний очереди печати, особенно в корпоративной среде.</p>
+
+<h2 id="понимание-типов-портов-и-протоколов-передачи">Понимание типов портов и протоколов передачи</h2>
+
+<p>Прежде чем приступать к техническим манипуляциям, необходимо разобраться, какие типы портов существуют и чем они отличаются. Операционная система Windows предлагает несколько стандартных вариантов, каждый из которых имеет свои преимущества и недостатки в зависимости от сети и модели устройства.</p>
+
+<p>Самым распространенным и надежным вариантом для сетевых устройств является <strong>стандартный TCP/IP порт</strong>. Он позволяет напрямую обращаться к устройству по его сетевому адресу (IP), обеспечивая высокую скорость и стабильность соединения. В отличие от него, порт WSD (Web Services for Devices) проще в настройке, но часто страдает от низкой производительности и периодических разрывов связи в сложных топологиях сети.</p>
+
+<p>Также встречаются устаревшие протоколы, такие как <strong>LPR (Line Printer Remote)</strong>, которые часто требуют дополнительной настройки очереди и имени принтера. Эти протоколы актуальны при подключении к специфическим серверам печати или старым сетевым устройствам, которые не поддерживают современные стандарты прямого подключения. Выбор правильного протокола напрямую влияет на скорость отправки каждого документа.</p>
+
+<h2 id="проверка-сетевого-адреса-и-конфигурации-устройства">Проверка сетевого адреса и конфигурации устройства</h2>
+
+<p>Первым шагом в настройке порта является получение актуального IP-адреса вашего принтера. Без этого параметра невозможно создать корректный порт. Вы можете узнать адрес, распечатав отчет о конфигурации сети с панели управления устройства — обычно это делается через меню <code>Настройки → Отчеты → Конфигурация сети</code>.</p>
+
+<p>Если принтер подключен по кабелю, вы также можете проверить адрес через <code>Сетевые подключения</code> на компьютере, но это менее надежно. Для Wi-Fi устройств лучше использовать встроенный дисплей принтера или мобильное приложение производителя, которое покажет текущие настройки <code>IP-адреса</code>, <code>маски подсети</code> и <code>шлюза</code>. Запишите эти данные, они понадобятся для создания нового порта.</p>
+
+<blockquote>⚠️ Внимание: Убедитесь, что компьютер и принтер находятся в одной подсети. Если ваш ПК имеет адрес 192.168.1.5, а принтер 192.168.0.100, они не смогут «видеть» друг друга без настройки маршрутизации.</blockquote>
+
+<p>Важно также убедиться, что IP-адрес не меняется после перезагрузки устройства. Если адрес динамический (получается от DHCP-сервера), при сбое он может измениться, и порт перестанет работать. Рекомендуется установить <strong>статический IP-адрес</strong> либо на самом принтере, либо зарезервировать его в настройках роутера по MAC-адресу устройства.</p>
+
+<div class="poll-widget" id="poll-b5dc26af"><div class="poll-widget-question">📊 Какой протокол вы использовали до этого?</div><div class="poll-widget-option" data-poll="b5dc26af" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Стандартный TCP/IP</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="b5dc26af" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">WSD</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="b5dc26af" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">LPR</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="b5dc26af" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Не знаю/Не проверял</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="пошаговая-инструкция-создание-нового-tcpip-порта">Пошаговая инструкция: Создание нового TCP/IP порта</h2>
+
+<p>Для настройки порта перейдите в <code>Панель управления → Устройства и принтеры</code> (или «Принтеры и сканеры» в современных версиях Windows). Найдите нужный принтер в списке, кликните по нему правой кнопкой мыши и выберите <code>Свойства принтера</code>. Откройте вкладку <strong>Порты</strong> — именно здесь происходит управление сетевыми подключениями.</p>
+
+<p>Нажмите кнопку <code>Добавить порт...</code>, в открывшемся окне выберите <strong>Standard TCP/IP Port</strong> и нажмите «Новый порт». Запустится мастер добавления, где вам потребуется ввести IP-адрес принтера, который вы узнали на предыдущем этапе. Система может предложить автоматически найти драйверы или настроить дополнительные параметры.</p>
+
+<div class="checklist-block"><h4>☑️ Проверка перед завершением</h4><label class="check-item"><input type="checkbox"><span>Проверка доступности IP (ping)</span></label><label class="check-item"><input type="checkbox"><span>Отключение антивируса на время настройки</span></label><label class="check-item"><input type="checkbox"><span>Закрытие других окон настроек</span></label><label class="check-item"><input type="checkbox"><span>Подтверждение имени порта</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<p>В процессе настройки мастер может предложить определить тип устройства. Выберите «Принтер», если система не определила его автоматически. Далее появится окно с настройками протокола. Вам нужно будет указать <strong>имя порта</strong> (обычно это тот же IP-адрес) и настроить уровень опроса состояния. Рекомендуется выбрать «Опрос состояния принтера» только если устройство поддерживает эту функцию корректно.</p>
+
+<p>Если вы видите предупреждение о том, что устройство не отвечает, не пугайтесь сразу. Иногда брандмауэр Windows блокирует запросы. Проверьте, открыт ли порт 9100 (стандартный порт для печати) на самом принтере. Если проблема сохраняется, попробуйте отключить брандмауэр на короткое время для проверки.</p>
+
+<details class="faq-item"><summary>Что делать, если порт не добавляется?</summary><div class="faq-answer"><p>В некоторых случаях служба spooler может зависать. Попробуйте перезапустить службу «Диспетчер печати» через «Службы» (services.msc). Также убедитесь, что у вас есть права администратора для внесения изменений в сетевые настройки.</p></div></details>
+
+<h2 id="устранение-конфликтов-и-частые-ошибки">Устранение конфликтов и частые ошибки</h2>
+
+<p>Одной из самых частых проблем является конфликт портов, когда несколько устройств используют один и тот же IP-адрес или когда старый порт не удаляется корректно. В списке портов вы можете увидеть дубликаты или порты со статусом «Не используется». Перед созданием нового порта рекомендуется удалить старые, нерабочие конфигурации, нажав кнопку <strong>Удалить</strong>.</p>
+
+<p>Иногда после установки нового порта статус «Готов» не появляется, и печать застревает. Это может быть связано с тем, что драйвер пытается общаться через старый протокол. В свойствах принтера убедитесь, что в поле «Используется» выбран именно созданный вами <code>IP_192.168.1.50</code> (название может отличаться). Также проверьте настройки <strong>обратного канала</strong> (SNMP), если они не поддерживаются устройством.</p>
+
+<table>
+<thead>
+<tr>
+<th>Тип ошибки</th>
+<th>Вероятная причина</th>
+<th>Решение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>«Принтер не отвечает»</td>
+<td>Неверный IP-адрес или сбой сети</td>
+<td>Проверьте пинг, обновите IP в порте</td>
+</tr>
+<tr>
+<td>«Доступ запрещен»</td>
+<td>Блокировка брандмауэром</td>
+<td>Разрешите порт 9100 в настройках защиты</td>
+</tr>
+<tr>
+<td>«Нет драйвера для порта»</td>
+<td>Отсутствие компонентов Windows</td>
+<td>Установите пакет поддержки LPR/WSD</td>
+</tr>
+<tr>
+<td>Задержка печати</td>
+<td>Использование WSD вместо TCP/IP</td>
+<td>Замените порт на Standard TCP/IP</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>⚠️ Внимание: Если вы используете порт SNMP, убедитесь, что значение «Статус SNMP» установлено в «Отключено», если принтер некорректно отвечает на запросы статуса. Это часто решает проблему с зависанием очереди печати.</blockquote>
+
+<h2 id="настройка-специфических-протоколов-lpr-и-raw">Настройка специфических протоколов: LPR и RAW</h2>
+
+<p>В некоторых корпоративных средах или при работе с серверами печати CUPS (Linux) используется протокол <strong>LPR</strong>. Для его настройки при создании нового порта выберите «LPR» вместо «RAW». В отличие от RAW, LPR требует указания имени очереди (Queue Name). Обычно это имя принтера или специфический код (например, <code>queue1</code>), который должен быть известен администратору сервера.</p>
+
+<p>Протокол RAW является стандартным для Windows и большинства современных сетевых принтеров. Он передает данные напрямую без дополнительных заголовков. Если вы настраиваете <strong>стандартный TCP/IP порт</strong>, по умолчанию используется именно RAW на порту 9100. Это обеспечивает максимальную скорость передачи данных, так как нет накладных расходов на обработку протокола LPR.</p>
+
+<p>Если вы работаете с устройством <em>HP</em> или <em>Canon</em> в сложной сети, иногда требуется ручное переключение между режимами «Отчет о статусе» и «Автоматическое определение». В свойствах порта найдите вкладку «Настройка устройства» и поэкспериментируйте с опцией «Разрешить SNMP». Включение этой функции позволит компьютеру получать информацию о количестве листов в лотке и уровне тонера.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>При настройке SNMP статуса убедитесь, что строка сообщества (Community String) совпадает на принтере и в настройках порта. По умолчанию это «public», но в корпоративных сетях её часто меняют на пароль администратора.</p></div>
+
+<h2 id="проверка-работоспособности-и-финальная-настройка">Проверка работоспособности и финальная настройка</h2>
+
+<p>После того как порт создан и выбран в качестве основного, необходимо провести тестовую печать. Отправьте на принтер тестовую страницу из свойств устройства. Если печать прошла успешно, проверьте, отображается ли статус «Готов» в окне печати и не меняются ли настройки после перезагрузки компьютера.</p>
+
+<p>Для полной гарантии стабильности рекомендуется отключить автоматический поиск портов в будущем. В свойствах принтера на вкладке «Порты» убедитесь, что галочка стоит именно на созданном вами TCP/IP порте. Если система предложит «Найти принтер», откажитесь от этого, чтобы избежать случайного переключения на неоптимальный WSD-порт.</p>
+
+<blockquote>⚠️ Внимание: После настройки статического IP-адреса на принтере, если вы измените настройки сети (например, смените провайдера или перенесете роутер), вам придется обновить настройки порта на всех компьютерах, так как адрес может стать недоступным.</blockquote>
+
+<p>Если вы используете <strong>сетевой принтер</strong> в офисе с несколькими пользователями, настройка должна быть проведена на каждом рабочем месте. В случае использования сервера печати, конфигурация портов производится централизованно на сервере, и клиенты получают доступ автоматически через стандартные сетевые протоколы.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Использование стандартного TCP/IP порта со статическим IP-адресом — это «золотой стандарт» для стабильной работы сетевого принтера, исключающий большинство проблем с потерей связи.</p></div>
+
+<h2 id="часто-задаваемые-вопросы">Часто задаваемые вопросы</h2>
+
+<details>
+<summary>Почему принтер работает, но статус всегда «Очередь печати»?</summary>
+<p>Скорее всего, проблема в настройке SNMP. Попробуйте отключить «Опрос состояния принтера» в настройках нового порта или изменить строку сообщества на «public». Это заставит Windows считать printer доступным без проверки реального статуса устройства.</p>
+</details>
+
+<details>
+<summary>Можно ли использовать один IP-адрес для двух принтеров?</summary>
+<p>Нет, это приведет к конфликту адресов. Каждый сетевой элемент (принтер, роутер, ПК) должен иметь уникальный IP-адрес в пределах одной подсети. Если адреса совпадают, оба устройства будут работать некорректно.</p>
+</details>
+
+<details>
+<summary>Как узнать, какой порт используется сейчас?</summary>
+<p>Зайдите в <code>Свойства принтера</code> → вкладка <strong>Порты</strong>. Посмотрите на список портов: тот, у которого стоит галочка, является активным. Обратите внимание на имя порта (например, <code>192.168.1.50</code>).</p>
+</details>
+
+<details>
+<summary>Нужно ли перезагружать принтер после создания порта?</summary>
+<p>Обычно это не требуется, так как порт — это логическая настройка в Windows. Однако, если вы меняли статический IP на самом принтере, перезагрузка устройства необходима для применения новых сетевых настроек.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#понимание-типов-портов-и-протоколов-передачи">Понимание типов портов и протоколов передачи</a></li><li><a href="#проверка-сетевого-адреса-и-конфигурации-устройства">Проверка сетевого адреса и конфигурации устройства</a></li><li><a href="#пошаговая-инструкция-создание-нового-tcpip-порта">Пошаговая инструкция: Создание нового TCP/IP порта</a></li><li><a href="#устранение-конфликтов-и-частые-ошибки">Устранение конфликтов и частые ошибки</a></li><li><a href="#настройка-специфических-протоколов-lpr-и-raw">Настройка специфических протоколов: LPR и RAW</a></li><li><a href="#проверка-работоспособности-и-финальная-настройка">Проверка работоспособности и финальная настройка</a></li><li><a href="#часто-задаваемые-вопросы">Часто задаваемые вопросы</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/g/gd/gde-kupit-tsvetnoj-kartridzh-dlya-printera-hp.html" class="related-card">Где купить цветной картридж для принтера HP: надежные места и выбор</a></li><li><a href="/articles/k/ke/kenon-2318-kak-posmotret-schetchik.html" class="related-card">Canon 2318: как проверить счётчик копий — пошаговая инструкция</a></li><li><a href="/articles/2/2-/2-krasyashchij-poroshok-kotoryj-ispolzuetsya-dlya-pechati-v-lazernykh-printerakh-eto.html" class="related-card">Два типа красящего порошка для лазерных принтеров: Тонер и Магнит</a></li><li><a href="/articles/k/ka/kak-vstavit-kartridzh-v-printer-canon-i-sensys.html" class="related-card">Как установить картридж в Canon i-SENSYS: пошаговая инструкция</a></li><li><a href="/articles/k/ka/kak-pravilno-polozhit-bumagu-v-printer-chtoby-napechatat.html" class="related-card">Как правильно положить бумагу в принтер: пошаговая инструкция 2026</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/g/gd/gde-kupit-tsvetnoj-kartridzh-dlya-printera-hp.html" class="related-bottom-card"><span class="related-bottom-title">Где купить цветной картридж для принтера HP: надежные места и выбор</span><span class="related-bottom-desc">Ищете оригинальный или совместимый картридж HP? Полный гид по местам покупки, сравнению цен, проверк</span></a><a href="/articles/k/ke/kenon-2318-kak-posmotret-schetchik.html" class="related-bottom-card"><span class="related-bottom-title">Canon 2318: как проверить счётчик копий — пошаговая инструкция</span><span class="related-bottom-desc">Узнайте, как посмотреть счётчик копий на сканере-копире Canon imageRUNNER 2318: через панель управле</span></a><a href="/articles/2/2-/2-krasyashchij-poroshok-kotoryj-ispolzuetsya-dlya-pechati-v-lazernykh-printerakh-eto.html" class="related-bottom-card"><span class="related-bottom-title">Два типа красящего порошка для лазерных принтеров: Тонер и Магнит</span><span class="related-bottom-desc">Разбор двух основных форм красящего порошка в лазерной печати: магнитный тонер и жидкий картридж. Ха</span></a><a href="/articles/k/ka/kak-vstavit-kartridzh-v-printer-canon-i-sensys.html" class="related-bottom-card"><span class="related-bottom-title">Как установить картридж в Canon i-SENSYS: пошаговая инструкция</span><span class="related-bottom-desc">Подробное руководство по замене картриджа в принтере Canon i-SENSYS: подготовка, установка, ошибки и</span></a><a href="/articles/k/ka/kak-pravilno-polozhit-bumagu-v-printer-chtoby-napechatat.html" class="related-bottom-card"><span class="related-bottom-title">Как правильно положить бумагу в принтер: пошаговая инструкция 2026</span><span class="related-bottom-desc">Подробное руководство по загрузке бумаги в принтер: выбор лотка, ориентация листов, настройки печати</span></a><a href="/articles/p/po/pochemu-printer-ne-pechataet-khotya-kraska-est-canon-g3411.html" class="related-bottom-card"><span class="related-bottom-title">Canon G3411 не печатает: почему, если краска есть и как исправить</span><span class="related-bottom-desc">Принтер Canon G3411 видит уровень чернил, но пишет &#x27;нет краски&#x27; или не печатает? Разбираем причины: </span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

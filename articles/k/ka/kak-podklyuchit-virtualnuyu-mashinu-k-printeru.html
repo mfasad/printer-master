@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Подключение виртуальной машины к принтеру: полное руководство — Принтер Мастер</title>
+    <meta name="description" content="Инструкция по настройке печати с виртуальной машины. Настройка USB-фильтрации в VirtualBox и VMware, перенаправление принтеров и решение частых ошибок.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-podklyuchit-virtualnuyu-mashinu-k-printeru.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Подключение виртуальной машины к принтеру: полное руководство">
+    <meta property="og:description" content="Инструкция по настройке печати с виртуальной машины. Настройка USB-фильтрации в VirtualBox и VMware, перенаправление принтеров и решение частых ошибок.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Подключение виртуальной машины к принтеру: полное руководство</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Полное руководство по настройке печати с виртуальной машины</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#основные-методы-перенаправления-устройств-печати">Основные методы перенаправления устройств печати</a></li><li><a href="#настройка-usb-фильтрации-в-oracle-vm-virtualbox">Настройка USB-фильтрации в Oracle VM VirtualBox</a></li><li><a href="#подключение-принтера-в-среде-vmware-workstation">Подключение принтера в среде VMware Workstation</a></li><li><a href="#настройка-сетевой-печати-для-удаленных-принтеров">Настройка сетевой печати для удаленных принтеров</a></li><li><a href="#устранение-типичных-проблем-с-драйверами">Устранение типичных проблем с драйверами</a></li><li><a href="#использование-общего-доступа-к-принтеру-через-хост">Использование общего доступа к принтеру через хост</a></li><li><a href="#рекомендации-по-оптимизации-производительности">Рекомендации по оптимизации производительности</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body">
+
+<p>Работа в изолированной среде виртуальной машины часто вызывает трудности при необходимости использования физических периферийных устройств, таких как принтеры. Операционная система гостя по умолчанию не видит оборудование, подключенное к хост-машине, что создает барьер для выполнения печатных задач. Однако современные гипервизоры предоставляют мощные инструменты для преодоления этого разрыва, позволяя перенаправлять потоки данных от виртуальной системы к реальному устройству.</p>
+
+<p>Процесс настройки зависит от используемого программного обеспечения для виртуализации, будь то <em>Oracle VM VirtualBox</em>, <em>VMware Workstation</em> или <em>Hyper-V</em>. Каждый из этих инструментов имеет свой собственный алгоритм действий, но общая логика остается схожей: необходимо обеспечить прозрачный канал передачи данных между физическим портом и виртуальной машиной. В этой статье мы разберем наиболее эффективные методы, которые позволят вам печатать документы без лишних сложностей.</p>
+
+<h2 id="основные-методы-перенаправления-устройств-печати">Основные методы перенаправления устройств печати</h2>
+
+<p>Существует два фундаментальных подхода к организации печати в виртуальной среде: USB-фильтрация и сетевая перенастройка. Первый вариант подразумевает, что устройство будет физически подключено к компьютеру, а гипервизор перехватит управление им, передав контроль гостевой ОС. Второй метод актуален для сетевых принтеров, где виртуальная машина подключается к устройству через локальную сеть так же, как и любая другая рабочая станция.</p>
+
+<p>Выбор метода зависит от типа вашего оборудования и требований к безопасности. Для <em>USB-принтеров</em> и <em>сканеров</em> наиболее надежным решением является прямая перенастройка через настройки виртуализации. В этом случае физическое устройство становится доступным только внутри виртуальной машины, пока она запущена, что исключает конфликты драйверов на хост-системе. Сетевой же подход универсален и не требует установки дополнительных драйверов фильтрации.</p>
+
+<blockquote>⚠️ Внимание: при использовании метода USB-фильтрации принтер может временно исчезнуть из списка доступных устройств на основной операционной системе (хосте). Это нормальное поведение, указывающее на успешное перенаправление потока данных в виртуальную среду.</blockquote>
+
+<h2 id="настройка-usb-фильтрации-в-oracle-vm-virtualbox">Настройка USB-фильтрации в Oracle VM VirtualBox</h2>
+
+<p>Для пользователей <em>VirtualBox</em> процесс перенастройки требует предварительной подготовки драйверов на хост-машине. Без установленных расширений управления USB система не сможет корректно перехватывать сигналы от периферийного оборудования. Убедитесь, что у вас установлена последняя версия <em>Oracle VM VirtualBox Extension Pack</em>, соответствующая версии самой программы.</p>
+
+<p>Перейдите в настройки виртуальной машины, выбрав пункт <code>USB</code> в боковом меню. Здесь необходимо активировать контроллер USB 2.0 (EHCI) или USB 3.0 (xHCI) в зависимости от физических портов вашего компьютера. После включения контроллера добавьте новое правило фильтрации, нажав на иконку с зеленым плюсом, и выберите ваш принтер из выпадающего списка доступных устройств.</p>
+
+<p>После сохранения настроек запустите виртуальную машину. Подключенный принтер должен автоматически определиться системой гостя. Если устройство не отображается, проверьте, не заблокирован ли доступ к порту на уровне хост-системы или антивируса. В некоторых случаях требуется перезагрузка виртуальной машины для инициализации драйверов.</p>
+
+<div class="checklist-block"><h4>☑️ Готовность к подключению в VirtualBox</h4><label class="check-item"><input type="checkbox"><span>Установлен Extension Pack</span></label><label class="check-item"><input type="checkbox"><span>Настроен контроллер USB</span></label><label class="check-item"><input type="checkbox"><span>Добавлен фильтр устройства</span></label><label class="check-item"><input type="checkbox"><span>Запущена виртуальная машина</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="подключение-принтера-в-среде-vmware-workstation">Подключение принтера в среде VMware Workstation</h2>
+
+<p>В экосистеме <em>VMware Workstation</em> механизм перенастройки работает несколько иначе и часто требует ручного вмешательства через меню устройства. При запуске виртуальной машины перейдите в верхнее меню и выберите <code>VM</code> (Виртуальная машина), затем <code>Removable Devices</code> (Съемные устройства). Здесь вы увидите список всех подключенных к хосту периферийных устройств, включая принтеры.</p>
+
+<p>Выберите нужный принтер в списке и нажмите <code>Connect (Disconnect from Host)</code> (Подключить (отключить от хоста)). Эта команда принудительно переключает управление устройством на гостевую систему. VMware автоматически попытается установить необходимые драйверы, если они уже присутствуют в образе ОС, или предложит их найти.</p>
+
+<p>Важно отметить, что в отличие от VirtualBox, здесь можно подключить несколько принтеров одновременно, если это необходимо для тестирования совместимости. Однако не стоит забывать, что хост-система потеряет доступ к выбранному устройству до тех пор, пока вы не выполните обратное действие — отключение от виртуальной машины.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Перед перенаправлением принтера в VMware убедитесь, что служба "VMware USB Arbitration Service" запущена в диспетчере задач хоста, иначе функция подключения может не сработать.</p></div>
+
+<div class="poll-widget" id="poll-509b1fba"><div class="poll-widget-question">📊 Какой гипервизор вы используете чаще всего?</div><div class="poll-widget-option" data-poll="509b1fba" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">VirtualBox</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="509b1fba" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">VMware Workstation</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="509b1fba" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Hyper-V</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="509b1fba" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Другой</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="настройка-сетевой-печати-для-удаленных-принтеров">Настройка сетевой печати для удаленных принтеров</h2>
+
+<p>Если ваш принтер подключен к сети через Ethernet или Wi-Fi, использование USB-фильтрации может быть излишним. В этом случае виртуальная машина должна быть настроена на работу в режиме <code>Bridged Adapter</code> (Мостовая адаптер). Этот режим позволяет гостевой ОС получить собственный IP-адрес в той же подсети, что и физический компьютер, делая её видимой для всех устройств локальной сети.</p>
+
+<p>Зайдите в настройки сети виртуальной машины и выберите тип подключения <code>Bridged</code>. После запуска ОС внутри виртуальной машины добавьте принтер через стандартный мастер установки, введя его IP-адрес или выбрав из списка обнаруженных устройств. Драйверы будут установлены так же, как при подключении к обычному физическому ПК.</p>
+
+<p>Такой способ особенно удобен, если вам нужно сохранить доступ к принтеру на хост-машине одновременно с использованием его из виртуальной машины. Однако он требует, чтобы виртуальная машина имела стабильное сетевое соединение и корректно настроенные параметры DNS.</p>
+
+<p>Ниже приведена таблица сравнения основных методов подключения, которая поможет выбрать оптимальный вариант для вашей задачи.</p>
+
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Требования</th>
+<th>Доступность на хосте</th>
+<th>Сложность настройки</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>USB-фильтрация</td>
+<td>Extension Pack / VMware Tools</td>
+<td>Отсутствует</td>
+<td>Средняя</td>
+</tr>
+<tr>
+<td>Сетевое подключение</td>
+<td>Сетевой принтер, режим моста</td>
+<td>Полный</td>
+<td>Низкая</td>
+</tr>
+<tr>
+<td>Общий доступ Windows</td>
+<td>Совместимость драйверов</td>
+<td>Полный</td>
+<td>Высокая</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="устранение-типичных-проблем-с-драйверами">Устранение типичных проблем с драйверами</h2>
+
+<p>Одной из самых частых проблем при подключении принтеров является отсутствие или некорректная работа драйверов внутри гостевой операционной системы. Даже если устройство определено системой, печать может завершаться ошибкой или создавать пустые листы. В таких случаях необходимо вручную загрузить и установить драйверы, соответствующие именно той версии ОС, которая работает внутри виртуальной машины.</p>
+
+<p>Следует учитывать, что драйверы для <em>Windows 10</em> на хосте могут не подходить для <em>Windows 7</em> в гостевой системе. Скачайте актуальные версии с официального сайта производителя, например <em>HP</em>, <em>Epson</em> или <em>Canon</em>, и перенесите установочный файл через общую папку или USB-флешку. Процесс установки идентичен стандартному, но требует наличия прав администратора внутри виртуальной машины.</p>
+
+<blockquote>⚠️ Внимание: не пытайтесь использовать универсальные драйверы печати PostScript, если ваш принтер имеет специфические требования к PCL или проприетарным драйверам, это может привести к потере функций форматирования и качества печати.</blockquote>
+
+<details class="faq-item"><summary>Что делать, если принтер не виден в списке?</summary><div class="faq-answer"><p>Попробуйте переподключить кабель USB, перезапустите службу печати на хосте и проверьте настройки контроллера USB в программе виртуализации.</p></div></details>
+
+<h2 id="использование-общего-доступа-к-принтеру-через-хост">Использование общего доступа к принтеру через хост</h2>
+
+<p>Альтернативным способом является настройка общего доступа к принтеру непосредственно на хост-компьютере с последующим подключением к нему из виртуальной машины. В этом режиме виртуальная машина работает как обычный сетевой клиент, подключаясь к принтеру через протокол SMB. Для этого на хосте необходимо включить <code>Общий доступ к файлам и принтерам</code> в настройках центра управления сетями.</p>
+
+<p>Зайдите в <code>Устройства и принтеры</code> на хосте, откройте свойства нужного принтера и во вкладке <code>Доступ</code> отметьте галочку <code>Общий доступ</code>. Внутри виртуальной машины выполните подключение через <code>Установка принтера</code> и выберите <code>Сетевой принтер</code>, введя путь вида <code>\\Имя_Компьютера\Имя_Принтера</code>.</p>
+
+<p>Этот метод имеет свои преимущества, так как не требует отключения устройства от хост-системы, но может вызывать задержки при печати крупных файлов из-за двойного прохождения данных через стек протоколов. Также важно настроить параметры безопасности, чтобы виртуальная машина имела права на отправку заданий печати.</p>
+
+<blockquote>⚠️ Внимание: при использовании общего доступа через SMB убедитесь, что политика безопасности хост-системы разрешает гостевые подключения без пароля, если это необходимо для вашей конфигурации.</blockquote>
+
+<h2 id="рекомендации-по-оптимизации-производительности">Рекомендации по оптимизации производительности</h2>
+
+<p>Для обеспечения стабильной работы печати важно правильно распределить системные ресурсы виртуальной машины. Выделение достаточного объема оперативной памяти и ядер процессора предотвращает зависание очереди печати при работе с большими документами. Если вы сталкиваетесь с задержками, увеличьте количество выделенных ядер в настройках системы.</p>
+
+<p>Также стоит проверить настройки очереди печати на хосте. Иногда служба <code>Print Spooler</code> на основной системе может конфликтовать с процессом перенаправления, блокируя передачу данных. Перезапуск службы печати на хосте часто решает проблемы с зависанием заданий в статусе "Ожидание".</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Использование режима "Мост" (Bridged) для сетевых принтеров является наиболее надежным способом, обеспечивающим максимальную совместимость и отсутствие конфликтов с хост-системой.</p></div>
+
+<p>В заключение стоит отметить, что выбор метода зависит от конкретных задач. Если вам нужна полная изоляция и работа с USB-устройствами, используйте фильтрацию. Для сетевой работы и универсальности лучше подойдет режим моста. Правильная настройка драйверов и понимание логики работы гипервизора гарантируют беспроблемную печать.</p>
+
+<details>
+<summary>Почему принтер не определяется в USB-режиме?</summary>
+<p>Чаще всего это связано с отсутствием Extension Pack в VirtualBox или некорректной работой службы VMware USB Arbitration Service. Проверьте версии программ и статус служб.</p>
+</details>
+
+<details>
+<summary>Можно ли подключить несколько принтеров одновременно?</summary>
+<p>Да, это возможно как в VirtualBox, так и в VMware. Просто добавьте фильтры для каждого устройства в настройках виртуальной машины и настройте их в гостевой ОС.</p>
+</details>
+
+<details>
+<summary>Нужны ли драйверы на хосте для USB-подключения?</summary>
+<p>Да, драйверы должны быть установлены на хост-машине, чтобы система могла корректно распознать устройство и передать его управление виртуальной машине.</p>
+</details>
+
+<details>
+<summary>Как отключить принтер от виртуальной машины?</summary>
+<p>В настройках виртуальной машины отключите USB-фильтр или выберите пункт "Отключить от виртуальной машины" в меню съемных устройств, чтобы вернуть управление хосту.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#основные-методы-перенаправления-устройств-печати">Основные методы перенаправления устройств печати</a></li><li><a href="#настройка-usb-фильтрации-в-oracle-vm-virtualbox">Настройка USB-фильтрации в Oracle VM VirtualBox</a></li><li><a href="#подключение-принтера-в-среде-vmware-workstation">Подключение принтера в среде VMware Workstation</a></li><li><a href="#настройка-сетевой-печати-для-удаленных-принтеров">Настройка сетевой печати для удаленных принтеров</a></li><li><a href="#устранение-типичных-проблем-с-драйверами">Устранение типичных проблем с драйверами</a></li><li><a href="#использование-общего-доступа-к-принтеру-через-хост">Использование общего доступа к принтеру через хост</a></li><li><a href="#рекомендации-по-оптимизации-производительности">Рекомендации по оптимизации производительности</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ke/kenon-1100d-kak-nastroit-dlya-krasochnykh-foto.html" class="related-card">Как настроить Canon 1100D для сочных и красочных фото</a></li><li><a href="/articles/s/st/strujnyj-printer-zapravka-chem.html" class="related-card">Заправка струйного принтера: чем и как правильно заправлять картриджи</a></li><li><a href="/articles/c/ca/canon-mf3010-kak-skanirovat-neskolko-listov-v-odin-fajl.html" class="related-card">Как сканировать несколько страниц в один файл на Canon MF3010</a></li><li><a href="/articles/k/ka/kak-sbrosit-schetchiki-na-printere-brother-dcp-1510r.html" class="related-card">Сброс счетчиков на Brother DCP-1510R: пошаговая инструкция 2026</a></li><li><a href="/articles/k/ka/kak-snyat-dvustoronnyuyu-pechat-na-printere.html" class="related-card">Двусторонняя печать на принтере: инструкция по настройке и снятию</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ke/kenon-1100d-kak-nastroit-dlya-krasochnykh-foto.html" class="related-bottom-card"><span class="related-bottom-title">Как настроить Canon 1100D для сочных и красочных фото</span><span class="related-bottom-desc">Пошаговая инструкция по настройке камеры Canon 1100D для получения ярких снимков. Настройка баланса </span></a><a href="/articles/s/st/strujnyj-printer-zapravka-chem.html" class="related-bottom-card"><span class="related-bottom-title">Заправка струйного принтера: чем и как правильно заправлять картриджи</span><span class="related-bottom-desc">Чем заправлять струйный принтер: виды чернил, пошаговая инструкция, ошибки и советы. Узнайте, как пр</span></a><a href="/articles/c/ca/canon-mf3010-kak-skanirovat-neskolko-listov-v-odin-fajl.html" class="related-bottom-card"><span class="related-bottom-title">Как сканировать несколько страниц в один файл на Canon MF3010</span><span class="related-bottom-desc">Пошаговая инструкция: как объединить сканы с Canon MF3010 в один PDF файл. Настройка драйвера, испол</span></a><a href="/articles/k/ka/kak-sbrosit-schetchiki-na-printere-brother-dcp-1510r.html" class="related-bottom-card"><span class="related-bottom-title">Сброс счетчиков на Brother DCP-1510R: пошаговая инструкция 2026</span><span class="related-bottom-desc">Как обнулить счетчики тонера и барабана на принтере Brother DCP-1510R без сервисного центра? Подробн</span></a><a href="/articles/k/ka/kak-snyat-dvustoronnyuyu-pechat-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Двусторонняя печать на принтере: инструкция по настройке и снятию</span><span class="related-bottom-desc">Пошаговое руководство, как правильно снять двустороннюю печать на принтере разных марок. Разбираем н</span></a><a href="/articles/p/pr/printer-pechataet-sinij-vmesto-zelenogo-tsveta-pochemu.html" class="related-bottom-card"><span class="related-bottom-title">Принтер печатает синий вместо зеленого: причины и решения</span><span class="related-bottom-desc">Разбираемся, почему принтер искажает цвета и вместо зеленого печатает синий. Инструкции по диагности</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

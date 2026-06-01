@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как прошить принтер на Marlin: пошаговая инструкция и нюансы — Принтер Мастер</title>
+    <meta name="description" content="Полное руководство по прошивке 3D-принтеров на базе Marlin. Настройка компиляции, смена платы, калибровка и устранение ошибок. Безопасное обновление ПО.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-proshit-printer-na-marlin.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как прошить принтер на Marlin: пошаговая инструкция и нюансы">
+    <meta property="og:description" content="Полное руководство по прошивке 3D-принтеров на базе Marlin. Настройка компиляции, смена платы, калибровка и устранение ошибок. Безопасное обновление ПО.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как прошить принтер на Marlin: пошаговая инструкция и нюансы</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Полное руководство по прошивке 3D-принтера на базе Marlin</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#введение-в-мир-marlin">Введение в мир Marlin</a></li><li><a href="#подготовка-рабочего-окружения-и-инструментов">Подготовка рабочего окружения и инструментов</a></li><li><a href="#получение-исходного-кода-и-настройка-конфигурации">Получение исходного кода и настройка конфигурации</a></li><li><a href="#компиляция-и-создание-прошивочного-файла">Компиляция и создание прошивочного файла</a></li><li><a href="#процесс-установки-прошивки-на-устройство">Процесс установки прошивки на устройство</a></li><li><a href="#калибровка-и-проверка-после-прошивки">Калибровка и проверка после прошивки</a></li><li><a href="#устранение-частых-проблем-и-отладка">Устранение частых проблем и отладка</a></li><li><a href="#заключение-и-дальнейшее-развитие">Заключение и дальнейшее развитие</a></li><li><a href="#часто-задаваемые-вопросы">Часто задаваемые вопросы</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="введение-в-мир-marlin">Введение в мир Marlin</h2>
+<p>
+<p>Прошивка 3D-принтера является одним из самых эффективных способов расширить функционал устройства, добавить новые возможности или исправить критические ошибки работы. <em>Marlin</em> — это наиболее популярная открытая прошивка с открытым исходным кодом, которая управляет логикой работы большинства моделей принтеров, особенно на базе архитектуры <strong>AVR</strong> и <strong>ARM</strong>. Без правильной конфигурации даже дорогое оборудование может работать нестабильно или выдавать брак.</p>
+</p>
+<p>
+<p>Процесс обновления или установки прошивки требует не только технических навыков, но и понимания того, как работает <strong>платформа компиляции</strong>. Вы не просто скачиваете готовый файл, а настраиваете параметры под конкретную <em>материнскую плату</em>, моторы и датчики температуры. Это превращает стандартное устройство в уникальный инструмент, заточенный под ваши задачи.</p>
+</p>
+<p>
+<p>Многие пользователи ошибочно полагают, что достаточно перетащить файл <code>.bin</code> на карту памяти, но для глубокой кастомизации необходимо работать с исходным кодом. Правильная настройка <strong>конфигурационных файлов</strong> в среде разработки Visual Studio Code обеспечит максимальную точность позиционирования и скорость печати.</p>
+</p>
+
+<h2 id="подготовка-рабочего-окружения-и-инструментов">Подготовка рабочего окружения и инструментов</h2>
+<p>
+<p>Первым этапом является установка необходимых программных инструментов на ваш компьютер. Вам потребуется среда разработки <strong>PlatformIO</strong> в составе плагина для Visual Studio Code. Это мощная экосистема, позволяющая компилировать код под различные микроконтроллеры.</p>
+</p>
+<p>
+<p>Также критически важно иметь актуальные <em>драйверы</em> для вашей платы. Для популярных чипов <strong>FTDI</strong> или <strong>CH340</strong> (часто встречающихся на китайских платах) нужно скачать и установить соответствующие драйверы, чтобы компьютер определял устройство при подключении через USB. Без этого этапа компилятор не сможет передать прошивку на принтер.</p>
+</p>
+<p>
+<p>Не забудьте подготовить карту памяти (обычно SDHC или microSD), отформатированную в файловую систему <code>FAT32</code> с размером кластера <code>4096</code> байт. Это стандартное требование для большинства контроллеров, чтобы они могли корректно считать файл прошивки при загрузке.</p>
+</p>
+<p>
+<div class="checklist-block"><h4>☑️ Сбор инструментов</h4><label class="check-item"><input type="checkbox"><span>Установить Visual Studio Code</span></label><label class="check-item"><input type="checkbox"><span>Подключить плагин PlatformIO</span></label><label class="check-item"><input type="checkbox"><span>Скачать драйверы для платы</span></label><label class="check-item"><input type="checkbox"><span>Подготовить карту памяти FAT32</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+</p>
+
+<h2 id="получение-исходного-кода-и-настройка-конфигурации">Получение исходного кода и настройка конфигурации</h2>
+<p>
+<p>Скачайте последнюю версию прошивки <em>Marlin</em> с официального репозитория на GitHub. Рекомендуется выбирать стабильную ветку (обычно <strong>2.1.x</strong> или новее), а не тестовые версии, если вы не планируете тестировать экспериментальные функции. Разархивируйте папку в удобное место, например, в текущую директорию рабочего проекта.</p>
+</p>
+<p>
+<p>Откройте папку проекта в Visual Studio Code. Перейдите к файлам <code>Configuration.h</code> и <code>Configuration_adv.h</code>. Именно здесь происходит магия настройки. Вам нужно найти раздел <strong>BOARD</strong> и выбрать код, соответствующий вашей материнской плате. Ошибка в выборе платы приведет к тому, что один из моторов начнет крутиться в обратную сторону или нагревательный элемент сгорит.</p>
+</p>
+<p>
+<p>Далее настройте параметры <strong>энкодера</strong> и <strong>инверсии осей</strong>. Если вы используете стандартные моторы, проверьте направление вращения. Для датчика температуры (термистора) также нужно выбрать правильный тип, иначе принтер будет думать, что температура в камере 1000°C, когда там реально 25°C.</p>
+</p>
+<p>
+<details class="faq-item"><summary>Где найти ID платы?</summary><div class="faq-answer"><p>ID платы (BOARD_...) обычно указан в документации к микроконтроллеру или на наклейке на самой плате. Если документация утеряна, попробуйте найти плату по фото на форумах, таких как 3DToday или Reddit r/Marlin.</p></div></details>
+</p>
+<p>
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Сделайте резервную копию оригинальных файлов Configuration.h и Configuration_adv.h перед началом любых изменений. Это спасет вас, если вы случайно удалите критически важные строки.</p></div>
+</p>
+
+<h2 id="компиляция-и-создание-прошивочного-файла">Компиляция и создание прошивочного файла</h2>
+<p>
+<p>После внесения всех изменений в конфигурационные файлы настало время скомпилировать код. В интерфейсе Visual Studio Code найдите панель PlatformIO и нажмите кнопку <strong>Build</strong> (или клавишу <code>Ctrl+B</code>). Процесс компиляции может занять от 30 секунд до нескольких минут в зависимости от мощности вашего ПК.</p>
+</p>
+<p>
+<p>Если компиляция успешна, вы увидите сообщение <code>Build Finished</code> в терминале. Если же возникли ошибки (Errors), внимательно изучите логи. Чаще всего ошибки связаны с синтаксисом, забытыми символами точки с запятой или неверным выбором версии библиотеки.</p>
+</p>
+<p>
+<p>На этом этапе система генерирует файл прошивки. Для плат <em>Arduino</em> это файл <code>.hex</code>, а для современных плат <em>32-бит</em> (STM32, Duet, BigTreeTech) чаще всего это файл <code>.bin</code>. Не пытайтесь переименовывать файлы вручную, если не уверены в формате, так как загрузчик может их не распознать.</p>
+</p>
+<p>
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Успешная компиляция — это только половина дела. Качество прошивки напрямую зависит от корректности введенных параметров в файлах Configuration.</p></div>
+</p>
+
+<h2 id="процесс-установки-прошивки-на-устройство">Процесс установки прошивки на устройство</h2>
+<p>
+<p>Существует два основных способа установки: через <strong>SD-карту</strong> и через <strong>USB-кабель</strong>. Способ через SD-карту является наиболее надежным, так как он не зависит от стабильности соединения по USB. Скопируйте полученный файл прошивки (обычно <code>firmware.bin</code>) в корень отформатированной карты памяти.</p>
+</p>
+<p>
+<p>Вставьте карту в выключенный принтер и подайте питание. Большинство современных плат автоматически определяют файл прошивки, перезаписывают его во внутреннюю память и удаляют файл с карты. Если этого не произошло, проверьте правильность имени файла или попробуйте изменить его на <code>FIRMWARE.CUR</code> (зависит от модели платы).</p>
+</p>
+<p>
+<p>Альтернативный метод — использование <strong>Arduino IDE</strong> или <em>PlatformIO</em> в режиме программатора. Вам потребуется подключить плату к ПК, выбрать правильный COM-порт и нажать кнопку <strong>Upload</strong>. Это требует более сложных настроек, но позволяет обновлять прошивку без использования карт памяти.</p>
+</p>
+<p>
+<blockquote>
+<p>⚠️ <strong>Внимание:</strong> Процесс перезаписи памяти критичен. Если в этот момент пропадет питание или выдернуть кабель, принтер может превратиться в "кирпич". Используйте качественный блок питания или подключите принтер через <strong>UPS</strong> (источник бесперебойного питания) во время обновления.</p>
+</blockquote>
+</p>
+<p>
+<div class="poll-widget" id="poll-889022ca"><div class="poll-widget-question">📊 Какой способ загрузки прошивки вы предпочитаете?</div><div class="poll-widget-option" data-poll="889022ca" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Через SD-карту</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="889022ca" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Через USB кабель</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="889022ca" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Через Wi-Fi (если поддерживается)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="889022ca" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Пока не пробовал ни один</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+</p>
+
+<h2 id="калибровка-и-проверка-после-прошивки">Калибровка и проверка после прошивки</h2>
+<p>
+<p>После успешной установки принтер перезагрузится. Первым делом проверьте, правильно ли определились оси X, Y и Z. Вручную перемещайте станину и головку через меню управления, наблюдая за направлением движения. Если ось движется в обратную сторону, вам нужно будет изменить параметр <code>INVERT_X_DIR</code> в файле конфигурации и перепрошить устройство.</p>
+</p>
+<p>
+<p>Обязательно протестируйте систему нагрева. Проверьте, соответствует ли показания термистора реальной температуре, измеренной обычным градусником. Неправильная калибровка температурного датчика может привести к перегреву хотэнда или, наоборот, к невозможности расплавить пластик.</p>
+</p>
+<p>
+<p>Для точной настройки геометрии используйте функцию автотестирования (если она включена) или калибруйте <strong>шаги на миллиметр</strong> (M92). Это особенно важно, если вы установили новые моторы или изменили механическую передачу (ремень, шестеренки).</p>
+</p>
+<p>
+<p>Таблица ниже демонстрирует типичные настройки температурных сенсоров:</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Тип сенсора</th>
+<th>Код конфигурации</th>
+<th>Макс. температура (градусы)</th>
+<th>Особенности</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>100 (EPCOS)</td>
+<td><code>THERMISTOR_ID_EPCOS</code></td>
+<td>260</td>
+<td>Стандарт для большинства китайских принтеров</td>
+</tr>
+<tr>
+<td>5 (ATC Semitec)</td>
+<td><code>THERMISTOR_5</code></td>
+<td>300</td>
+<td>Высокая точность, часто используется в E3D</td>
+</tr>
+<tr>
+<td>1 (Honeywell)</td>
+<td><code>THERMISTOR_1</code></td>
+<td>280</td>
+<td>Надежный, но менее распространенный тип</td>
+</tr>
+<tr>
+<td>RTD (PT100)</td>
+<td><code>THERMISTOR_RTD</code></td>
+<td>400+</td>
+<td>Для промышленных установок, требует внешнего усилителя</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong>Внимание:</strong> Параметры температурных таблиц могут отличаться в зависимости от партии компонентов. Если принтер работает нестабильно при высоких температурах, проверьте, не используете ли вы устаревшую таблицу.</p>
+</blockquote>
+
+<h2 id="устранение-частых-проблем-и-отладка">Устранение частых проблем и отладка</h2>
+<p>
+<p>При работе с прошивкой <em>Marlin</em> часто возникают проблемы с <strong>застреванием</strong> принтера в бесконечном цикле загрузки. Это может быть вызвано неисправным датчиком конца хода (концевиком), который постоянно замкнут. В этом случае принтер думает, что ось достигла предела и блокирует дальнейшие движения.</p>
+</p>
+<p>
+<p>Еще одна частая проблема — <strong>шум</strong> моторов или потеря шагов. Это часто связано с неправильной настройкой тока драйверов (Vref) или слишком агрессивными настройками ускорений в конфигурации. Попробуйте снизить параметры <code>DEFAULT_ACCELERATION</code> и проверить питание.</p>
+</p>
+<p>
+<p>Если экран не отображает информацию, проверьте настройки <strong>LCD-интерфейса</strong>. Для новых экранов с поддержкой протокола <em>SPI</em> или <em>I2C</em> нужно включить соответствующие опции в файле <code>Configuration_adv.h</code>. Неправильный выбор типа дисплея приведет к "мертвому" экрану.</p>
+</p>
+<p>
+<details class="faq-item"><summary>Что делать, если прошивка "сгорела"?</summary><div class="faq-answer"><p>Если принтер перестал отвечать, попробуйте использовать программатор (например, USBASP) для перепрошивки микроконтроллера напрямую. Это сложный метод, требующий пайки и специфического оборудования.</p></div></details>
+</p>
+
+<h2 id="заключение-и-дальнейшее-развитие">Заключение и дальнейшее развитие</h2>
+<p>
+<p>Успешная прошивка <em>Marlin</em> открывает доступ к таким функциям, как <strong>Mesh Bed Leveling</strong> (автоматическое выравнивание стола), <strong>Power Panic</strong> (сохранение печати при отключении света) и расширенная настройка <strong>ретраекции</strong>. Это превращает обычный принтер в высокоточное производственное оборудование.</p>
+</p>
+<p>
+<p>Не бойтесь экспериментировать, но всегда сохраняйте рабочую версию конфигурации. Мир <em>Open Source</em> 3D-печати постоянно развивается, и новые версии прошивок добавляют возможности, которые ранее были недоступны. Регулярно обновляйте свои знания и следите за обновлениями репозитория.</p>
+</p>
+<p>
+<p>Помните, что <mark>безопасность процесса прошивки зависит не от скорости, а от тщательной подготовки и проверки каждого параметра конфигурации перед компиляцией</mark>. Это правило позволит избежать дорогостоящих поломок и потери времени.</p>
+</p>
+
+<h2 id="часто-задаваемые-вопросы">Часто задаваемые вопросы</h2>
+<details>
+<summary>Нужно ли удалять старую прошивку перед установкой новой?</summary>
+<p>В большинстве случаев новая прошивка просто перезаписывает старую во флэш-памяти контроллера. Явно удалять её не нужно, процесс перепрошивки включает стирание соответствующих секторов памяти автоматически.</p>
+</details>
+<details>
+<summary>Можно ли прошить принтер, если он не включается?</summary>
+<p>Если принтер не реагирует на нажатие кнопки питания, проблема скорее в блоке питания или плате. Однако, если питание есть, но нет реакции, возможно, микроконтроллер требует перепрошивки через внешний программатор, так как загрузчик недоступен.</p>
+</details>
+<details>
+<summary>Почему принтер пишет "Thermal Runaway" после обновления?</summary>
+<p>Это означает, что температура не растет так, как ожидалось, или датчик сломан. Проверьте, правильно ли вы выбрали тип термистора в конфиге и цел ли сам датчик. Также проверьте контакты крепления термистора.</p>
+</details>
+<details>
+<summary>Как узнать версию Marlin, установленную на принтере?</summary>
+<p>В меню управления принтером обычно есть раздел "О программе" или "Info". Также можно отправить команду G-кодом <code>M115</code> через консоль (например, в Pronterface или Cura), и принтер ответит строкой с версией прошивки.</p>
+</details>
+<details>
+<summary>Можно ли использовать прошивку от одной платы на другой совместимой?</summary>
+<p>Только если микроконтроллеры идентичны (например, оба ATMega2560) и электрическая схема совпадает (распиновка портов, драйверов, датчиков). Использование прошивки "как есть" с другой платы может привести к короткому замыканию.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#введение-в-мир-marlin">Введение в мир Marlin</a></li><li><a href="#подготовка-рабочего-окружения-и-инструментов">Подготовка рабочего окружения и инструментов</a></li><li><a href="#получение-исходного-кода-и-настройка-конфигурации">Получение исходного кода и настройка конфигурации</a></li><li><a href="#компиляция-и-создание-прошивочного-файла">Компиляция и создание прошивочного файла</a></li><li><a href="#процесс-установки-прошивки-на-устройство">Процесс установки прошивки на устройство</a></li><li><a href="#калибровка-и-проверка-после-прошивки">Калибровка и проверка после прошивки</a></li><li><a href="#устранение-частых-проблем-и-отладка">Устранение частых проблем и отладка</a></li><li><a href="#заключение-и-дальнейшее-развитие">Заключение и дальнейшее развитие</a></li><li><a href="#часто-задаваемые-вопросы">Часто задаваемые вопросы</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-skanirovat-printerom-kenon-mf-3010.html" class="related-card">Как сканировать документы на Canon MF3010: Полное руководство</a></li><li><a href="/articles/k/ka/kak-dostavat-kartridzh-s-printera-canon.html" class="related-card">Как достать картридж из принтера Canon: пошаговая инструкция</a></li><li><a href="/articles/c/ch/chto-znachit-proverit-konfiguratsiyu-printera.html" class="related-card">Что значит проверить конфигурацию принтера: полный гид</a></li><li><a href="/articles/k/ka/kartridzh-hp-122-dlya-kakikh-printerov.html" class="related-card">Картридж HP 122: совместимость с принтерами и особенности выбора</a></li><li><a href="/articles/o/os/osi-3d-printera-gde-kakaya.html" class="related-card">Оси 3D принтера: где какая, типы конструкций и настройка</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-skanirovat-printerom-kenon-mf-3010.html" class="related-bottom-card"><span class="related-bottom-title">Как сканировать документы на Canon MF3010: Полное руководство</span><span class="related-bottom-desc">Пошаговая инструкция по настройке и сканированию на МФУ Canon MF3010 через USB и ПО IJ Scan Utility.</span></a><a href="/articles/k/ka/kak-dostavat-kartridzh-s-printera-canon.html" class="related-bottom-card"><span class="related-bottom-title">Как достать картридж из принтера Canon: пошаговая инструкция</span><span class="related-bottom-desc">Подробное руководство по извлечению картриджей из принтеров Canon. Советы по замене, частые ошибки и</span></a><a href="/articles/c/ch/chto-znachit-proverit-konfiguratsiyu-printera.html" class="related-bottom-card"><span class="related-bottom-title">Что значит проверить конфигурацию принтера: полный гид</span><span class="related-bottom-desc">Разбираем, как проверить конфигурацию принтера, чтобы устранить ошибки печати. Инструкция по диагнос</span></a><a href="/articles/k/ka/kartridzh-hp-122-dlya-kakikh-printerov.html" class="related-bottom-card"><span class="related-bottom-title">Картридж HP 122: совместимость с принтерами и особенности выбора</span><span class="related-bottom-desc">Узнайте, для каких принтеров подходит картридж HP 122 (чёрный/цветной), как проверить совместимость </span></a><a href="/articles/o/os/osi-3d-printera-gde-kakaya.html" class="related-bottom-card"><span class="related-bottom-title">Оси 3D принтера: где какая, типы конструкций и настройка</span><span class="related-bottom-desc">Подробный гайд по осям 3D принтера: где расположена ось X, Y, Z, типы кинематики, нюансы настройки и</span></a><a href="/articles/k/ka/kak-najti-drajvera-na-printer-canon.html" class="related-bottom-card"><span class="related-bottom-title">Где найти и как установить драйвер Canon для принтера: 4 способа</span><span class="related-bottom-desc">Пошаговая инструкция: как найти оригинальный драйвер Canon, скачать и установить. Решаем проблемы с </span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

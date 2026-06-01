@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Принтер недоступен в Active Directory: причины и решения — Принтер Мастер</title>
+    <meta name="description" content="Если принтер недоступен через Active Directory, узнайте, как диагностировать ошибки подключения, проверить права доступа и настроить диспетчер печати для восстановления работы.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/a/ac/active-directory-sejchas-nedostupny-printer-chto.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Принтер недоступен в Active Directory: причины и решения">
+    <meta property="og:description" content="Если принтер недоступен через Active Directory, узнайте, как диагностировать ошибки подключения, проверить права доступа и настроить диспетчер печати для восстановления работы.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Принтер недоступен в Active Directory: причины и решения</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Что делать, если принтер недоступен через Active Directory</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#диагностика-сетевого-уровня-и-dns-записей">Диагностика сетевого уровня и DNS-записей</a></li><li><a href="#проблемы-с-правами-доступа-и-групповыми-политиками">Проблемы с правами доступа и групповыми политиками</a></li><li><a href="#сбои-службы-диспетчера-печати-и-очереди-заданий">Сбои службы Диспетчера печати и очереди заданий</a></li><li><a href="#конфликты-драйверов-и-версий-по">Конфликты драйверов и версий ПО</a></li><li><a href="#анализ-логов-и-системных-событий">Анализ логов и системных событий</a></li><li><a href="#восстановление-подключения-и-публикации-в-домене">Восстановление подключения и публикации в домене</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body">
+
+<p>Ситуация, когда принтер перестает быть виден или доступным для пользователей домена, является одной из самых распространенных проблем в корпоративной инфраструктуре. Часто администраторы сталкиваются с сообщением о том, что устройство недоступно через <strong>Active Directory</strong>, даже если физически оно подключено к сети и включено. Это может парализовать работу целого отдела, особенно если печать критически важна для бизнес-процессов.</p>
+
+<p>Проблема редко бывает единичной и обычно указывает на рассинхронизацию между контроллером домена, сервером печати и клиентскими рабочими станциями. Для успешного устранения сбоя необходимо провести комплексную диагностику, начиная от проверки сетевого взаимодействия и заканчивая анализом политик безопасности <strong>Group Policy</strong>. Важно понимать, что сообщение «принтер недоступен» может скрывать под собой как банальную нехватку места на диске сервера, так и сложные конфликты версий драйверов.</p>
+
+<h2 id="диагностика-сетевого-уровня-и-dns-записей">Диагностика сетевого уровня и DNS-записей</h2>
+
+<p>Первым шагом при обнаружении того, что принтер не отображается в <em>Active Directory</em> или не подключается пользователем, должна стать проверка базовой сетевой связности. Часто причина кроется не в самом домене, а в том, что сервер печати просто не может ответить на запросы клиентов из-за проблем с маршрутизацией или именем хоста.</p>
+
+<p>Необходимо убедиться, что имя сервера печати корректно разрешается в IP-адрес. Попробуйте выполнить команду <code>ping server-printer.domain.local</code> с клиентской машины. Если вы получаете ошибку «Unknown host», проблема скорее всего в <strong>DNS</strong>, а не в настройках самого принтера. В Active Directory критически важно, чтобы все имена были уникальными и правильно прописаны в зоне обратного просмотра.</p>
+
+<p>Также проверьте доступность стандартных портов печати. Обычно используются порты <code>9100</code> для RAW-потока или <code>515</code> для LPR. Если фаервол между подсетями блокирует эти порты, пользователи будут видеть принтер в списках, но не смогут отправить на него задание. Убедитесь, что правила брандмауэра Windows на стороне сервера позволяют входящие соединения на порты <strong>RPC</strong> и <strong>SMB</strong>.</p>
+
+<h2 id="проблемы-с-правами-доступа-и-групповыми-политиками">Проблемы с правами доступа и групповыми политиками</h2>
+
+<p>Если сеть работает исправно, но принтер все равно недоступен, следующим фокусом внимания должны стать права доступа в <em>Active Directory Users and Computers</em>. Часто после обновления домена или пересоздания пользователя права на подключение к принтеру могут сбиваться или блокироваться политиками безопасности.</p>
+
+<p>В свойствах объекта принтера во вкладке «Безопасность» проверьте, входит ли группа пользователей (например, «Domain Users» или конкретная группа отдела) в список разрешений. Отсутствие галочки «Печать» или «Подключиться» делает устройство невидимым или неработоспособным для выбранного пользователя. Иногда проблема возникает из-за конфликта прав между локальными группами и доменными группами.</p>
+
+<p>Особое внимание уделите групповым политикам (GPO). Возможно, политика запрета подключения к принтерам или политика перенаправления принтеров вызывает конфликт. Используйте утилиту <code>gpresult /r</code> на клиентской машине, чтобы увидеть, какие политики применяются к пользователю и компьютеру. Ошибка в GPO может полностью скрыть принтер из списка доступных устройств.</p>
+
+<blockquote>
+<p>⚠️ Внимание: Изменения в групповых политиках требуют времени на репликацию между контроллерами домена. Если вы только что изменили права доступа, подождите 15-20 минут или выполните команду <code>gpupdate /force</code> перед повторной проверкой доступности принтера.</p>
+</blockquote>
+
+<div class="poll-widget" id="poll-457f159f"><div class="poll-widget-question">📊 Видели ли вы ошибку «Принтер недоступен» в Active Directory?</div><div class="poll-widget-option" data-poll="457f159f" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Да, часто</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="457f159f" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Да, редко</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="457f159f" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Нет, впервые</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="457f159f" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Не знаю, что это</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="сбои-службы-диспетчера-печати-и-очереди-заданий">Сбои службы Диспетчера печати и очереди заданий</h2>
+
+<p>Сердцем инфраструктуры печати в Windows является служба «Диспетчер печати» (Print Spooler). Если эта служба зависла, остановилась или работает с ошибками, принтер в Active Directory может отображаться как «Недоступен» или быть вовсе невидимым для сети.</p>
+
+<p>Проверьте статус службы на сервере печати. Откройте <code>services.msc</code> и найдите <strong>Print Spooler</strong>. Если служба остановлена, запустите её. Однако, если она останавливается сразу после запуска, это указывает на повреждение драйверов или конфликт файлов очереди печати. В таком случае необходимо очистить папку <code>C:\Windows\System32\spool\PRINTERS</code> вручную после остановки службы.</p>
+
+<p>Также стоит проверить наличие «зависших» заданий в очереди. Одно поврежденное задание может заблокировать весь поток печати, делая принтер недоступным для новых пользователей. Попробуйте удалить все задания в очереди через консоль управления или перенаправить поток на другой виртуальный принтер для очистки.</p>
+
+<div class="checklist-block"><h4>☑️ Чек-лист проверки службы печати</h4><label class="check-item"><input type="checkbox"><span>Проверить статус службы Print Spooler</span></label><label class="check-item"><input type="checkbox"><span>Остановить службу вручную</span></label><label class="check-item"><input type="checkbox"><span>Очистить папку spool\PRINTERS</span></label><label class="check-item"><input type="checkbox"><span>Запустить службу заново</span></label><label class="check-item"><input type="checkbox"><span>Перезагрузить сервер</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 5</div></div>
+
+<h2 id="конфликты-драйверов-и-версий-по">Конфликты драйверов и версий ПО</h2>
+
+<p>Одной из самых коварных причин недоступности принтера является несовместимость или повреждение драйверов. Active Directory распространяет драйверы на клиентские машины, и если на сервере установлен драйвер, который не подходит для архитектуры клиента (например, x64 драйвер для x86 машины), подключение может не состояться.</p>
+
+<p>В консоли «Управление печатью» (Print Management) проверьте, правильно ли настроены драйверы для всех поддерживаемых архитектур. Часто бывает, что драйвер загружен только для 64-битной системы, а у пользователя стоит 32-битный Windows. Для корректной работы необходимо добавить драйверы для обеих архитектур в свойства принтера.</p>
+
+<p>Если вы недавно обновляли драйверы, возможно, новая версия содержит ошибки, вызывающие конфликт с операционной системой клиента. В этом случае может потребоваться откат к предыдущей стабильной версии драйвера. Убедитесь, что драйверы подписаны цифровой подписью Microsoft, так как политика безопасности домена может блокировать установку неподписанного ПО.</p>
+
+<details class="faq-item"><summary>Детали о драйверах Type 3 и Type 4</summary><div class="faq-answer"><p>Разница между драйверами Type 3 (legacy) и Type 4 (V4) влияет на совместимость. Драйверы V4 более универсальны, но требуют поддержки со стороны операционной системы клиента. Если принтер старый, драйвер Type 3 может быть единственным рабочим вариантом, но он часто вызывает проблемы в современных доменах.</p></div></details>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Перед установкой нового драйвера на сервер печати создайте точку восстановления системы. Это позволит быстро откатить изменения, если принтер перестанет работать после обновления.</p></div>
+
+<h2 id="анализ-логов-и-системных-событий">Анализ логов и системных событий</h2>
+
+<p>Если визуальная проверка и стандартные перезапуски служб не помогают, необходимо обратиться к журналу событий Windows. Логи содержат точную информацию о причинах сбоев, которые не видны в обычном интерфейсе управления.</p>
+
+<p>Откройте <code>Event Viewer</code> и перейдите в раздел <strong>Windows Logs</strong> -> <code>System</code>. Ищите события с источником <em>PrintService</em> или <em>Spooler</em>. Ошибки с кодом <code>300</code> или <code>1001</code> часто указывают на проблемы с доступом к ресурсам или сбой драйвера. Коды событий могут дать подсказку о том, какой именно модуль печати вызвал исключение.</p>
+
+<p>Также полезно проверить журнал безопасности для выявления попыток несанкционированного доступа. Если вы видите множество отказов в доступе (Access Denied) от имени вашего пользователя или системы, возможно, проблема в учетных данных. Проверьте, не истек ли пароль учетной записи компьютера, к которому подключен принтер.</p>
+
+<table>
+<thead>
+<tr>
+<th>Код ошибки</th>
+<th>Описание проблемы</th>
+<th>Рекомендуемое действие</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0x00000002</td>
+<td>Путь к принтеру не найден</td>
+<td>Проверить имя сервера и доступность пути</td>
+</tr>
+<tr>
+<td>0x00000643</td>
+<td>Сбой установки драйвера</td>
+<td>Переустановить драйверы или проверить подпись</td>
+</tr>
+<tr>
+<td>0x0000007e</td>
+<td>Модуль не найден</td>
+<td>Повреждение системных файлов или драйвера</td>
+</tr>
+<tr>
+<td>0x00000005</td>
+<td>Отказано в доступе</td>
+<td>Проверить права в Active Directory</td>
+</tr>
+</tbody>
+</table>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Логи событий — это первый источник правды при диагностике сложных проблем печати. Если вы не умеете читать коды ошибок, обратитесь к документации производителя принтера или базы знаний Microsoft.</p></div>
+
+<h2 id="восстановление-подключения-и-публикации-в-домене">Восстановление подключения и публикации в домене</h2>
+
+<p>Если все предыдущие шаги не дали результата, возможно, объект принтера был случайно удален из каталога Active Directory или потерял связь с ним. В этом случае принтер физически работает, но пользователи не могут найти его через поиск в домене.</p>
+
+<p>Для восстановления публикации принтера в Active Directory откройте консоль управления печатью, нажмите правой кнопкой мыши на проблемный принтер и выберите «Свойства». Перейдите на вкладку «Общий доступ» и убедитесь, что галочка «Публиковать в Active Directory» установлена. Снимите и снова поставьте её, чтобы принудительно обновить запись в каталоге.</p>
+
+<p>Если принтер не добавляется в каталог, проверьте права учетной записи, под которой работает сервер печати. У неё должны быть права на создание объектов в домене. Также убедитесь, что на сервере включен компонент «Публикация принтеров в Active Directory» в ролевой службе печати. Без этого компонента интеграция невозможна.</p>
+
+<details class="faq-item"><summary>Как работает репликация принтеров</summary><div class="faq-answer"><p>Изменения в каталоге Active Directory реплицируются между контроллерами не мгновенно. В зависимости от настройки интервалов репликации, принтер может стать видимым для всех пользователей только через 15-60 минут после активации публикации.</p></div></details>
+
+<blockquote>
+<p>⚠️ Внимание: Если вы меняете имя принтера или его путь в сети, старые подключения на рабочих станциях станут неработоспособными. Пользователям придется удалять старый принтер и подключать новый вручную, что может вызвать путаницу.</p>
+</blockquote>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Регулярная проверка состояния службы печати и актуальности драйверов позволяет предотвратить 90% инцидентов с недоступностью принтеров в домене.</p></div>
+
+<details>
+<summary>Почему принтер виден в сети, но не открывается через Active Directory?</summary>
+<p>Это часто происходит из-за того, что объект принтера существует в каталоге, но служба спулера на сервере не отвечает на запросы авторизации. Проверьте статус службы и права доступа группы «Domain Computers».</p>
+</details>
+
+<details>
+<summary>Как принудительно обновить список принтеров на клиенте?</summary>
+<p>Выполните команду <code>rundll32 printui.dll,PrintUIEntry /y</code> или просто перезапустите службу «Рабочая станция» (Workstation) на клиентском ПК, чтобы обновить кэш доменных ресурсов.</p>
+</details>
+
+<details>
+<summary>Можно ли восстановить принтер, если он удален из AD?</summary>
+<p>Да, если у вас есть резервная копия контроллера домена или вы используете инструмент восстановления объектов AD. В противном случае придется заново создать объект принтера и опубликовать его.</p>
+</details>
+
+<details>
+<summary>Влияет ли антивирус на работу принтера в домене?</summary>
+<p>Да, некоторые антивирусы сканируют сетевые подключения и порты. Если антивирус блокирует порты RPC или SMB, принтер может стать недоступным. Попробуйте временно отключить антивирус для проверки.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#диагностика-сетевого-уровня-и-dns-записей">Диагностика сетевого уровня и DNS-записей</a></li><li><a href="#проблемы-с-правами-доступа-и-групповыми-политиками">Проблемы с правами доступа и групповыми политиками</a></li><li><a href="#сбои-службы-диспетчера-печати-и-очереди-заданий">Сбои службы Диспетчера печати и очереди заданий</a></li><li><a href="#конфликты-драйверов-и-версий-по">Конфликты драйверов и версий ПО</a></li><li><a href="#анализ-логов-и-системных-событий">Анализ логов и системных событий</a></li><li><a href="#восстановление-подключения-и-публикации-в-домене">Восстановление подключения и публикации в домене</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-podklyuchit-printer-canon-mf3010-k-noutbuku.html" class="related-card">Как подключить принтер Canon MF3010 к ноутбуку: драйверы и настройка</a></li><li><a href="/articles/k/ka/kak-podklyuchit-printer-k-noutbuku-esli-net-diskovoda.html" class="related-card">Как подключить принтер к ноутбуку без дисковода: Полное руководство</a></li><li><a href="/articles/k/ka/kak-nastroit-k-kompyuteru-printer-hp.html" class="related-card">Настройка принтера HP на ПК и ноутбуке: пошаговая инструкция 2026</a></li><li><a href="/articles/k/ka/kak-pravilno-pechatat-na-fotobumage-na-printere.html" class="related-card">Как правильно печатать на фотобумаге: настройки и нюансы</a></li><li><a href="/articles/k/ka/kak-podklyuchit-printer-kenon-lbp-2900-k-vindovs-10.html" class="related-card">Как подключить Canon LBP 2900 к Windows 10: драйверы и настройка</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-podklyuchit-printer-canon-mf3010-k-noutbuku.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить принтер Canon MF3010 к ноутбуку: драйверы и настройка</span><span class="related-bottom-desc">Пошаговая инструкция по подключению МФУ Canon MF3010 к ноутбуку. Установка драйверов, настройка печа</span></a><a href="/articles/k/ka/kak-podklyuchit-printer-k-noutbuku-esli-net-diskovoda.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить принтер к ноутбуку без дисковода: Полное руководство</span><span class="related-bottom-desc">Пошаговая инструкция по установке принтера на ноутбук без привода. Скачивание драйверов, USB-подключ</span></a><a href="/articles/k/ka/kak-nastroit-k-kompyuteru-printer-hp.html" class="related-bottom-card"><span class="related-bottom-title">Настройка принтера HP на ПК и ноутбуке: пошаговая инструкция 2026</span><span class="related-bottom-desc">Как подключить и настроить принтер HP через USB и Wi-Fi. Установка драйверов, решение частых ошибок </span></a><a href="/articles/k/ka/kak-pravilno-pechatat-na-fotobumage-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Как правильно печатать на фотобумаге: настройки и нюансы</span><span class="related-bottom-desc">Пошаговая инструкция по печати на фотобумаге. Настройка драйвера, выбор режимов, устранение разводов</span></a><a href="/articles/k/ka/kak-podklyuchit-printer-kenon-lbp-2900-k-vindovs-10.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить Canon LBP 2900 к Windows 10: драйверы и настройка</span><span class="related-bottom-desc">Полная инструкция по установке Canon LBP 2900 на Windows 10. Решение проблем с драйвером CAPT, обход</span></a><a href="/articles/k/ka/kak-zapravit-printer-xerox-phaser-3117.html" class="related-bottom-card"><span class="related-bottom-title">Как заправить принтер Xerox Phaser 3117: пошаговая инструкция</span><span class="related-bottom-desc">Подробный гайд по замене картриджа в Xerox Phaser 3117. Разбор процесса заправки, нюансы чипов и уст</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>SMTP-сервер для принтера: что это и пошаговая настройка — Принтер Мастер</title>
+    <meta name="description" content="Подробная инструкция: что такое SMTP и как настроить отправку сканов по электронной почте на принтере. Параметры портов, шифрование и устранение ошибок.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/c/ch/chto-takoe-server-smtp-i-kak-ego-nastroit-dlya-printera.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="SMTP-сервер для принтера: что это и пошаговая настройка">
+    <meta property="og:description" content="Подробная инструкция: что такое SMTP и как настроить отправку сканов по электронной почте на принтере. Параметры портов, шифрование и устранение ошибок.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">SMTP-сервер для принтера: что это и пошаговая настройка</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как настроить SMTP-сервер на принтере для отправки сканов по почте</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#введение">Введение</a></li><li><a href="#принцип-работы-протокола-и-роль-сервера">Принцип работы протокола и роль сервера</a></li><li><a href="#необходимые-параметры-для-настройки">Необходимые параметры для настройки</a></li><li><a href="#пошаговая-инструкция-по-настройке-через-веб-интерфейс">Пошаговая инструкция по настройке через веб-интерфейс</a></li><li><a href="#особенности-настройки-для-разных-почтовых-провайдеров">Особенности настройки для разных почтовых провайдеров</a></li><li><a href="#устранение-распространенных-ошибок">Устранение распространенных ошибок</a></li><li><a href="#безопасность-и-защита-данных">Безопасность и защита данных</a></li><li><a href="#частые-вопросы-faq">Частые вопросы (FAQ)</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="введение">Введение</h2>
+
+<p>Когда вы используете многофункциональное устройство для работы с документами, часто возникает необходимость быстро отправить отсканированный файл на электронную почту. Для реализации этой функции принтер должен иметь возможность связаться с почтовым сервером, что невозможно без правильной конфигурации протокола <strong>SMTP</strong> (Simple Mail Transfer Protocol). Этот протокол является стандартом де-факто для передачи электронных писем в сетях TCP/IP.</p>
+
+<p>Без корректных настроек сервера вы можете столкнуться с тем, что функция «Сканировать по почте» будет просто неактивна или выдавать ошибку при попытке отправки. Дело в том, что современные почтовые провайдеры требуют строгой аутентификации и шифрования соединения, чтобы предотвратить спам и перехват данных. Поэтому просто ввести адрес почты недостаточно, необходимо указать конкретные параметры сервера, порты и сертификаты безопасности.</p>
+
+<p>Эта статья поможет вам разобраться в технических деталях настройки <em>SMTP</em> для вашего МФУ. Мы рассмотрим, какие данные нужно взять у провайдера, как ввести их в веб-интерфейсе устройства и почему отправка может не работать даже при верных параметрах. Понимание этих принципов позволит вам самостоятельно решать проблемы с доставкой документов.</p>
+
+<h2 id="принцип-работы-протокола-и-роль-сервера">Принцип работы протокола и роль сервера</h2>
+
+<p>Сервер <strong>SMTP</strong> — это специализированная программа или компьютер, который отвечает за пересылку сообщений от отправителя к получателю. В контексте вашего принтера он выступает в роли «почтового ящика», через который устройство передает файлы. Когда вы нажимаете кнопку «Отправить» на панели управления, принтер формирует пакет данных, содержащий файл-вложение и заголовки письма, и передает его на адрес, указанный в настройках.</p>
+
+<p>Процесс передачи не ограничивается простым соединением. Современный протокол требует, чтобы устройство сначала представилось серверу, предоставив логин и пароль. Только после успешной аутентификации соединение может быть установлено для передачи данных. Это важное требование безопасности, которое защищает почтовые сервисы от несанкционированного использования.</p>
+
+<p>Важно понимать разницу между отправкой и получением. Для получения писем принтерам обычно используются протоколы <strong>POP3</strong> или <strong>IMAP</strong>, но для отправки сканов нужен исключительно <strong>SMTP</strong>. Ошибка в выборе протокола или порта часто приводит к тому, что устройство «не видит» сервер или разрывает соединение сразу после начала попытки отправки. </p>
+
+<blockquote>⚠️ Внимание: Не путайте адрес входящего сервера (IMAP/POP3) с исходящим (SMTP). Использование неверных адресов приведет к ошибке соединения, даже если логин и пароль верны.</blockquote>
+
+<p>Многие пользователи ошибочно полагают, что принтер может отправлять письма напрямую через интернет без посредников. На самом деле, прямой доступ к портам 25 или 587 часто блокируется провайдерами интернет-услуг на стороне клиента, поэтому использование авторизованного SMTP-сервера вашего почтового провайдера является обязательным условием для стабильной работы.</p>
+
+<div class="poll-widget" id="poll-628d6472"><div class="poll-widget-question">📊 Какой почтовый сервис вы используете для отправки сканов?</div><div class="poll-widget-option" data-poll="628d6472" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Gmail</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="628d6472" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Yandex</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="628d6472" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Mail.ru</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="628d6472" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Корпоративная почта</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="628d6472" data-idx="4" onclick="pbPollVote(this)"><span class="poll-widget-label">Другой</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="необходимые-параметры-для-настройки">Необходимые параметры для настройки</h2>
+
+<p>Прежде чем приступать к вводу данных в меню устройства, вам необходимо собрать информацию у вашего почтового провайдера. Без этих точных данных настройка будет невозможна, так как серверы требуют строгих соответствий. Обычно эти данные находятся в разделе справки на сайте вашего почтового сервиса или в личном кабинете.</p>
+
+<p>Основным параметром является адрес сервера. Это доменное имя, которое указывает принтеру, куда именно отправлять данные. Например, для популярных сервисов это могут быть адреса типа <code>smtp.yandex.ru</code> или <code>smtp.gmail.com</code>. Не пытайтесь угадать этот адрес, используйте только официальные данные из документации провайдера.</p>
+
+<p>Вторым критически важным параметром является порт. Порт — это «дверь», через которую происходит соединение. Для незашифрованного соединения обычно используется порт 25, но сейчас большинство провайдеров требуют использование шифрования. Стандартные порты для защищенных соединений — это <strong>465</strong> (SSL) или <strong>587</strong> (TLS/STARTTLS). Выбор неправильного порта часто является главной причиной ошибок подключения.</p>
+
+<table>
+<thead>
+<tr>
+<th>Почтовый сервис</th>
+<th>Адрес SMTP-сервера</th>
+<th>Порт (SSL/TLS)</th>
+<th>Требования к паролю</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Yandex</td>
+<td>smtp.yandex.ru</td>
+<td>465</td>
+<td>Пароль приложений</td>
+</tr>
+<tr>
+<td>Gmail</td>
+<td>smtp.gmail.com</td>
+<td>465 или 587</td>
+<td>Пароль приложений</td>
+</tr>
+<tr>
+<td>Mail.ru</td>
+<td>smtp.mail.ru</td>
+<td>465</td>
+<td>Двухфакторная аутентификация</td>
+</tr>
+<tr>
+<td>Rambler</td>
+<td>smtp.rambler.ru</td>
+<td>465</td>
+<td>Обычный пароль</td>
+</tr>
+</tbody>
+</table>
+
+<p>Особое внимание уделите полю логина. В большинстве современных систем логином является полный адрес электронной почты, а не только часть до «собачки». Если вы укажете только имя пользователя, сервер отклонит соединение. Также стоит обратить внимание на тип шифрования, который поддерживает ваш провайдер.</p>
+
+<blockquote>⚠️ Внимание: Если вы используете Gmail или Яндекс, стандартный пароль от аккаунта часто не подходит для настройки на внешних устройствах. Вам необходимо сгенерировать специальный «Пароль приложений» в настройках безопасности вашего почтового аккаунта.</blockquote>
+
+<details class="faq-item"><summary>Что такое пароль приложений и зачем он нужен?</summary><div class="faq-answer"><p>Пароль приложений — это уникальный код, который генерируется для конкретного устройства или программы. Он заменяет ваш основной пароль при входе с внешних устройств, что повышает безопасность аккаунта, так как при компрометации этого кода ваш основной пароль остается в безопасности.</p></div></details>
+
+<h2 id="пошаговая-инструкция-по-настройке-через-веб-интерфейс">Пошаговая инструкция по настройке через веб-интерфейс</h2>
+
+<p>Самый надежный способ настройки параметров SMTP — использование веб-интерфейса принтера. Этот метод удобнее, чем ввод данных через маленький дисплей устройства, так как позволяет видеть полную информацию и избегать опечаток. Вам нужно узнать IP-адрес вашего принтера, набрать его в адресной строке браузера на компьютере, подключенном к той же сети.</p>
+
+<p>После входа в систему перейдите в раздел настроек сети или почты. Обычно этот пункт находится в меню <code>Настройки → Сеть → Настройки протокола E-mail</code> или <code>Настройки системы → Настройки SNMP/E-mail</code>. Интерфейс может отличаться в зависимости от производителя, но логика действий остается общей для всех устройств.</p>
+
+<p>В открывшемся меню вы найдете поля для ввода адреса сервера, порта и учетных данных. Введите адрес сервера в поле <code>SMTP Server</code>, укажите порт в поле <code>Port</code> и выберите тип шифрования из выпадающего списка (SSL, TLS или None). В полях логина и пароля введите данные, которые вы подготовили заранее.</p>
+
+<div class="checklist-block"><h4>☑️ Подготовка к настройке SMTP</h4><label class="check-item"><input type="checkbox"><span>Узнать IP-адрес принтера</span></label><label class="check-item"><input type="checkbox"><span>Записать адрес SMTP-сервера</span></label><label class="check-item"><input type="checkbox"><span>Сгенерировать пароль приложений</span></label><label class="check-item"><input type="checkbox"><span>Выбрать корректный порт (465/587)</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<p>После ввода всех данных обязательно нажмите кнопку <em>Проверить соединение</em> или <em>Тестовая отправка</em>, которая обычно находится внизу страницы настроек. Это позволит убедиться, что все параметры верны, прежде чем вы начнете использовать устройство для сканирования. Если тест прошел успешно, сохраните изменения нажатием кнопки <code>Применить</code> или <code>OK</code>.</p>
+
+<p>Если тест не удался, вернитесь к пункту проверки портов и шифрования. Часто причиной ошибки становится несовпадение типа шифрования, выбранного в настройках, с тем, который требует сервер. Например, если сервер требует SSL, а вы выбрали TLS, соединение не установится.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Сохраните скриншот страницы с настройками SMTP перед внесением изменений. Это поможет быстро откатить настройки, если вы случайно удалите важные данные или перепутаете значения портов.</p></div>
+
+<h2 id="особенности-настройки-для-разных-почтовых-провайдеров">Особенности настройки для разных почтовых провайдеров</h2>
+
+<p>Каждый крупный почтовый сервис имеет свои особенности, которые необходимо учитывать при настройке. Например, <em>Яндекс</em> требует обязательного использования пароля приложений, если включена двухфакторная аутентификация. Это связано с их политикой безопасности, которая запрещает вход сторонних приложений с обычными паролями.</p>
+
+<p>Для пользователей <em>Gmail</em> ситуация еще строже: после отключения поддержки менее защищенных приложений, стандартный пароль перестал работать. Необходимо зайти в аккаунт Google, включить двухфакторную аутентификацию и создать новый «Пароль приложений» специально для вашего принтера. Этот пароль будет состоять из случайных символов и не будет похож на ваш обычный пароль.</p>
+
+<p>Корпоративные почтовые серверы часто требуют дополнительных настроек, таких как указание домена перед логином (например, <code>DOMAIN\username</code>) или использование специфических портов, отличных от стандартных 465 или 587. В таких случаях лучше всего обратиться к администратору вашей IT-инфраструктуры для получения точных инструкций.</p>
+
+<blockquote>⚠️ Внимание: При использовании корпоративных почтовых серверов (Exchange, Domino и др.) доступ к SMTP может быть ограничен брандмауэром организации. Убедитесь, что ваш принтер может «видеть» сервер, если он находится в другой подсети.</blockquote>
+
+<p>Не забывайте, что некоторые провайдеры требуют, чтобы адрес отправителя совпадал с адресом, от которого настроена аутентификация. Если вы попытаетесь указать в настройках принтера адрес <code>admin@company.com</code>, а аутентифицируетесь под <code>user@company.com</code>, сервер может заблокировать отправку как попытку подмены адреса.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Для большинства современных почтовых сервисов (Gmail, Yandex, Mail.ru) использование стандартного пароля от аккаунта невозможно — обязательно генерируйте Пароль Приложений.</p></div>
+
+<h2 id="устранение-распространенных-ошибок">Устранение распространенных ошибок</h2>
+
+<p>Даже при правильном вводе данных могут возникать ошибки. Одной из самых частых проблем является ошибка «Соединение не установлено» или «Превышено время ожидания». Это обычно указывает на то, что принтер не может «достучаться» до сервера. Причина может крыться в блокировке порта провайдером интернета или неправильном IP-адресе.</p>
+
+<p>Другая частая ошибка — «Неверный логин или пароль». Если вы уверены, что ввели их правильно, проверьте, не требуется ли серверу дополнительный формат ввода. Иногда нужно добавить префикс домена или убедиться, что в поле логина указан полный email, а не только имя пользователя.</p>
+
+<p>Если вы видите сообщение об ошибке шифрования, это означает, что принтер и сервер не договорились о способе защиты данных. Попробуйте сменить тип шифрования в настройках: если стояло SSL, поставьте TLS, или наоборот. В некоторых случаях помогает выбор варианта «Нет» (None), но это менее безопасно и поддерживается не всеми провайдерами.</p>
+
+<p>Важно также проверить время и дату на самом принтере. Если часы устройства сбиты, соединение с сервером будет разорвано, так как сертификаты безопасности не будут считаться валидными. Синхронизируйте время принтера с сетевым сервером времени (NTP).</p>
+
+<details class="faq-item"><summary>Как проверить доступность порта SMTP?</summary><div class="faq-answer"><p>Вы можете использовать команду ping или telnet с компьютера, подключенного к той же сети, что и принтер. В командной строке введите: telnet smtp.yandex.ru 465. Если соединение установлено, вы увидите пустой экран, если нет — ошибку подключения.</p></div></details>
+
+<h2 id="безопасность-и-защита-данных">Безопасность и защита данных</h2>
+
+<p>Настройка SMTP для принтера связана с передачей конфиденциальных данных по сети, поэтому вопросы безопасности выходят на первый план. Использование незашифрованных соединений (порт 25 без SSL/TLS) категорически не рекомендуется, так как данные могут быть перехвачены злоумышленниками.</p>
+
+<p>Многие современные МФУ поддерживают использование сертификатов безопасности для проверки подлинности сервера. Включите эту опцию в настройках, если она доступна. Это гарантирует, что вы подключаетесь именно к серверу вашего провайдера, а не к поддельному серверу злоумышленника.</p>
+
+<p>Регулярно обновляйте пароль приложений на почтовом сервисе и вводите новый пароль в настройках принтера. Если вы подозреваете, что настройки были скомпрометированы, немедленно отключите функцию отправки по почте и смените пароль доступа к веб-интерфейсу самого устройства.</p>
+
+<blockquote>⚠️ Внимание: Никогда не оставляйте в настройках принтера пароль от вашего личного аккаунта, если он используется для других важных сервисов. Используйте только специально сгенерированные пароли приложений.</blockquote>
+
+<p>Также стоит ограничить доступ к веб-интерфейсу принтера. Убедитесь, что вход в меню настроек защищен паролем администратора, чтобы посторонние не могли изменить ваши настройки SMTP или перехватить управление устройством.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Использование шифрования SSL/TLS и паролей приложений — это минимальный стандарт безопасности для отправки документов по сети в 2026 году.</p></div>
+
+<h2 id="частые-вопросы-faq">Частые вопросы (FAQ)</h2>
+
+<details>
+<summary>Что делать, если принтер пишет «Ошибка аутентификации»?</summary>
+<p>Скорее всего, вы используете обычный пароль вместо специального «Пароля приложений» или ввели неверный адрес сервера. Проверьте настройки безопасности вашего почтового аккаунта и сгенерируйте новый пароль для сторонних устройств.</p>
+</details>
+
+<details>
+<summary>Можно ли отправлять сканы без регистрации на сайте провайдера?</summary>
+<p>Нет, современные протоколы безопасности требуют обязательной аутентификации. Отправка без логина и пароля возможна только на старых корпоративных серверах, которые открыты для всей подсети, но это небезопасно и редко встречается в бытовых условиях.</p>
+</details>
+
+<details>
+<summary>Куда девается файл, если отправка не удалась?</summary>
+<p>Обычно файл сохраняется во внутренней памяти принтера в папке «Неудачные сканы» или «Очередь печати». Вы можете зайти в меню устройства, найти раздел истории и попробовать отправить его повторно после устранения ошибок.</p>
+</details>
+
+<details>
+<summary>Нужно ли настраивать SMTP для печати с телефона?</summary>
+<p>Нет, настройка SMTP нужна только для функции «Сканировать по почте» (Scan to Email). Для печати с телефона используется протокол AirPrint, Mopria или Wi-Fi Direct, которые не требуют настройки почтового сервера.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#введение">Введение</a></li><li><a href="#принцип-работы-протокола-и-роль-сервера">Принцип работы протокола и роль сервера</a></li><li><a href="#необходимые-параметры-для-настройки">Необходимые параметры для настройки</a></li><li><a href="#пошаговая-инструкция-по-настройке-через-веб-интерфейс">Пошаговая инструкция по настройке через веб-интерфейс</a></li><li><a href="#особенности-настройки-для-разных-почтовых-провайдеров">Особенности настройки для разных почтовых провайдеров</a></li><li><a href="#устранение-распространенных-ошибок">Устранение распространенных ошибок</a></li><li><a href="#безопасность-и-защита-данных">Безопасность и защита данных</a></li><li><a href="#частые-вопросы-faq">Частые вопросы (FAQ)</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-fotografirovat-na-kenon-500d.html" class="related-card">Как фотографировать на Canon 500D: Полное руководство по настройкам</a></li><li><a href="/articles/c/ca/canon-eos-1000d-kak-nastroit-diafragmu.html" class="related-card">Как настроить диафрагму на Canon EOS 100D: Полное руководство</a></li><li><a href="/articles/k/ka/kakoj-printer-podojdet-dlya-pechati-foto.html" class="related-card">Какой принтер выбрать для печати фото: сравнение моделей и технологий</a></li><li><a href="/articles/c/ca/canon-kak-perevesti.html" class="related-card">Как перевести Canon: язык, интерфейс и режимы сканеров</a></li><li><a href="/articles/k/ka/kakoj-kartridzh-nuzhen-dlya-printera-canon.html" class="related-card">Какой картридж нужен для принтера Canon: выбор, совместимость и типы</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-fotografirovat-na-kenon-500d.html" class="related-bottom-card"><span class="related-bottom-title">Как фотографировать на Canon 500D: Полное руководство по настройкам</span><span class="related-bottom-desc">Руководство по съемке на Canon EOS 500D. Настройки экспозиции, работа с объективами, режимы и советы</span></a><a href="/articles/c/ca/canon-eos-1000d-kak-nastroit-diafragmu.html" class="related-bottom-card"><span class="related-bottom-title">Как настроить диафрагму на Canon EOS 100D: Полное руководство</span><span class="related-bottom-desc">Подробная инструкция по управлению диафрагмой на камере Canon EOS 1000D. Настройки режима Av, приори</span></a><a href="/articles/k/ka/kakoj-printer-podojdet-dlya-pechati-foto.html" class="related-bottom-card"><span class="related-bottom-title">Какой принтер выбрать для печати фото: сравнение моделей и технологий</span><span class="related-bottom-desc">Полный гид по выбору принтера для фотографий. Разбор струйных и сублимационных моделей, советы по че</span></a><a href="/articles/c/ca/canon-kak-perevesti.html" class="related-bottom-card"><span class="related-bottom-title">Как перевести Canon: язык, интерфейс и режимы сканеров</span><span class="related-bottom-desc">Полная инструкция: как сменить язык интерфейса, перевести сканер в режим печати на русском и настрои</span></a><a href="/articles/k/ka/kakoj-kartridzh-nuzhen-dlya-printera-canon.html" class="related-bottom-card"><span class="related-bottom-title">Какой картридж нужен для принтера Canon: выбор, совместимость и типы</span><span class="related-bottom-desc">Полный гид по подбору картриджей Canon. Сравнение оригинала и аналогов, проверка совместимости, чипо</span></a><a href="/articles/k/ka/kak-nastroit-setevye-printery.html" class="related-bottom-card"><span class="related-bottom-title">Как настроить сетевой принтер: пошаговая инструкция для офиса и дома</span><span class="related-bottom-desc">Полное руководство по настройке сетевых принтеров. Настройка IP-адреса, установка драйверов через TC</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

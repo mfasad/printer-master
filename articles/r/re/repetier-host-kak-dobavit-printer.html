@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как добавить принтер в Repetier-Host: пошаговая настройка — Принтер Мастер</title>
+    <meta name="description" content="Полная инструкция по подключению 3D-принтера к Repetier-Host. Настройка портов, прошивка, калибровка и решение частых проблем.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/r/re/repetier-host-kak-dobavit-printer.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как добавить принтер в Repetier-Host: пошаговая настройка">
+    <meta property="og:description" content="Полная инструкция по подключению 3D-принтера к Repetier-Host. Настройка портов, прошивка, калибровка и решение частых проблем.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как добавить принтер в Repetier-Host: пошаговая настройка</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Полное руководство: как добавить принтер в Repetier-Host</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#начало-работы-с-repetier-host">Начало работы с Repetier-Host</a></li><li><a href="#установка-драйверов-и-выбор-порта">Установка драйверов и выбор порта</a></li><li><a href="#настройка-параметров-соединения">Настройка параметров соединения</a></li><li><a href="#добавление-принтера-в-список-устройств">Добавление принтера в список устройств</a></li><li><a href="#калибровка-и-тестирование-функций">Калибровка и тестирование функций</a></li><li><a href="#работа-с-g-кодом-и-слайсером">Работа с G-кодом и слайсером</a></li><li><a href="#решение-частых-проблем">Решение частых проблем</a></li><li><a href="#дополнительные-возможности">Дополнительные возможности</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="начало-работы-с-repetier-host">Начало работы с Repetier-Host</h2>
+<p>Подключение 3D-принтера к компьютеру — это фундаментальный шаг, от которого зависит качество последующей печати. <em>Repetier-Host</em> выступает в роли универсального хоста, объединяющего функции слайсера и управляющей программы в одном интерфейсе. Правильная настройка связи между ПК и устройством требует внимательности к деталям, особенно при выборе типа соединения.</p>
+<p>Многие пользователи сталкиваются с трудностями на этапе первичной инициализации, полагая, что достаточно просто вставить USB-кабель. Однако без корректной конфигурации <code>Serial Port</code> и <code>Baud Rate</code> программа не сможет обмениваться командами с материнской платой. Вам необходимо убедиться, что драйверы микроконтроллера установлены корректно, прежде чем запускать софт.</p>
+<p>Современные версии <em>Repetier-Host</em> поддерживают широкий спектр контроллеров, от классических Arduino до мощных 32-битных систем. Процесс добавления устройства унифицирован, но требует понимания архитектуры вашего принтера. Если вы используете прошивку <em>Marlin</em> или <em>Repetier Firmware</em>, алгоритм действий будет идентичным, что делает этот подход удобным для большинства энтузиастов.</p>
+
+<h2 id="установка-драйверов-и-выбор-порта">Установка драйверов и выбор порта</h2>
+<p>Прежде чем открывать программу, убедитесь, что операционная система видит ваше оборудование. Вставьте USB-кабель в принтер и компьютер. Откройте <code>Диспетчер устройств</code> в Windows и проверьте раздел <code>Порты (COM и LPT)</code>. Если вы видите устройство с восклицательным знаком, значит, драйверы не установлены.</p>
+<p>Чаще всего используются чипы <em>FTDI</em>, <em>CP2102</em> или <em>CH340</em>. Для каждого из них существуют специфичные драйверы, которые нужно скачать с сайта производителя. Без корректного драйвера <code>COM-порт</code> не будет отображаться в списке доступных соединений внутри хоста, и подключение станет невозможным.</p>
+<p>После установки драйверов перезагрузите систему для гарантии применения изменений. Теперь запустите <em>Repetier-Host</em>. В нижней части окна найдите выпадающий список выбора порта. Если вы видите несколько вариантов, например, <code>COM3</code> и <code>COM4</code>, попробуйте выбрать тот, который появился в диспетчере устройств непосредственно после подключения принтера.</p>
+<blockquote>⚠️ <strong>Внимание:</strong> Если после подключения принтера в списке портов ничего не изменилось, проверьте целостность USB-кабеля. Часто используются кабели только для зарядки, которые не передают данные, что делает настройку невозможной.</blockquote>
+
+<div class="poll-widget" id="poll-57336a0c"><div class="poll-widget-question">📊 Какой чип вы используете в своем принтере?</div><div class="poll-widget-option" data-poll="57336a0c" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">FTDI</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="57336a0c" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">CP2102</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="57336a0c" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">CH340</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="57336a0c" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Другой/Не знаю</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="настройка-параметров-соединения">Настройка параметров соединения</h2>
+<p>Выбрав порт, следующим критическим шагом является настройка скорости обмена данными. <code>Baud Rate</code> должен точно совпадать с настройками прошивки вашего принтера. Стандартные значения для большинства устройств составляют <code>115200</code> или <code>250000</code>. Если выбрать неверное значение, вы увидите поток бессмысленных символов или полную тишину в консоли.</p>
+<p>В разделе <code>Network / Serial</code> можно изменить параметры подключения. Вам нужно ввести <code>COM-порт</code> вручную, если он не определился автоматически, и установить корректную скорость. Для старых принтеров часто требуется <code>9600</code> или <code>57600</code>, поэтому всегда сверяйте документацию к вашей материнской плате.</p>
+<p>Также обратите внимание на параметр <code>Connection Timeout</code>. Если соединение устанавливается слишком долго, попробуйте увеличить это значение. Некоторые программы с низким приоритетом могут замедлять работу USB-шлюза, что приводит к тайм-аутам при попытке инициализации.</p>
+<p>Нажмите кнопку <code>Connect</code> и наблюдайте за текстовым окном консоли. Успешное соединение подтверждается появлением приветственного сообщения от прошивки, например, <code>Start</code> или <code>Marlin</code>. Если вы видите ошибку <code>Timeout</code>, перепроверьте выбор порта и скорость.</p>
+
+<div class="checklist-block"><h4>☑️ Проверка перед подключением</h4><label class="check-item"><input type="checkbox"><span>Драйверы установлены</span></label><label class="check-item"><input type="checkbox"><span>Порт выбран верно</span></label><label class="check-item"><input type="checkbox"><span>Скорость совпадает</span></label><label class="check-item"><input type="checkbox"><span>Кабель исправен</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="добавление-принтера-в-список-устройств">Добавление принтера в список устройств</h2>
+<p>После того как соединение установлено, необходимо сохранить конфигурацию принтера, чтобы не вводить данные каждый раз заново. Перейдите в меню <code>Printer</code> и выберите <code>Printer Configuration</code>. Здесь находится список всех добавленных вами устройств. Нажмите кнопку <code>Add</code> для создания новой записи.</p>
+<p>В открывшемся окне введите имя вашего принтера, например, <code>Ender 3 Pro</code> или <code>Custom DIY</code>. Это имя будет отображаться в главном списке. Обязательно заполните поля <code>Printer Type</code> и <code>Firmware</code>, так как это влияет на доступные команды и настройки калибровки. Если прошивка не указана, хост будет использовать стандартные настройки по умолчанию.</p>
+<p>Важно задать параметры <code>Bed Size</code> (размер стола) и <code>Z-Axis</code> (высоту печати). Эти данные используются для визуализации объекта в окне предпросмотра. Ошибка в размерах может привести к тому, что слайсер предложит модель, которая физически не поместится на столе вашего принтера.</p>
+<blockquote>⚠️ <strong>Внимание:</strong> Никогда не игнорируйте настройку размера стола. Если вы укажете габариты 200x200 для принтера с рабочим полем 100x100, печать может пойти по краям стола и закончиться аварией.</blockquote>
+
+<h2 id="калибровка-и-тестирование-функций">Калибровка и тестирование функций</h2>
+<p>После сохранения настроек вернитесь в главное окно и подключитесь к настраиваемому устройству. Используйте панель управления для проверки работы осей. Нажимайте кнопки <code>X+</code>, <code>X-</code>, <code>Y+</code>, <code>Y-</code>, <code>Z+</code>, <code>Z-</code> и наблюдайте за перемещением каретки. Все оси должны двигаться плавно, без рывков и посторонних звуков.</p>
+<p>Проверьте работу нагревательных элементов. В разделе <code>Temperature</code> установите целевую температуру для экструдера и стола. Обратите внимание, как быстро растут градусы и как часто включается вентилятор охлаждения. Это поможет вам понять, насколько эффективно работает ваша система терморегуляции.</p>
+<p>Протестируйте работу конечных выключателей (endstops). В консоли введите команду <code>M119</code> или используйте соответствующую кнопку в интерфейсе. Система должна показать состояние каждого выключателя: <code>triggered</code> (нажат) или <code>open</code> (не нажат). Это критически важно для корректной работы функции <code>Auto Home</code>.</p>
+<p>Если вы используете <code>Marlin</code>, вы можете обновить конфигурацию прошивки прямо из хоста. Это позволяет изменить параметры, такие как <code>Max Feedrate</code> или <code>Acceleration</code>, без перепрошивки микроконтроллера. Изменения вступают в силу немедленно и сохраняются в энергозависимой памяти.</p>
+
+<details class="faq-item"><summary>Как проверить работу энкодера?</summary><div class="faq-answer"><p>Если ваш принтер оснащен колесом-энкодером, подключите его через USB. В Repetier-Host настройте чувствительность вращения в меню настроек порта. Это позволит управлять меню принтера прямо с компьютера, что удобно при отладке.</p></div></details>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Перед началом тестовых движений убедитесь, что на столе нет инструментов или посторонних предметов, чтобы избежать столкновения с кареткой при случайном срабатывании команды.</p></div>
+
+<h2 id="работа-с-g-кодом-и-слайсером">Работа с G-кодом и слайсером</h2>
+<p>Основная функция <em>Repetier-Host</em> — подготовка и отправка файлов печати. Нажмите кнопку <code>Slicer</code> и выберите нужный слайсер, например, <em>Cura</em> или <em>PrusaSlicer</em>. Настройте профиль печати под ваши нужды: высота слоя, заполнение, поддержка и скорость движения.</p>
+<p>После нарезки модели нажмите <code>Print</code> для отправки G-кода на принтер. Программа покажет прогресс бар и текущее время печати. В окне консоли вы увидите поток команд, которые отправляются на устройство. Вы можете остановить печать в любой момент, нажав кнопку <code>Stop</code>.</p>
+<p>Для удобства можно настроить автоматическое перемещение стола в удобное положение после завершения печати. Для этого в конфигурации принтера укажите пост-процессинговые команды. Это позволит вам легко снять модель со стола, не выжидая остывания и не рискуя повредить ее при демонтаже.</p>
+
+<h2 id="решение-частых-проблем">Решение частых проблем</h2>
+<p>Иногда при подключении возникают ошибки, которые мешают нормальной работе. Если хост сообщает <code>Connection Error</code>, проверьте, не занят ли порт другой программой. Убедитесь, что в диспетчере устройств нет конфликтов ресурсов. Перезагрузка принтера и компьютера часто решает проблему.</p>
+<p>Если печать начинается, но останавливается через несколько секунд, проверьте настройки <code>Watchdog</code>. Некоторые прошивки требуют регулярного подтверждения связи, иначе они блокируют управление. Увеличьте таймаут связи в настройках хоста или измените параметры прошивки.</p>
+<p>Нестабильная связь по USB может быть вызвана электромагнитными помехами от моторов. Используйте экранированные кабели и убедитесь, что заземление системы выполнено правильно. В некоторых случаях помогает использование USB-хаба с внешним питанием для изоляции принтера от сети ПК.</p>
+<blockquote>⚠️ <strong>Внимание:</strong> Если вы видите постоянные ошибки <code>Checksum Error</code> в логе, попробуйте снизить скорость обмена данными (Baud Rate). Это повысит стабильность передачи, хотя и увеличит время печати.</blockquote>
+
+<table>
+  <thead>
+    <tr>
+      <th>Параметр</th>
+      <th>Рекомендуемое значение</th>
+      <th>Описание</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>Baud Rate</code></td>
+      <td>115200 / 250000</td>
+      <td>Скорость обмена данными с контроллером</td>
+    </tr>
+    <tr>
+      <td><code>Timeout</code></td>
+      <td>5000 мс</td>
+      <td>Время ожидания ответа от принтера</td>
+    </tr>
+    <tr>
+      <td><code>Buffer Size</code></td>
+      <td>256 байт</td>
+      <td>Размер буфера команд</td>
+    </tr>
+    <tr>
+      <td><code>Flow Control</code></td>
+      <td>None / RTS/CTS</td>
+      <td>Управление потоком данных</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Правильная настройка Baud Rate и проверка драйверов — это 90% успеха при первом подключении принтера к Repetier-Host.</p></div>
+
+<h2 id="дополнительные-возможности">Дополнительные возможности</h2>
+<p><em>Repetier-Host</em> предлагает расширенные функции для опытных пользователей. Вы можете настроить автоматическое получение температуры и запись логов в файл. Это пригодится для диагностики проблем с термобарьером или нестабильным нагревом.</p>
+<p>Интерфейс позволяет создавать макросы для выполнения сложных последовательностей действий одной кнопкой. Например, вы можете настроить команду для разгона вентилятора стола, перемещения каретки в угол и отключения нагрева. Это удобно при подготовке к печати или завершении работы.</p>
+<p>Для сетевой печати можно использовать дополнительные плагины, которые позволяют отправлять файлы по Wi-Fi через <code>OctoPrint</code> или другие серверы. Это избавляет от необходимости использовать USB-кабель и дает возможность управлять процессом удаленно.</p>
+
+<details class="faq-item"><summary>Настройка макросов</summary><div class="faq-answer"><p>В разделе настроек найдите вкладку Macros. Создайте новую команду, введите G-код (например, G28 для гоминга) и назначьте ей удобную кнопку на панели управления.></p></div></details>
+
+<p>Использование <em>Repetier-Host</em> дает вам полный контроль над процессом аддитивного производства. От настройки портов до тонкой калибровки параметров движения — все инструменты находятся под рукой. Регулярное обновление программы и проверка настроек гарантируют стабильную работу вашего 3D-принтера.</p>
+
+<details>
+  <summary>Что делать, если принтер не определяется?</summary>
+  <p>Проверьте кабель, попробуйте другой USB-порт и переустановите драйверы чипа. Убедитесь, что принтер включен до подключения кабеля.</p>
+</details>
+
+<details>
+  <summary>Как изменить скорость обмена данными?</summary>
+  <p>Зайдите в <code>Printer Configuration</code>, выберите порт и в поле <code>Baud Rate</code> введите значение, указанное в документации вашей прошивки (обычно 115200 или 250000).</p>
+</details>
+
+<details>
+  <summary>Можно ли подключить несколько принтеров?</summary>
+  <p>Да, в Repetier-Host можно добавить неограниченное количество принтеров. Просто создайте новую конфигурацию для каждого устройства в меню Printer.</p>
+</details>
+
+<details>
+  <summary>Какая прошивка лучше всего работает с Repeater Host?</summary>
+  <p>Оригинальная <em>Repetier Firmware</em> интегрирована лучше всего, но хост отлично поддерживает <em>Marlin</em>, <em>Grbl</em> и <em>Smoothieboard</em>.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#начало-работы-с-repetier-host">Начало работы с Repetier-Host</a></li><li><a href="#установка-драйверов-и-выбор-порта">Установка драйверов и выбор порта</a></li><li><a href="#настройка-параметров-соединения">Настройка параметров соединения</a></li><li><a href="#добавление-принтера-в-список-устройств">Добавление принтера в список устройств</a></li><li><a href="#калибровка-и-тестирование-функций">Калибровка и тестирование функций</a></li><li><a href="#работа-с-g-кодом-и-слайсером">Работа с G-кодом и слайсером</a></li><li><a href="#решение-частых-проблем">Решение частых проблем</a></li><li><a href="#дополнительные-возможности">Дополнительные возможности</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-nastroit-skan-s-printera-na-kompyuter.html" class="related-card">Как настроить сканирование с принтера на компьютер: полное руководство</a></li><li><a href="/articles/k/ka/kak-napechatat-konvert-s4-na-printere-canon.html" class="related-card">Печать конвертов C4 на Canon: Пошаговая инструкция настройки</a></li><li><a href="/articles/p/pr/printer-ne-otvechaet-chto-delat-canon-g3010.html" class="related-card">Принтер Canon G3010 не отвечает: полные способы решения проблемы</a></li><li><a href="/articles/p/pr/printery-hp-kakoj-luchshe.html" class="related-card">Какой принтер HP лучше купить: обзор моделей для дома и офиса</a></li><li><a href="/articles/k/ka/kak-podklyuchit-ajfon-k-printeru-cherez-wifi.html" class="related-card">Как подключить iPhone к принтеру через Wi-Fi: полное руководство AirPrint</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-nastroit-skan-s-printera-na-kompyuter.html" class="related-bottom-card"><span class="related-bottom-title">Как настроить сканирование с принтера на компьютер: полное руководство</span><span class="related-bottom-desc">Пошаговая инструкция по настройке сканера. Установка драйверов, выбор ПО, настройка TWAIN и WIA, реш</span></a><a href="/articles/k/ka/kak-napechatat-konvert-s4-na-printere-canon.html" class="related-bottom-card"><span class="related-bottom-title">Печать конвертов C4 на Canon: Пошаговая инструкция настройки</span><span class="related-bottom-desc">Узнайте, как правильно загрузить и напечатать конверт формата C4 на принтерах Canon. Инструкция по н</span></a><a href="/articles/p/pr/printer-ne-otvechaet-chto-delat-canon-g3010.html" class="related-bottom-card"><span class="related-bottom-title">Принтер Canon G3010 не отвечает: полные способы решения проблемы</span><span class="related-bottom-desc">Узнайте, что делать, если принтер Canon G3010 не отвечает на запросы. Пошаговая диагностика драйверо</span></a><a href="/articles/p/pr/printery-hp-kakoj-luchshe.html" class="related-bottom-card"><span class="related-bottom-title">Какой принтер HP лучше купить: обзор моделей для дома и офиса</span><span class="related-bottom-desc">Сравнение популярных серий принтеров HP. Узнайте, какой лазерный или струйный аппарат выбрать для пе</span></a><a href="/articles/k/ka/kak-podklyuchit-ajfon-k-printeru-cherez-wifi.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить iPhone к принтеру через Wi-Fi: полное руководство AirPrint</span><span class="related-bottom-desc">Пошаговая инструкция по настройке печати с iPhone на принтер через Wi-Fi. Обзор AirPrint, устранение</span></a><a href="/articles/k/ka/kartridzh-cf283x-737-dlya-kakogo-printera.html" class="related-bottom-card"><span class="related-bottom-title">Картридж CF283X 737: для каких принтеров HP подходит</span><span class="related-bottom-desc">Полный список моделей принтеров HP, использующих картридж CF283X (HP 737X). Совместимость, отличия о</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

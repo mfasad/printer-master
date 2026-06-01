@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как печатать на локальном принтере через RDP: Настройка перенаправления — Принтер Мастер</title>
+    <meta name="description" content="Пошаговая инструкция по настройке печати на удаленном рабочем столе. Решаем проблему отсутствия принтера в RDP-сессии Windows.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-cherez-udalennyj-rabochij-stol-pechatat-na-svoem-printere.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как печатать на локальном принтере через RDP: Настройка перенаправления">
+    <meta property="og:description" content="Пошаговая инструкция по настройке печати на удаленном рабочем столе. Решаем проблему отсутствия принтера в RDP-сессии Windows.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как печатать на локальном принтере через RDP: Настройка перенаправления</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как через удаленный рабочий стол печатать на своем принтере</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#подготовка-локального-принтера-и-драйверов">Подготовка локального принтера и драйверов</a></li><li><a href="#настройка-параметров-подключения-rdp">Настройка параметров подключения RDP</a></li><li><a href="#проверка-доступности-принтера-в-удаленной-сессии">Проверка доступности принтера в удаленной сессии</a></li><li><a href="#установка-драйверов-на-удаленном-сервере">Установка драйверов на удаленном сервере</a></li><li><a href="#решение-проблем-с-перенаправлением">Решение проблем с перенаправлением</a></li><li><a href="#оптимизация-скорости-печати">Оптимизация скорости печати</a></li><li><a href="#альтернативные-методы-подключения">Альтернативные методы подключения</a></li><li><a href="#faq-частые-вопросы-пользователей">FAQ: Частые вопросы пользователей</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body">
+
+<p>Работа в удаленном режиме часто требует вывода документов на физическое устройство, находящееся в локальной сети пользователя. Ситуация, когда вы подключаетесь к корпоративному серверу, но не видите свой домашний принтер, является классической проблемой администрирования удаленных сессий. Система по умолчанию не знает, куда отправлять данные, если локальный драйвер не синхронизирован с удаленным сеансом.</p>
+
+<p>Механизм <strong>перенаправления устройств</strong> (Device Redirection) позволяет решить эту задачу без сложной настройки сетевых протоколов. Вам необходимо лишь корректно настроить параметры подключения и убедиться в наличии подходящих драйверов на удаленном сервере. Этот процесс превращает удаленный принтер в доступную виртуальную машину, которая физически находится у вас под рукой.</p>
+
+<p>Многие пользователи ошибочно полагают, что для печати требуется установка сложного сетевого ПО или открытие портов фаервола. В большинстве случаев достаточно стандартных инструментов <em>Microsoft Remote Desktop</em> или <em>mstsc</em>. Ключевой момент заключается в том, чтобы удаленная машина воспринимала ваш локальный аппарат как стандартный сетевой ресурс.</p>
+
+<h2 id="подготовка-локального-принтера-и-драйверов">Подготовка локального принтера и драйверов</h2>
+
+<p>Первым этапом является проверка работоспособности устройства на вашем компьютере. Прежде чем пытаться подключиться к серверу, убедитесь, что принтер печатает корректно из локальных программ. Если локальная печать не работает, удаленная сессия не сможет передать данные корректно.</p>
+
+<p>Критически важно проверить версию драйвера. На удаленном сервере могут быть установлены старые библиотеки, которые конфликтуют с новыми драйверами вашего устройства. Идеальный сценарий — наличие на сервере драйвера той же версии, что и на клиенте, но это не всегда обязательно благодаря механизму эмуляции.</p>
+
+<p><strong>Совместимость драйверов</strong> часто становится узким местом. Если вы используете специфический <em>HP LaserJet</em> или <em>Xerox WorkCentre</em> с собственным ПО, убедитесь, что на сервере установлен аналогичный или совместимый драйвер. В противном случае система предложит использовать универсальный драйвер <strong>Microsoft IPP Class Driver</strong>, который может не поддерживать все функции устройства.</p>
+
+<h2 id="настройка-параметров-подключения-rdp">Настройка параметров подключения RDP</h2>
+
+<p>Основная настройка происходит в клиенте удаленного рабочего стола до начала сессии. Запустите приложение <code>Подключение к удаленному рабочему столу</code> и перейдите в настройки, нажав кнопку <code>Показать параметры</code>. В открывшемся окне необходимо переключиться на вкладку <code>Локальные ресурсы</code>.</p>
+
+<p>В разделе <strong>Локальные устройства и ресурсы</strong> найдите пункт <code>Принтеры</code>. Установите флажок рядом с этим пунктом, чтобы включить перенаправление. Если у вас несколько принтеров, система автоматически определит и предложит все доступные устройства, подключенные к вашему ПК.</p>
+
+<p><blockquote>⚠️ Внимание: Если вы подключаетесь к серверу с включенным режимом безопасности, перенаправление принтеров может быть заблокировано групповыми политиками администратора. В таком случае вам потребуется помощь системного администратора для изменения настроек GPO на стороне сервера.</blockquote></p>
+
+<p>Для более точной настройки нажмите кнопку <code>Подробнее</code> под списком локальных ресурсов. Здесь вы увидите полный список доступных устройств. Убедитесь, что галочка стоит именно напротив вашего принтера, а не только над общим пунктом.</p>
+
+<div class="poll-widget" id="poll-40cfa05a"><div class="poll-widget-question">📊 Какой тип подключения вы используете чаще всего?</div><div class="poll-widget-option" data-poll="40cfa05a" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Стандартный RDP (mstsc)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="40cfa05a" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Thin Client</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="40cfa05a" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Веб-версия RDP</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="40cfa05a" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Другие клиенты (AnyDesk, TeamViewer)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="проверка-доступности-принтера-в-удаленной-сессии">Проверка доступности принтера в удаленной сессии</h2>
+
+<p>После успешного подключения к удаленному рабочему столу откройте меню <code>Пуск</code> и перейдите в раздел <code>Устройства и принтеры</code> (или <code>Параметры → Устройства → Принтеры и сканеры</code> в Windows 10/11). Вы должны увидеть принтер с префиксом «Удаленный принтер» или названием, соответствующим вашему локальному устройству.</p>
+
+<p>Иногда принтер отображается, но имеет статус <strong>«Оффлайн»</strong> или <code>«Приостановлен»</code>. Это часто случается, если драйверы на сервере не полностью совпадают с локальными. Попробуйте удалить устройство и добавить его заново, нажав <code>Добавить принтер</code> и дождавшись обнаружения.</p>
+
+<p>Важно отметить, что в некоторых конфигурациях принтер может отображаться как виртуальное устройство с именем <code>RDP Printer</code>. Это нормально, система использует стандартный драйвер для перенаправления потока данных. Если печать не запускается, проверьте очередь печати и статус службы <strong>Spooler</strong>.</p>
+
+<h2 id="установка-драйверов-на-удаленном-сервере">Установка драйверов на удаленном сервере</h2>
+
+<p>Если принтер отображается, но печать завершается ошибкой, проблема почти наверняка в отсутствии драйвера на сервере. Удаленная система не может использовать ваш локальный драйвер напрямую, ей нужна собственная копия программного обеспечения.</p>
+
+<p>Вам необходимо зайти на официальный сайт производителя и скачать драйвер для соответствующей версии Windows Server или Windows 10/11. Установите его на сервере, перезагрузите службу печати и повторите попытку подключения.</p>
+
+<p>Для корпоративных сред часто используется <em>Point and Print</em> — механизм автоматической установки драйверов. Однако, если политика безопасности ограничивает установку ПО, вам придется вручную загружать <strong>.inf</strong> файлы драйверов и устанавливать их через диспетчер устройств.</p>
+
+<div class="checklist-block"><h4>☑️ Проверка драйверов на сервере</h4><label class="check-item"><input type="checkbox"><span>Установлен драйвер принтера</span></label><label class="check-item"><input type="checkbox"><span>Служба Spooler работает</span></label><label class="check-item"><input type="checkbox"><span>Доступ к порту не заблокирован</span></label><label class="check-item"><input type="checkbox"><span>Драйвер совместим с архитектурой сервера</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="решение-проблем-с-перенаправлением">Решение проблем с перенаправлением</h2>
+
+<p>Иногда драйверы установлены, но принтер все равно не виден. В этом случае стоит проверить реестр и групповые политики. Ошибка может быть связана с тем, что клиентское приложение блокирует доступ к периферии.</p>
+
+<p>Попробуйте выполнить команду <code>gpupdate /force</code> в командной строке сервера (с правами администратора), чтобы обновить политики. Также проверьте параметры в <code>regedit</code> по пути <code>HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services</code>.</p>
+
+<p><blockquote>⚠️ Внимание: Изменение реестра может повлиять на стабильность работы сервера. Если вы не уверены в своих действиях, создайте точку восстановления системы перед внесением изменений в системные ключи.</blockquote></p>
+
+<p>Еще одной частой причиной сбоя является устаревшая версия клиента RDP. Убедитесь, что на вашем компьютере установлена актуальная версия <em>Microsoft Remote Desktop Client</em>. Старые версии могут не поддерживать новые протоколы безопасности перенаправления устройств.</p>
+
+<table>
+<thead>
+<tr>
+<th>Проблема</th>
+<th>Возможная причина</th>
+<th>Решение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Принтер не отображается</td>
+<td>Отключена опция в RDP</td>
+<td>Включить «Принтеры» во вкладке «Локальные ресурсы»</td>
+</tr>
+<tr>
+<td>Ошибка драйвера при печати</td>
+<td>Несовместимость версий</td>
+<td>Установить драйвер на сервер вручную</td>
+</tr>
+<tr>
+<td>Печать в очередь, но не запускается</td>
+<td>Проблема со службой Spooler</td>
+<td>Перезапустить службу «Диспетчер печати»</td>
+</tr>
+<tr>
+<td>Принтер «Оффлайн»</td>
+<td>Блокировка политик безопасности</td>
+<td>Проверить GPO и настройки фаервола</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="оптимизация-скорости-печати">Оптимизация скорости печати</h2>
+
+<p>Печать через RDP может работать медленно, особенно если документ содержит много графики. Это связано с тем, что данные передаются через сетевой канал, а не через локальный USB. Оптимизация этого процесса требует настройки качества отрисовки.</p>
+
+<p>В настройках подключения RDP на вкладке <code>Экран</code> попробуйте снизить <strong>качество цветов</strong> до 16 бит или отключить <code>Фоновые изображения</code>. Это уменьшит объем передаваемых данных и ускорит отрисовку страницы на удаленном устройстве.</p>
+
+<p>Также полезно проверить настройки самого принтера в Windows. Отключите <strong>двустороннюю печать</strong> и сложные эффекты обводки, если они не критичны. Простые текстовые документы будут обрабатываться значительно быстрее.</p>
+
+<details class="faq-item"><summary>Что делать, если печать зависла?</summary><div class="faq-answer"><p>Если документ завис в очереди, не пытайтесь просто перезагрузить принтер. Сначала остановите службу Spooler, удалите файлы из папки %windir%\System32\spool\PRINTERS и только затем перезапустите службу. Это очистит очередь полностью.</p></div></details>
+
+<h2 id="альтернативные-методы-подключения">Альтернативные методы подключения</h2>
+
+<p>Если стандартный метод перенаправления не работает, рассмотрите возможность использования <strong>виртуального принтера</strong>. Создайте на сервере файл PDF с помощью виртуального драйвера, сохраните его в общую папку, а затем распечатайте локально.</p>
+
+<p>Этот способ обходит проблемы с драйверами, так как сервер передает готовый файл, а не поток команд управления принтером. Это особенно актуально для старых серверов, где установка современных драйверов невозможна.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Используйте виртуальный принтер PDF как временное решение, если основной метод не работает. Это позволит вам быстро получить документ без глубокой настройки системы.</p></div>
+
+<p>В редких случаях можно настроить <code>IP-принтер</code> через <strong>Direct IP</strong>, если у вас есть доступ к порту принтера. Это требует, чтобы принтер был доступен в сети, а не только через USB на клиенте.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Главный секрет стабильной печати — это идентичность драйверов. Чем ближе драйвер на сервере к локальному драйверу, тем меньше проблем с рендерингом страницы.</p></div>
+
+<blockquote>⚠️ Внимание: Обновления Windows часто меняют механизмы безопасности перенаправления устройств. Внимательно следите за обновлениями и тестируйте настройку после установки крупных патчей.</blockquote>
+
+<h2 id="faq-частые-вопросы-пользователей">FAQ: Частые вопросы пользователей</h2>
+
+<details>
+<summary>Почему принтер не появляется сразу после подключения?</summary>
+<p>Это может занять от 30 секунд до нескольких минут. Система должна инициализировать драйвер и установить соединение. Если прошло больше 5 минут, проверьте вкладку «Локальные ресурсы» и перезапустите подключение.</p>
+</details>
+
+<details>
+<summary>Можно ли печатать на двух принтерах одновременно через RDP?</summary>
+<p>Да, если вы отметите галочками несколько принтеров во вкладке «Локальные ресурсы», все они появятся в удаленной сессии. Вы сможете выбирать любой из них при отправке задания на печать.</p>
+</details>
+
+<details>
+<summary>Работает ли печать, если принтер подключен по Wi-Fi?</summary>
+<p>Да, работает. Важно, чтобы принтер был доступен вашему локальному компьютеру. RDP перенаправляет не физическое соединение, а поток данных, поэтому тип подключения (USB или Wi-Fi) не имеет значения для настройки RDP.</p>
+</details>
+
+<details>
+<summary>Что делать, если на сервере нет прав на установку драйвера?</summary>
+<p>В этом случае используйте универсальный драйвер <em>Microsoft IPP Class Driver</em> или попросите администратора предоставить права на установку ПО. Без драйвера печать невозможна, так как сервер не знает, как интерпретировать данные.</p>
+</details>
+
+<details>
+<summary>Можно ли использовать этот метод для печати на 3D-принтер?</summary>
+<p>Технически да, но это ненадежно. 3D-принтеры требуют точного тайминга и постоянного потока данных. Прерывание связи или задержка в RDP может привести к браку печати. Лучше использовать локальную печать напрямую.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#подготовка-локального-принтера-и-драйверов">Подготовка локального принтера и драйверов</a></li><li><a href="#настройка-параметров-подключения-rdp">Настройка параметров подключения RDP</a></li><li><a href="#проверка-доступности-принтера-в-удаленной-сессии">Проверка доступности принтера в удаленной сессии</a></li><li><a href="#установка-драйверов-на-удаленном-сервере">Установка драйверов на удаленном сервере</a></li><li><a href="#решение-проблем-с-перенаправлением">Решение проблем с перенаправлением</a></li><li><a href="#оптимизация-скорости-печати">Оптимизация скорости печати</a></li><li><a href="#альтернативные-методы-подключения">Альтернативные методы подключения</a></li><li><a href="#faq-частые-вопросы-пользователей">FAQ: Частые вопросы пользователей</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-podklyuchit-malenkij-printer-k-telefonu-cherez-blyutuz.html" class="related-card">Как подключить маленький принтер к телефону через блютуз: пошаговая инструкция</a></li><li><a href="/articles/b/ba/bartender-kak-dobavit-printer.html" class="related-card">Как добавить принтер в Bartender: пошаговая инструкция и настройка</a></li><li><a href="/articles/k/ka/kak-ustanovit-printer-hp-laser-mfp-135wr.html" class="related-card">Как установить принтер HP Laser MFP 135wr: пошаговая инструкция 2026</a></li><li><a href="/articles/p/pr/printer-canon-pixma-mg2540s-ne-zakhvatyvaet-bumagu-i-treshchit-chto.html" class="related-card">Canon MG2540S не тянет бумагу и трещит: 7 причин и ремонт</a></li><li><a href="/articles/k/ka/kak-otklyuchit-tsvetnoj-kartridzh-na-printere-canon.html" class="related-card">Как отключить цветной картридж на принтере Canon: полное руководство</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-podklyuchit-malenkij-printer-k-telefonu-cherez-blyutuz.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить маленький принтер к телефону через блютуз: пошаговая инструкция</span><span class="related-bottom-desc">Пошаговая инструкция по подключению портативного принтера к смартфону по Bluetooth. Решаем проблемы </span></a><a href="/articles/b/ba/bartender-kak-dobavit-printer.html" class="related-bottom-card"><span class="related-bottom-title">Как добавить принтер в Bartender: пошаговая инструкция и настройка</span><span class="related-bottom-desc">Узнайте, как подключить и настроить принтер этикеток в программе Bartender. Пошаговая установка драй</span></a><a href="/articles/k/ka/kak-ustanovit-printer-hp-laser-mfp-135wr.html" class="related-bottom-card"><span class="related-bottom-title">Как установить принтер HP Laser MFP 135wr: пошаговая инструкция 2026</span><span class="related-bottom-desc">Подробное руководство по подключению и настройке МФУ HP Laser MFP 135wr к ПК/ноутбуку через USB/Wi-F</span></a><a href="/articles/p/pr/printer-canon-pixma-mg2540s-ne-zakhvatyvaet-bumagu-i-treshchit-chto.html" class="related-bottom-card"><span class="related-bottom-title">Canon MG2540S не тянет бумагу и трещит: 7 причин и ремонт</span><span class="related-bottom-desc">Принтер Canon PIXMA MG2540S не захватывает бумагу и издаёт треск? Разбираем поломки: от замятия до и</span></a><a href="/articles/k/ka/kak-otklyuchit-tsvetnoj-kartridzh-na-printere-canon.html" class="related-bottom-card"><span class="related-bottom-title">Как отключить цветной картридж на принтере Canon: полное руководство</span><span class="related-bottom-desc">Инструкция по отключению цветного картриджа Canon для печати ч/б. Скрытые меню, драйверы и настройки</span></a><a href="/articles/k/ka/kak-podklyuchit-printer-bez-diska-kompyuter.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить принтер к ПК без диска — 5 способов (2026)</span><span class="related-bottom-desc">Пошаговая инструкция: подключаем принтер к Windows 10/11 без установочного диска. Скачиваем драйвера</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

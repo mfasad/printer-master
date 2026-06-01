@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Подключение сетевого принтера из чужого домена: инструкция для IT-администратора — Принтер Мастер</title>
+    <meta name="description" content="Пошаговая настройка доступа к принтеру в другом домене Active Directory. Настройка доверия, установка драйверов, настройка прав и устранение ошибок Kerberos.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-podklyuchit-printer-iz-drugogo-domena.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Подключение сетевого принтера из чужого домена: инструкция для IT-администратора">
+    <meta property="og:description" content="Пошаговая настройка доступа к принтеру в другом домене Active Directory. Настройка доверия, установка драйверов, настройка прав и устранение ошибок Kerberos.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Подключение сетевого принтера из чужого домена: инструкция для IT-администратора</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как подключить принтер из другого домена Active Directory</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#настройка-доступа-к-периферии-между-разными-доменами">Настройка доступа к периферии между разными доменами</a></li><li><a href="#проверка-базовых-доверительных-отношений">Проверка базовых доверительных отношений</a></li><li><a href="#прямое-подключение-через-ip-адрес-без-поиска-в-ad">Прямое подключение через IP-адрес без поиска в AD</a></li><li><a href="#аутентификация-и-учетные-данные">Аутентификация и учетные данные</a></li><li><a href="#устранение-ошибок-блокировки-rpc-и-печати">Устранение ошибок блокировки RPC и печати</a></li><li><a href="#таблица-основных-протоколов-и-портов">Таблица основных протоколов и портов</a></li><li><a href="#настройка-групповых-политик-для-автоматической-установки">Настройка групповых политик для автоматической установки</a></li><li><a href="#управление-правами-доступа-и-безопасность">Управление правами доступа и безопасность</a></li><li><a href="#частые-вопросы-и-ответы">Частые вопросы и ответы</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="настройка-доступа-к-периферии-между-разными-доменами">Настройка доступа к периферии между разными доменами</h2>
+<p>Подключение периферийного оборудования в корпоративной сети часто усложняется, когда сервер печати и пользовательская станция находятся в разных доменах Active Directory. Это частая ситуация при слиянии компаний или в крупных холдингах с филиальной структурой. Вам необходимо обеспечить корректную маршрутизацию пакетов и настройку доверительных отношений, иначе клиент просто не увидит устройство в сети.</p>
+<p>Сложность процесса кроется не столько в физическом подключении кабеля, сколько в логической настройке прав доступа и протоколов аутентификации. Пользователь может иметь права администратора на своем компьютере, но без прописанных учетных данных в целевом домене он не сможет установить <strong>сетевой принтер</strong>. Игнорирование этих нюансов приведет к ошибкам 0x0000011b или 0x00000709 при попытке добавления.</p>
+
+<h2 id="проверка-базовых-доверительных-отношений">Проверка базовых доверительных отношений</h2>
+<p>Прежде чем пытаться установить драйвер или добавить принтер в очередь, необходимо убедиться, что домены видят друг друга на сетевом уровне. Если между доменами нет настроенных <strong>доверительных отношений (Trust Relationships)</strong>, аутентификация будет невозможна, и система будет выдавать ошибку доступа.</p>
+<p>Администратор должен проверить настройки в оснастке <code>Active Directory Domains and Trusts</code>. Доверие может быть односторонним или двухсторонним, в зависимости от политики безопасности компании. Если доверие настроено корректно, но доступ все равно закрыт, проверьте настройки DNS. Без корректной <strong>регистрации записей SRV</strong> в DNS-сервере поиск контроллера домена с принтером завершится неудачей.</p>
+<blockquote>⚠️ Внимание: Если между доменами настроено одностороннее доверие, убедитесь, что оно направлено от домена пользователя к домену принтера. Иначе учетная запись пользователя не сможет быть авторизована на сервере печати.</blockquote>
+
+<h2 id="прямое-подключение-через-ip-адрес-без-поиска-в-ad">Прямое подключение через IP-адрес без поиска в AD</h2>
+<p>Использование стандартного мастера добавления принтера через поиск в Active Directory часто приводит к сбоям при работе с межсетевыми экранами или сложной маршрутизацией. Самый надежный способ в таких условиях — использование прямого TCP/IP подключения. Вам нужно знать <strong>статический IP-адрес</strong> сетевого контроллера печати или самого принтера.</p>
+<p>При выборе типа подключения укажите "Добавить TCP/IP принтер". Система запросит хост или IP. Введите адрес вручную, например, <code>192.168.10.55</code>. Система попытается установить связь через порт 9100 или WSD. Если автоматический тип порта определяется неверно, принудительно выберите "Стандартный TCP/IP порт".</p>
+<p>Драйвер может не подгрузиться автоматически, если на клиентской машине нет его в кэше. В этом случае потребуется указать путь к драйверу вручную. Используйте локальный установщик или сетевую папку, доступную по UNC-пути, если к ней есть права.</p>
+<div class="checklist-block"><h4>☑️ Проверка доступности принтера</h4><label class="check-item"><input type="checkbox"><span>Пронг (Ping) IP-адреса принтера</span></label><label class="check-item"><input type="checkbox"><span>Проверка портов 9100 и 445</span></label><label class="check-item"><input type="checkbox"><span>Настройка статического IP</span></label><label class="check-item"><input type="checkbox"><span>Отключение фаервола на время установки</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="аутентификация-и-учетные-данные">Аутентификация и учетные данные</h2>
+<p>Самый критичный этап — предоставление прав доступа. Когда вы вводите IP-адрес или UNC-путь, система запросит учетные данные. Здесь нельзя использовать локальную учетную запись вашего компьютера. Необходимо указать логин и пароль пользователя, существующего в <strong>домене сервера печати</strong>. Формат ввода зависит от конфигурации: <code>DOMAIN\User</code> или <code>User@domain.com</code>.</p>
+<p>Если вы используете протокол SMB для доступа к сетевой папке с драйверами, убедитесь, что версия SMB соответствует настройкам сервера. Современные системы по умолчанию отключают SMBv1, что часто является причиной невозможности установки драйверов со старых серверов печати.</p>
+<p>В некоторых случаях требуется предварительное добавление пользователя в группу администраторов на сервере печати или в локальную группу "Print Operators". Без этих прав пользователь сможет только печатать, но не сможет изменить настройки очереди или установить драйвер самостоятельно.</p>
+<details class="faq-item"><summary>Особенности протокола SMB при подключении</summary><div class="faq-answer"><p>При использовании Windows 10 2004+ и выше, протокол SMBv1 по умолчанию отключен. Если сервер печати работает на Windows Server 2008 R2, вам потребуется либо обновить драйверы на сервере, либо временно разрешить SMBv1 на клиенте через реестр, что небезопасно.</p></div></details>
+<blockquote>⚠️ Внимание: При вводе пароля учтите, что он не сохраняется в конфигурации принтера после перезагрузки, если не использовался метод "Сохранить учетные данные в диспетчере учетных данных". Это может привести к постоянным запросам пароля при каждом запуске печати.</blockquote>
+
+<h2 id="устранение-ошибок-блокировки-rpc-и-печати">Устранение ошибок блокировки RPC и печати</h2>
+<p>После успешной установки часто возникают ошибки печати, связанные с блокировкой удаленного вызова процедур (RPC). Это связано с обновлением безопасности Microsoft PrintNightmare, которое изменило поведение портов 135 и 445. Вам может потребоваться изменить ключи реестра на сервере печати, чтобы разрешить подключение из внешнего домена.</p>
+<p>Конкретные проблемы могут проявляться в виде кодов ошибок 0x0000011b или 0x00000709. Исправление часто требует отключения проверки подписи драйверов или изменения политики безопасности RPC. Также необходимо проверить, что служба "Диспетчер печати" на сервере не ограничивает доступ по IP-адресам.</p>
+<p>Важно настроить исключения в брандмауэре Windows на обеих сторонах. Блокировка портов может быть скрытой, если используется сторонний антивирус. Проверьте, открыты ли порты для входящих подключений со стороны подсети клиента. <strong>Правила файрвола</strong> должны разрешать трафик не только на сервер, но и обратно.</p>
+<div class="poll-widget" id="poll-8868005e"><div class="poll-widget-question">📊 Какую ошибку вы чаще всего видите при подключении?</div><div class="poll-widget-option" data-poll="8868005e" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">0x0000011b</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="8868005e" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">0x00000709</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="8868005e" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Принтер не отображается в поиске</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="8868005e" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Ошибка установки драйвера</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="таблица-основных-протоколов-и-портов">Таблица основных протоколов и портов</h2>
+<p>Для корректной работы принтера в чужом домене необходимо обеспечить проходимость следующих портов. Ниже приведена сводная таблица, которую следует использовать при диагностике сетевых проблем.</p>
+<table>
+<thead>
+<tr>
+<th>Протокол</th>
+<th>Порт</th>
+<th>Назначение</th>
+<th>Статус</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SMB</td>
+<td>445</td>
+<td>Общий доступ к файлам и принтерам</td>
+<td>Обязательно</td>
+</tr>
+<tr>
+<td>RPC</td>
+<td>135</td>
+<td>Удаленный вызов процедур</td>
+<td>Рекомендуется</td>
+</tr>
+<tr>
+<td>LDAP</td>
+<td>389</td>
+<td>Запрос к каталогу Active Directory</td>
+<td>Желательно</td>
+</tr>
+<tr>
+<td>ICMP</td>
+<td>—</td>
+<td>Проверка доступности (Ping)</td>
+<td>Опционально</td>
+</tr>
+<tr>
+<td>IPP</td>
+<td>631</td>
+<td>Протокол печати через интернет</td>
+<td>Альтернатива</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="настройка-групповых-политик-для-автоматической-установки">Настройка групповых политик для автоматической установки</h2>
+<p>Если вам нужно подключить принтер к десяткам или сотням компьютеров, ручная установка неэффективна. Используйте групповые политики (GPO) для развертывания принтеров. Однако, если принтер находится в другом домене, вы не сможете применить политику напрямую из локального домена.</p>
+<p>Решение заключается в создании <strong>ссылки на объект принтера</strong> в гуповой политике. Вам нужно будет настроить доверие между доменами и использовать функцию "Deploy Printer" в консоли управления групповыми политиками. Важно указать правильный UNC-путь, например <code>\\PrintServer\PrinterName</code>.</p>
+<p>При использовании GPO убедитесь, что у компьютеров и пользователей есть права на чтение политики. Если домены не имеют полного доверия, настройка может не примениться. Также проверьте, что клиентские машины имеют доступ к контроллеру домена, где применяется политика.</p>
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Для ускорения развертывания создайте скрипт запуска (.bat или .ps1), который проверяет наличие принтера и устанавливает его через PowerShell, если он отсутствует. Это поможет избежать конфликтов при обновлении групповых политик.</p></div>
+
+<h2 id="управление-правами-доступа-и-безопасность">Управление правами доступа и безопасность</h2>
+<p>После успешного подключения необходимо настроить права доступа на уровне очереди печати. По умолчанию пользователи из чужого домена могут не иметь прав на управление очередью. Зайдите в свойства принтера на сервере и перейдите во вкладку "Безопасность".</p>
+<p>Добавьте группу из внешнего домена (например, <code>DomainB\Users</code>) в список разрешений. Предоставьте права "Печать", но ограничьте права "Управление принтером" и "Управление документами", чтобы пользователи не могли отменять задания других сотрудников. Это критически важно для соблюдения <strong>корпоративной политики безопасности</strong>.</p>
+<p>Если вы используете <em>HP</em>, <em>Xerox</em> или <em>Canon</em> принтеры с встроенными веб-интерфейсами, проверьте настройки доступа в самом устройстве. Некоторые модели позволяют ограничить печать только локальной подсетью, блокируя запросы из внешних доменов на уровне прошивки.</p>
+<blockquote>⚠️ Внимание: Не предоставляйте полный доступ группе "Everyone" из внешнего домена. Это создает риск несанкционированной печати и утечки конфиденциальных данных через очереди печати.</blockquote>
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Безопасность печати в мульти-доменной среде требует строго разграничения прав: пользователи должны иметь право только на отправку документов, а управление очередью и настройками должно оставаться за администраторами целевого домена.</p></div>
+
+<h2 id="частые-вопросы-и-ответы">Частые вопросы и ответы</h2>
+<details>
+<summary>Почему принтер виден, но не подключается?</summary>
+<p>Вероятно, проблема в правах доступа или блокировке портов файрволом. Проверьте, есть ли у вашей учетной записи права на подключение к принтеру на сервере и открыт ли порт 445.</p>
+</details>
+<details>
+<summary>Можно ли подключить принтер из домена без доверительных отношений?</summary>
+<p>Технически можно, используя прямой IP-адрес и встроенную учетную запись, но это небезопасно и требует ручного ввода пароля при каждой перезагрузке или сбоя службы.</p>
+</details>
+<details>
+<summary>Как исправить ошибку 0x0000011b при подключении?</summary>
+<p>Эта ошибка часто возникает из-за обновлений безопасности RPC. На сервере печати необходимо изменить ключ реестра <code>RpcAuthnLevelPrivacyEnabled</code> на 0 или обновить драйверы до версии, поддерживающей новые требования Windows.</p>
+</details>
+<details>
+<summary>Нужно ли устанавливать драйверы на сервере печати?</summary>
+<p>Да, сервер должен иметь установленные драйверы для всех поддерживаемых архитектур клиентов (x64, x86). Если драйверов нет, клиент не сможет их скачать автоматически.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#настройка-доступа-к-периферии-между-разными-доменами">Настройка доступа к периферии между разными доменами</a></li><li><a href="#проверка-базовых-доверительных-отношений">Проверка базовых доверительных отношений</a></li><li><a href="#прямое-подключение-через-ip-адрес-без-поиска-в-ad">Прямое подключение через IP-адрес без поиска в AD</a></li><li><a href="#аутентификация-и-учетные-данные">Аутентификация и учетные данные</a></li><li><a href="#устранение-ошибок-блокировки-rpc-и-печати">Устранение ошибок блокировки RPC и печати</a></li><li><a href="#таблица-основных-протоколов-и-портов">Таблица основных протоколов и портов</a></li><li><a href="#настройка-групповых-политик-для-автоматической-установки">Настройка групповых политик для автоматической установки</a></li><li><a href="#управление-правами-доступа-и-безопасность">Управление правами доступа и безопасность</a></li><li><a href="#частые-вопросы-и-ответы">Частые вопросы и ответы</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-uznat-khost-printera-canon.html" class="related-card">Как узнать хост принтера Canon: 3 способа найти IP-адрес</a></li><li><a href="/articles/k/ka/kak-uznat-parol-printera-samsung-m2070w.html" class="related-card">Как узнать пароль Wi-Fi принтера Samsung M2070W: простые способы</a></li><li><a href="/articles/k/ka/kak-zaryadit-printer-kraskoj.html" class="related-card">Как правильно заправить принтер краской: инструкции и ошибки</a></li><li><a href="/articles/k/ka/kak-nastroit-printer-na-pechat-s-noutbuka-windows.html" class="related-card">Как настроить принтер на печать с ноутбука Windows: Полная инструкция</a></li><li><a href="/articles/k/ka/kak-podklyuchit-printer-k-drugomu-wifi.html" class="related-card">Как подключить принтер к новому Wi-Fi: пошаговая инструкция</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-uznat-khost-printera-canon.html" class="related-bottom-card"><span class="related-bottom-title">Как узнать хост принтера Canon: 3 способа найти IP-адрес</span><span class="related-bottom-desc">Пошаговая инструкция: как узнать хост принтера Canon через меню, утилиту IP Status или командную стр</span></a><a href="/articles/k/ka/kak-uznat-parol-printera-samsung-m2070w.html" class="related-bottom-card"><span class="related-bottom-title">Как узнать пароль Wi-Fi принтера Samsung M2070W: простые способы</span><span class="related-bottom-desc">Полное руководство по восстановлению доступа к настройкам и Wi-Fi сети принтера Samsung M2070w. Узна</span></a><a href="/articles/k/ka/kak-zaryadit-printer-kraskoj.html" class="related-bottom-card"><span class="related-bottom-title">Как правильно заправить принтер краской: инструкции и ошибки</span><span class="related-bottom-desc">Пошаговая инструкция, как зарядить принтер краской. Разбор видов картриджей, методика заправки, типи</span></a><a href="/articles/k/ka/kak-nastroit-printer-na-pechat-s-noutbuka-windows.html" class="related-bottom-card"><span class="related-bottom-title">Как настроить принтер на печать с ноутбука Windows: Полная инструкция</span><span class="related-bottom-desc">Пошаговое руководство по подключению и настройке принтера на Windows 10/11. Решение проблем с драйве</span></a><a href="/articles/k/ka/kak-podklyuchit-printer-k-drugomu-wifi.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить принтер к новому Wi-Fi: пошаговая инструкция</span><span class="related-bottom-desc">Узнайте, как перенастроить принтер на другую сеть Wi-Fi. Полное руководство для HP, Epson, Canon и B</span></a><a href="/articles/c/ca/canon-fc220-kak-polzovatsya.html" class="related-bottom-card"><span class="related-bottom-title">Canon FC220: инструкция по замене картриджа и настройке сканера</span><span class="related-bottom-desc">Подробное руководство: как заменить картридж в Canon FC220, устранить ошибки печати и настроить скан</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

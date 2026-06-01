@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Удаление принтера через групповую политику: пошаговая инструкция — Принтер Мастер</title>
+    <meta name="description" content="Как удалить принтер с компьютеров в домене Windows через GPO: шаги, команды, ошибки и решения. Подробное руководство для системных администраторов.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-udalit-printer-gruppovoj-politikoj.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Удаление принтера через групповую политику: пошаговая инструкция">
+    <meta property="og:description" content="Как удалить принтер с компьютеров в домене Windows через GPO: шаги, команды, ошибки и решения. Подробное руководство для системных администраторов.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Удаление принтера через групповую политику: пошаговая инструкция</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как удалить принтер через групповую политику (GPO) — полное руководство</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#почему-нельзя-просто-удалить-принтер-вручную">Почему нельзя просто удалить принтер вручную</a></li><li><a href="#способ-1-удаление-принтера-через-редактор-групповой-политики-gpm">Способ 1: Удаление принтера через редактор групповой политики (GPM)</a></li><li><a href="#способ-2-удаление-через-powershell-автоматизация">Способ 2: Удаление через PowerShell (автоматизация)</a></li><li><a href="#способ-3-удаление-через-реестр-для-упрямых-принтеров">Способ 3: Удаление через реестр (для упрямых принтеров)</a></li><li><a href="#способ-4-удаление-через-командную-строку-printuidll">Способ 4: Удаление через командную строку (printui.dll)</a></li><li><a href="#ошибки-при-удалении-принтеров-через-gpo-и-их-решения">Ошибки при удалении принтеров через GPO и их решения</a></li><li><a href="#как-проверить-что-принтер-действительно-удалён">Как проверить, что принтер действительно удалён</a></li><li><a href="#faq-частые-вопросы-по-удалению-принтеров-через-gpo">FAQ: Частые вопросы по удалению принтеров через GPO</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><p>Управление принтерами в корпоративной сети через <strong>групповую политику</strong> (GPO) — стандартная практика для системных администраторов. Однако не всегда очевидно, как правильно удалить принтер, особенно если он был развернут через политики ранее. Некорректное удаление может привести к "призрачным" устройствам в списке, ошибкам печати или конфликтам драйверов. Эта статья покрывает все способы удаления принтеров через GPO, включая скрипты, реестр и встроенные инструменты Windows.</p>
+
+<p>Мы разберём не только базовые методы, но и нюансы: почему принтер может оставаться в системе после применения политики, как очистить кэш печати, и что делать, если GPO не применяется. Инструкции актуальны для <em>Windows Server 2012 R2/2016/2019/2022</em> и клиентских ОС <em>Windows 10/11</em> в доменной среде. Если вы администрируете смешанную среду с <em>macOS</em> или <em>Linux</em>, часть методов также применима через <code>Samba</code> или <code>CUPS</code>.</p>
+
+<h2 id="почему-нельзя-просто-удалить-принтер-вручную">Почему нельзя просто удалить принтер вручную</h2>
+
+<p>Многие администраторы сталкиваются с ситуацией, когда принтер, удалённый через <code>Панель управления</code> или <code>Настройки</code>, появляется снова после перезагрузки или обновления политик. Это происходит потому, что:</p>
+
+<ul>
+  <li>🔄 <strong>Групповая политика переустанавливает принтер</strong> при следующем цикле обновления (каждые 90-120 минут или при запуске системы).</li>
+  <li>📛 <strong>Драйвер принтера остаётся в системе</strong>, что может вызывать конфликты при подключении новых устройств.</li>
+  <li>🖨️ <strong>"Призрачные" принтеры</strong> сохраняются в реестре (<code>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Print\Printers</code>) даже после видимого удаления.</li>
+  <li>📡 <strong>Политика "PushPrinterConnections"</strong> активно развёртывает принтеры независимо от локальных действий пользователя.</li>
+</ul>
+
+<p>Единственный надёжный способ — удалить принтер на уровне <strong>групповой политики</strong>, которая его изначально развернула. В противном случае вы рискуете получить "зомби"-устройства, которые будут периодически возвращаться, особенно после обновлений Windows или смены сетевых настроек.</p>
+
+<div class="poll-widget" id="poll-e15ab8e3"><div class="poll-widget-question">📊 Как вы обычно удаляете принтеры в домене?</div><div class="poll-widget-option" data-poll="e15ab8e3" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Через GPO</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="e15ab8e3" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Вручную на каждом ПК</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="e15ab8e3" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Скриптом PowerShell</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="e15ab8e3" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Использую сторонние утилиты</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="способ-1-удаление-принтера-через-редактор-групповой-политики-gpm">Способ 1: Удаление принтера через редактор групповой политики (GPM)</h2>
+
+<p>Если принтер был развёрнут через <strong>Group Policy Preferences (GPP)</strong>, его можно удалить тем же способом. Этот метод подходит для принтеров, добавленных через <code>Пользовательская конфигурация → Настройки → Панель управления → Принтеры</code>.</p>
+
+<ol>
+  <li><p>Откройте <strong>Редактор управления групповой политикой</strong> (<code>gpmc.msc</code>) на контроллере домена.</p></li>
+  <li><p>Найдите политику, которая развёртывает принтер. Обычно она находится в разделе <code>Объекты групповой политики</code> или привязана к подразделению (<em>OU</em>) с пользователями/компьютерами.</p></li>
+  <li><p>Перейдите в <code>Конфигурация пользователя → Настройки → Панель управления → Принтеры</code> (или <code>Конфигурация компьютера</code>, если принтер развёртывался на уровне машины).</p></li>
+  <li><p>Выделите принтер, который нужно удалить, кликните правой кнопкой и выберите <code>Удалить</code>.</p></li>
+  <li><p>Сохраните изменения и обновите политики на клиентских машинах командой:</p>
+    <pre><code>gpupdate /force</code></pre>
+  </li>
+</ol>
+
+<p>Если принтер был развёрнут через <strong>скрипт входа</strong> (например, <code>VBScript</code> или <code>PowerShell</code>), удалите соответствующий скрипт из политики в разделе <code>Конфигурация пользователя → Политики → Конфигурация Windows → Скрипты</code>.</p>
+
+
+<p>Убедитесь, что принтер не используется в других политиках|Создайте резервную копию политики (экспорт в XML)|Проверьте зависимости (например, драйверы)|Уведомите пользователей о временном отсутствии принтера--></p>
+
+<h2 id="способ-2-удаление-через-powershell-автоматизация">Способ 2: Удаление через PowerShell (автоматизация)</h2>
+
+<p>Для массового удаления принтеров или если GPP не подходит, используйте <strong>PowerShell</strong>. Этот метод гибкий и позволяет удалять принтеры по имени, пути или другим критериям.</p>
+
+<p>Скрипт ниже удаляет принтер по имени на локальном компьютере. Чтобы применить его через GPO:</p>
+<ol>
+  <li><p>Создайте новый <code>.ps1</code>-файл с содержимым:</p>
+    <pre><code>$printerName = "Имя_принтера"
+<p>if (Get-Printer -Name $printerName -ErrorAction SilentlyContinue) {</p>
+<p>Remove-Printer -Name $printerName</p>
+<p>Write-Output "Принтер $printerName удалён."</p>
+<p>} else {</p>
+<p>Write-Output "Принтер $printerName не найден."</p>
+<p>}</code></pre></p>
+  </li>
+  <li><p>Поместите скрипт в сетевую папку, доступную всем клиентам (например, <code>\\domain\NETLOGON\Scripts\</code>).</p></li>
+  <li><p>Создайте новую политику или отредактируйте существующую, добавив скрипт в <code>Конфигурация компьютера → Политики → Конфигурация Windows → Скрипты → Запуск</code>.</p></li>
+</ol>
+
+<p>Для удаления <strong>всех сетевых принтеров</strong> используйте:</p>
+<pre><code>Get-Printer | Where-Object {$_.Type -eq "Connection"} | Remove-Printer -Force</code></pre>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если скрипт не выполняется из-за политики выполнения PowerShell, добавьте в начало файла строку <code>Set-ExecutionPolicy Bypass -Scope Process -Force</code>.</p></div>
+
+<h2 id="способ-3-удаление-через-реестр-для-упрямых-принтеров">Способ 3: Удаление через реестр (для упрямых принтеров)</h2>
+
+<p>Если принтер не удаляется стандартными методами, его записи могут оставаться в реестре. <strong>Внимание</strong>: редактирование реестра — рискованная операция, которая может привести к нестабильной работе системы. Рекомендуется создать резервную копию перед изменениями.</p>
+
+<p>Чтобы удалить принтер через реестр:</p>
+<ol>
+  <li><p>Откройте <code>regedit</code> на целевом компьютере.</p></li>
+  <li><p>Перейдите в раздел:
+    <pre><code>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Print\Printers</code></pre>
+  </p></li>
+  <li><p>Найдите папку с именем принтера и удалите её.</p></li>
+  <li><p>Удалите соответствующие записи в:
+    <pre><code>HKEY_CURRENT_USER\Printers\Connections</code></pre>
+  </p></li>
+</ol>
+
+<p>Для автоматического удаления через GPO:</p>
+<ol>
+  <li><p>Создайте <code>.reg</code>-файл с командами удаления (пример ниже).</p></li>
+  <li><p>Разверните его через политику в разделе <code>Конфигурация компьютера → Настройки → Реестр</code>.</p></li>
+</ol>
+
+<pre><code>Windows Registry Editor Version 5.00
+
+<p>[-HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Print\Printers\Имя_принтера]</p>
+<p>[-HKEY_CURRENT_USER\Printers\Connections\Имя_принтера]</code></pre></p>
+
+<details class="faq-item"><summary>Что делать, если нет прав на редактирование реестра?</summary><div class="faq-answer"><p>
+<p>Если у вас нет административных прав, попробуйте:</p>
+<p>1. Запустить <code>regedit</code> от имени администратора (Shift + правый клик → "Запуск от другого пользователя").</p>
+<p>2. Использовать <code>psexec</code> из <em>Sysinternals</em> для повышения прав: <code>psexec -i -s regedit</code>.</p>
+<p>3. Обратиться к доменному администратору для развёртывания изменений через GPO.</p></div></details></p>
+
+<h2 id="способ-4-удаление-через-командную-строку-printuidll">Способ 4: Удаление через командную строку (printui.dll)</h2>
+
+<p>Утилита <code>printui.dll</code> — мощный инструмент для управления принтерами из командной строки. Она позволяет удалять принтеры, драйверы и порты без графического интерфейса.</p>
+
+<p>Команда для удаления принтера по имени:</p>
+<pre><code>rundll32 printui.dll,PrintUIEntry /dn /n "\\Имя_сервера\Имя_принтера"</code></pre>
+
+<p>Примеры использования:</p>
+<ul>
+  <li>🖥️ Удаление локального принтера:
+    <pre><code>rundll32 printui.dll,PrintUIEntry /dn /n "HP LaserJet P4015"</code></pre>
+  </li>
+  <li>🌐 Удаление сетевого принтера:
+    <pre><code>rundll32 printui.dll,PrintUIEntry /dn /n "\\print-server\Xerox-Office"</code></pre>
+  </li>
+  <li>🗑️ Удаление всех принтеров (осторожно!):
+    <pre><code>for /f "tokens=2 delims=," %G in ('wmic printer get name /value ^| find "="') do rundll32 printui.dll,PrintUIEntry /dn /n "%G"</code></pre>
+  </li>
+</ul>
+
+<p>Чтобы развернуть команду через GPO, создайте <code>.bat</code>-файл и добавьте его в политику как <strong>скрипт запуска</strong> (<code>Конфигурация компьютера → Политики → Конфигурация Windows → Скрипты → Запуск</code>).</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Команда <code>printui.dll</code> работает на всех версиях Windows, включая Windows 11, и не требует установки дополнительных компонентов.</p></div>
+
+<h2 id="ошибки-при-удалении-принтеров-через-gpo-и-их-решения">Ошибки при удалении принтеров через GPO и их решения</h2>
+
+<p>Даже после правильного удаления принтера через групповую политику могут возникать проблемы. Ниже — таблица распространённых ошибок и способов их устранения.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Ошибка</th>
+      <th>Причина</th>
+      <th>Решение</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Принтер появляется снова после <code>gpupdate</code></td>
+      <td>Политика развёртывания всё ещё активна или применяется другая политика</td>
+      <td>Проверьте приоритет политик через <code>gpresult /h report.html</code> и отключите конфликтующие</td>
+    </tr>
+    <tr>
+      <td>Ошибка "Доступ запрещён" при удалении</td>
+      <td>Недостаточно прав или принтер используется другим процессом</td>
+      <td>Запустите команду от администратора или перезагрузите службу <code>Spooler</code> (<code>net stop spooler & net start spooler</code>)</td>
+    </tr>
+    <tr>
+      <td>Принтер удаляется, но драйвер остаётся</td>
+      <td>Драйвер установлен отдельно от принтера</td>
+      <td>Удалите драйвер через <code>printui.dll /dl</code> или <code>pnputil /delete-driver</code></td>
+    </tr>
+    <tr>
+      <td>Политика не применяется на клиентских ПК</td>
+      <td>Проблемы с репликацией <em>SYSVOL</em> или правами</td>
+      <td>Проверьте журналы <code>Event Viewer → Windows Logs → System</code> на ошибки <code>GroupPolicy</code></td>
+    </tr>
+    <tr>
+      <td>Принтер удаляется, но порт остаётся</td>
+      <td>Порт не привязан к политике и требует ручного удаления</td>
+      <td>Удалите порт через <code>printui.dll /dn /q /x</code> или вручную в <code>Панель управления → Устройства и принтеры → Настройка сервера печати</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Если принтер удаляется, но пользователи всё равно его видят, проверьте:</p>
+<ul>
+  <li>🔍 <strong>Кэш профиля пользователя</strong> — иногда принтеры сохраняются в <code>%APPDATA%\Microsoft\Windows\Printers</code>.</li>
+  <li>📡 <strong>Локальные политики</strong> — если на ПК применены <em>Local Group Policies</em>, они могут переопределять доменные.</li>
+  <li>🔄 <strong>Отложенное применение GPO</strong> — дождитесь следующего цикла обновления или запустите <code>gpupdate /sync</code>.</li>
+</ul>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Чтобы ускорить применение политик, используйте команду <code>gpupdate /force /boot</code> — она принудительно обновит политики и перезагрузит компьютер.</p></div>
+
+<h2 id="как-проверить-что-принтер-действительно-удалён">Как проверить, что принтер действительно удалён</h2>
+
+<p>Удаление принтера через GPO не всегда очевидно для конечных пользователей. Чтобы убедиться, что принтер полностью удалён:</p>
+
+<ol>
+  <li><p>Проверьте список принтеров на клиентском ПК:
+    <pre><code>Get-Printer | Format-Table Name, Type, ComputerName</code></pre>
+  </p></li>
+  <li><p>Убедитесь, что драйвер удалён:
+    <pre><code>Get-PrinterDriver | Where-Object {$_.Name -like "<em>Имя_драйвера</em>"}</code></pre>
+  </p></li>
+  <li><p>Проверьте реестр на наличие записей (см. <strong>Способ 3</strong>).</p></li>
+  <li><p>Запустите <code>gpresult /r</code> и убедитесь, что политика удаления применена.</p></li>
+</ol>
+
+<p>Если принтер всё ещё отображается, но не печатает, возможно, остался <strong>"призрачный" порт</strong>. Чтобы его удалить:</p>
+<ol>
+  <li><p>Откройте <code>Панель управления → Администрирование → Службы</code> и остановите <code>Диспетчер печати</code>.</p></li>
+  <li><p>Удалите файлы из <code>C:\Windows\System32\spool\PRINTERS\</code>.</p></li>
+  <li><p>Перезапустите службу и проверьте список портов в <code>printui.dll /s /t2</code>.</p></li>
+</ol>
+
+<details class="faq-item"><summary>Как удалить принтер для конкретного пользователя?</summary><div class="faq-answer"><p>
+<p>Если нужно удалить принтер только для одного пользователя, используйте политику с <strong>фильтрацией по безопасности</strong> (Item-Level Targeting в GPP). Либо применяйте скрипт через <code>Конфигурация пользователя</code>, а не компьютера.</p></div></details></p>
+
+<h2 id="faq-частые-вопросы-по-удалению-принтеров-через-gpo">FAQ: Частые вопросы по удалению принтеров через GPO</h2>
+
+<details>
+  <summary>Можно ли удалить принтер через GPO, если он был установлен вручную?</summary>
+  <p>Да, но только если принтер подключён как <strong>сетевой</strong> (через UNC-путь, например, <code>\\server\printer</code>). Локальные принтеры (подключённые по USB или LPT) через GPO не управляются. Для них используйте скрипты или <code>printui.dll</code>.</p>
+</details>
+
+<details>
+  <summary>Как удалить принтер для всех пользователей, кроме администраторов?</summary>
+  <p>Используйте <strong>фильтрацию по безопасности</strong> в GPO:
+  <ol>
+    <li>В политике удаления принтера перейдите на вкладку <code>Безопасность</code>.</li>
+    <li>Уберите галочку <code>Применять</code> для группы <code>Администраторы домена</code>.</li>
+    <li>Добавьте группу <code>Пользователи домена</code> с правом <code>Чтение</code> и <code>Применение групповой политики</code>.</li>
+  </ol>
+  </p>
+</details>
+
+<details>
+  <summary>Что делать, если после удаления принтер возвращается при следующем входе?</summary>
+  <p>Это означает, что принтер развёртывается другой политикой. Проверьте:
+  <pre><code>gpresult /h report.html</code></pre>
+<p>Откройте сгенерированный <code>report.html</code> и найдите раздел <code>Group Policy Objects</code>. Ищите политики с настройками принтеров в <code>User/Computer Settings → Preferences → Control Panel Settings → Printers</code>.</p></p>
+</details>
+
+<details>
+  <summary>Как удалить драйвер принтера через GPO?</summary>
+  <p>Драйверы удаляются отдельно от принтеров. Используйте команду в скрипте:
+  <pre><code>pnputil /delete-driver oem*.inf /uninstall /force</code></pre>
+<p>Или через <code>printui.dll</code>:</p>
+  <pre><code>rundll32 printui.dll,PrintUIEntry /dl /n "Имя_драйвера"</code></pre>
+  <p>Чтобы развернуть это через GPO, добавьте команду в <code>Скрипты запуска/выключения</code>.</p>
+  </p>
+</details>
+
+<details>
+  <summary>Можно ли удалить принтер на <em>macOS</em> или <em>Linux</em> через GPO?</summary>
+  <p>Нет, GPO работает только в среде Windows. Для <em>macOS</em> используйте:
+  <ul>
+    <li>Скрипты <code>lpadmin -x</code> (для <code>CUPS</code>).</li>
+    <li>Утилиты управления, такие как <em>Jamf</em> или <em>Mosyle</em>.</li>
+  </ul>
+<p>Для <em>Linux</em> подойдёт:</p>
+  <pre><code>lpadmin -x Принтер_Имя</code></pre>
+<p>Или настройка <code>Samba</code> для синхронизации с доменом.</p></p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#почему-нельзя-просто-удалить-принтер-вручную">Почему нельзя просто удалить принтер вручную</a></li><li><a href="#способ-1-удаление-принтера-через-редактор-групповой-политики-gpm">Способ 1: Удаление принтера через редактор групповой политики (GPM)</a></li><li><a href="#способ-2-удаление-через-powershell-автоматизация">Способ 2: Удаление через PowerShell (автоматизация)</a></li><li><a href="#способ-3-удаление-через-реестр-для-упрямых-принтеров">Способ 3: Удаление через реестр (для упрямых принтеров)</a></li><li><a href="#способ-4-удаление-через-командную-строку-printuidll">Способ 4: Удаление через командную строку (printui.dll)</a></li><li><a href="#ошибки-при-удалении-принтеров-через-gpo-и-их-решения">Ошибки при удалении принтеров через GPO и их решения</a></li><li><a href="#как-проверить-что-принтер-действительно-удалён">Как проверить, что принтер действительно удалён</a></li><li><a href="#faq-частые-вопросы-по-удалению-принтеров-через-gpo">FAQ: Частые вопросы по удалению принтеров через GPO</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ku/kuda-nazhimat-chtoby-raspechatat-na-printere.html" class="related-card">Куда нажимать, чтобы распечатать: инструкции для Windows, Mac и мобильных</a></li><li><a href="/articles/k/ka/kak-podklyuchit-printer-cherez-nastrojki.html" class="related-card">Как подключить принтер через настройки: полное руководство по настройке</a></li><li><a href="/articles/k/ka/kak-raspechatat-fotku-na-printere-s-kompyutera.html" class="related-card">Как распечатать фото на принтере с компьютера: пошаговая инструкция</a></li><li><a href="/articles/k/ka/kak-skachat-drajvera-dlya-printera-samsung-scx-4200.html" class="related-card">Драйвера для Samsung SCX-4200: где скачать и как установить</a></li><li><a href="/articles/p/pr/printer-pechataet-odnu-stranitsu-za-8-sekund-skolko-stranits-mozhno-napechatat-za-14-minut.html" class="related-card">Сколько страниц напечатает принтер за 14 минут: расчет производительности</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ku/kuda-nazhimat-chtoby-raspechatat-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Куда нажимать, чтобы распечатать: инструкции для Windows, Mac и мобильных</span><span class="related-bottom-desc">Полное руководство: куда нажимать для печати на принтере. Разбор кнопок в Word, браузере, настройках</span></a><a href="/articles/k/ka/kak-podklyuchit-printer-cherez-nastrojki.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить принтер через настройки: полное руководство по настройке</span><span class="related-bottom-desc">Пошаговая инструкция по подключению принтера через настройки Windows и macOS. Решаем проблемы драйве</span></a><a href="/articles/k/ka/kak-raspechatat-fotku-na-printere-s-kompyutera.html" class="related-bottom-card"><span class="related-bottom-title">Как распечатать фото на принтере с компьютера: пошаговая инструкция</span><span class="related-bottom-desc">Узнайте, как настроить печать фотографий с ПК. Обзор программ, выбор качества, настройка драйверов и</span></a><a href="/articles/k/ka/kak-skachat-drajvera-dlya-printera-samsung-scx-4200.html" class="related-bottom-card"><span class="related-bottom-title">Драйвера для Samsung SCX-4200: где скачать и как установить</span><span class="related-bottom-desc">Пошаговая инструкция по скачиванию и установке драйверов для принтера Samsung SCX-4200 с официальног</span></a><a href="/articles/p/pr/printer-pechataet-odnu-stranitsu-za-8-sekund-skolko-stranits-mozhno-napechatat-za-14-minut.html" class="related-bottom-card"><span class="related-bottom-title">Сколько страниц напечатает принтер за 14 минут: расчет производительности</span><span class="related-bottom-desc">Узнайте, как рассчитать объем печати за 14 минут, если скорость принтера 1 стр/8 сек. Разбор формул,</span></a><a href="/articles/k/ka/kak-pechatat-otkrytki-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Как печатать открытки на принтере: выбор бумаги и настройки</span><span class="related-bottom-desc">Пошаговая инструкция по печати открыток на струйных и лазерных принтерах. Настройки драйвера, выбор </span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

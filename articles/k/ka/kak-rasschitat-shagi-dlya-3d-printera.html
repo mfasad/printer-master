@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как рассчитать шаги для 3D-принтера: формулы и настройки — Принтер Мастер</title>
+    <meta name="description" content="Пошаговая инструкция по расчёту шагов на мм для 3D-принтера: формулы, калибровка, ошибки и советы для точной печати. Подходит для Marlin, Klipper, Prusa.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-rasschitat-shagi-dlya-3d-printera.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как рассчитать шаги для 3D-принтера: формулы и настройки">
+    <meta property="og:description" content="Пошаговая инструкция по расчёту шагов на мм для 3D-принтера: формулы, калибровка, ошибки и советы для точной печати. Подходит для Marlin, Klipper, Prusa.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как рассчитать шаги для 3D-принтера: формулы и настройки</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Расчёт шагов на мм для 3D-принтера: формулы, калибровка и типичные ошибки</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#1-что-такое-шаги-на-мм-и-почему-их-нужно-калибровать">1. Что такое шаги на мм и почему их нужно калибровать</a></li><li><a href="#2-формулы-расчёта-шагов-для-разных-типов-передач">2. Формулы расчёта шагов для разных типов передач</a></li><li><a href="#3-практическая-калибровка-пошаговая-инструкция">3. Практическая калибровка: пошаговая инструкция</a></li><li><a href="#4-как-изменить-шаги-в-прошивке">4. Как изменить шаги в прошивке</a></li><li><a href="#5-типичные-ошибки-и-как-их-избежать">5. Типичные ошибки и как их избежать</a></li><li><a href="#6-проверка-результатов-и-тонкая-настройка">6. Проверка результатов и тонкая настройка</a></li><li><a href="#7-частые-вопросы-и-решения">7. Частые вопросы и решения</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body">
+
+<p>Точность 3D-печати напрямую зависит от правильной настройки <strong>шагов на миллиметр</strong> (steps/mm) — параметра, определяющего, сколько импульсов шаговому двигателю нужно отправить, чтобы переместить ось на 1 мм. Неверные значения приводят к смещению слоёв, искажению геометрии модели или "слоистости" даже при идеальных настройках слайсера. В этой статье разберём, как рассчитать шаги для каждой оси (<code>X</code>, <code>Y</code>, <code>Z</code>, <code>E</code>), какие формулы использовать для ременных и винтовых передач, а также как избежать распространённых ошибок при калибровке.</p>
+
+<p>Многие пользователи ошибочно полагают, что заводские настройки прошивки (например, в <em>Marlin</em> или <em>Klipper</em>) универсальны. Однако даже у принтеров одной модели из-за разброса механических деталей (ременей, шкивов, ходовых винтов) значения могут отличаться на 5–15%. Особенно критично это для оси <code>E</code> (экструдера), где погрешность в 1–2 шага приводит к недопечатку или переэкструзии. Далее — подробный гайд с формулами, практическими примерами и советами по диагностике проблем.</p>
+
+<h2 id="1-что-такое-шаги-на-мм-и-почему-их-нужно-калибровать">1. Что такое шаги на мм и почему их нужно калибровать</h2>
+
+<p><strong>Шаги на миллиметр</strong> (steps/mm) — это коэффициент, связывающий количество шагов шагового двигателя с физическим перемещением оси. Например, если для оси <code>X</code> задано значение <code>80</code>, это означает, что двигатель должен сделать 80 шагов, чтобы сдвинуть каретку на 1 мм. Параметр зависит от:</p>
+
+<ul>
+  <li>🔧 <strong>Типа передачи</strong>: ременная (GT2, GT3), винтовая (трапецеидальные/шариковые винты), зубчатая (рейка-шестерня).</li>
+  <li>🔄 <strong>Передаточного отношения</strong>: количество зубьев на шкивах, шаг резьбы винта, микрошаги драйвера.</li>
+  <li>🖨️ <strong>Конструкции принтера</strong>: дельта, картезианский, CoreXY — у каждого типа свои нюансы расчёта.</li>
+</ul>
+
+<p>Некалиброванные шаги проявляются так:</p>
+<ul>
+  <li>❌ <strong>Ось X/Y</strong>: смещение слоёв, "лесенка" на круглых объектах, несовпадение размеров модели с заданными в слайсере.</li>
+  <li>❌ <strong>Ось Z</strong>: "волны" на поверхности, неравномерная высота слоёв, завышенная или заниженная общая высота печати.</li>
+  <li>❌ <strong>Экструдер (E)</strong>: недопечатка (тонкие стенки), переэкструзия (заусенцы, "сопли"), неравномерное заполнение.</li>
+</ul>
+
+<p>Производители часто указывают в документации "типовые" значения, но они редко учитывают:</p>
+<ul>
+  <li>🔄 Износ ремней или винтов (увеличивает люфт, требует коррекции).</li>
+  <li>🛠️ Замену деталей (например, установку шкива с другим количеством зубьев).</li>
+  <li>📏 Погрешности сборки (неперпендикулярность осей, перекос рамы).</li>
+</ul>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если после замены экструдера на <em>BMG Clone</em> или <em>Orbiter</em> печать стала нестабильной, первым делом проверьте шаги оси <code>E</code> — у этих моделей другое передаточное отношение!</p></div>
+
+<h2 id="2-формулы-расчёта-шагов-для-разных-типов-передач">2. Формулы расчёта шагов для разных типов передач</h2>
+
+<p>Общая формула для расчёта шагов на мм:</p>
+<pre><code>Шаги на мм = (Количество шагов двигателя на оборот × Микрошаги) / (Шаг передачи в мм)</code></pre>
+
+<p>Где:</p>
+<ul>
+  <li><strong>Количество шагов двигателя</strong>: обычно <code>200</code> для стандартных шаговых двигателей (1.8° на шаг).</li>
+  <li><strong>Микрошаги</strong>: задаются в прошивке (например, <code>1/16</code> или <code>1/32</code>).</li>
+  <li><strong>Шаг передачи</strong>: зависит от типа механизма (см. таблицу ниже).</li>
+</ul>
+
+<p>Рассмотрим конкретные случаи:</p>
+
+<h3>2.1. Ременная передача (оси X/Y в большинстве принтеров)</h3>
+<p>Формула для ремня <em>GT2</em> (шаг 2 мм):</p>
+<pre><code>Шаги на мм = (200 × Микрошаги) / (Количество зубьев шкива × 2)</code></pre>
+<p>Пример: шкив на 20 зубьев, микрошаги <code>1/16</code>:</p>
+<pre><code>(200 × 16) / (20 × 2) = 80 шагов/мм</code></pre>
+
+<h3>2.2. Винтовая передача (ось Z или дельта-принтеры)</h3>
+<p>Для трапецеидального винта с шагом <code>8 мм</code> (например, в <em>Ender 3</em>):</p>
+<pre><code>Шаги на мм = (200 × Микрошаги) / Шаг винта</code></pre>
+<p>При микрошагах <code>1/16</code>:</p>
+<pre><code>(200 × 16) / 8 = 400 шагов/мм</code></pre>
+
+<h3>2.3. Экструдер (ось E)</h3>
+<p>Формула зависит от типа экструдера:</p>
+<ul>
+  <li>🔄 <strong>Боуден (с редуктором)</strong>: учитывайте передаточное отношение (например, <code>3:1</code> у <em>Creality Spider</em>).</li>
+  <li>🔄 <strong>Прямой привод</strong>: без редуктора, но с учётом диаметра шестерни (обычно <code>7–11 мм</code>).</li>
+</ul>
+<p>Пример для <em>BMG Clone</em> (редуктор <code>3:1</code>, микрошаги <code>1/16</code>, шестерня <code>11 мм</code>):</p>
+<pre><code>(200 × 16 × 3) / (π × 11) ≈ 280 шагов/мм</code></pre>
+
+<table>
+  <thead>
+    <tr>
+      <th>Тип передачи</th>
+      <th>Формула</th>
+      <th>Пример (микрошаги 1/16)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Ремень GT2 (шкив 20 зубьев)</td>
+      <td>(200 × М) / (Зубьев × 2)</td>
+      <td>80</td>
+    </tr>
+    <tr>
+      <td>Винт T8 (шаг 8 мм)</td>
+      <td>(200 × М) / 8</td>
+      <td>400</td>
+    </tr>
+    <tr>
+      <td>Экструдер Bowden (шестерня 11 мм)</td>
+      <td>(200 × М) / (π × D)</td>
+      <td>91</td>
+    </tr>
+    <tr>
+      <td>Экструдер с редуктором 3:1</td>
+      <td>(200 × М × 3) / (π × D)</td>
+      <td>280</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Для дельта-принтеров шаги по осям <code>X</code>, <code>Y</code>, <code>Z</code> должны быть одинаковыми, так как движение осуществляется синхронно тремя моторами.</p></div>
+
+<h2 id="3-практическая-калибровка-пошаговая-инструкция">3. Практическая калибровка: пошаговая инструкция</h2>
+
+<p>Теоретический расчёт — только половина дела. Из-за люфтов, износа или неточной сборки фактические шаги могут отличаться. Проверим их экспериментально.</p>
+
+<h3>3.1. Калибровка осей X, Y, Z</h3>
+<ol>
+  <li><strong>Подготовка</strong>: нагрейте сопло и поднимите ось <code>Z</code> на 10 мм, чтобы избежать столкновений.</li>
+  <li><strong>Команда перемещения</strong>: отправьте в консоль (через <em>Pronterface</em>, <em>OctoPrint</em> или терминал принтера):</li>
+</ol>
+<pre><code>G91 ; Относительное позиционирование
+<p>G1 X100 F3000 ; Переместить ось X на 100 мм</p>
+<p>G90 ; Абсолютное позиционирование</code></pre></p>
+<ol start="3">
+  <li><strong>Измерение</strong>: с помощью линейки или штангенциркуля замерьте реальное перемещение. Например, вместо 100 мм ось прошла 98 мм.</li>
+  <li><strong>Коррекция</strong>: рассчитайте новое значение по формуле:</li>
+</ol>
+<pre><code>Новые шаги = (Текущие шаги × Заданное расстояние) / Фактическое расстояние
+<p>= (80 × 100) / 98 ≈ 81.63</code></pre></p>
+<ol start="5">
+  <li><strong>Применение</strong>: обновите значение в прошивке (см. раздел 4) и повторите тест.</li>
+</ol>
+
+
+<p>Поднять сопло на 10 мм|Отправить команду <code>G1 Z100 F300</code>|Измерить реальное перемещение|Рассчитать новые шаги|Обновить прошивку и повторить тест--></p>
+
+<h3>3.2. Калибровка экструдера (ось E)</h3>
+<p>Метод "отметки на филаменте":</p>
+<ol>
+  <li>Нагрейте экструдер до рабочей температуры (например, <code>200°C</code> для PLA).</li>
+  <li>Отметьте на филаменте маркером точку на расстоянии <code>100 мм</code> от входа в экструдер.</li>
+  <li>Отправьте команду:</li>
+</ol>
+<pre><code>G91
+<p>G1 E100 F100 ; Экструдировать 100 мм филамента</p>
+<p>G90</code></pre></p>
+<ol start="4">
+  <li>Измерьте расстояние от метки до входа. Если осталось <code>20 мм</code>, значит, экструдер продвинул только <code>80 мм</code>.</li>
+  <li>Скорректируйте шаги:</li>
+</ol>
+<pre><code>Новые шаги = (Текущие шаги × 100) / 80 ≈ 112.5</code></pre>
+
+<details class="faq-item"><summary>Почему экструдер "щёлкает" при калибровке?</summary><div class="faq-answer"><p>
+<p>Это признак <strong>перегруза</strong> — либо забита сопла, либо шаги занижены (двигатель не справляется с нагрузкой). Проверьте температуру печати и чистоту экструдера.</p></div></details></p>
+
+<h2 id="4-как-изменить-шаги-в-прошивке">4. Как изменить шаги в прошивке</h2>
+
+<p>Способ редактирования зависит от прошивки вашего принтера:</p>
+
+<h3>4.1. Marlin</h3>
+<p>Откройте файл <code>Configuration.h</code> и найдите строки:</p>
+<pre><code>#define DEFAULT_AXIS_STEPS_PER_UNIT   {80, 80, 400, 93}</code></pre>
+<p>Где:</p>
+<ul>
+  <li><code>80</code> — ось <code>X</code>,</li>
+  <li><code>80</code> — ось <code>Y</code>,</li>
+  <li><code>400</code> — ось <code>Z</code>,</li>
+  <li><code>93</code> — экструдер <code>E</code>.</li>
+</ul>
+<p>После изменений скомпилируйте и прошейте принтер через <em>Arduino IDE</em> или <em>PlatformIO</em>.</p>
+
+<h3>4.2. Klipper</h3>
+<p>Отредактируйте файл <code>printer.cfg</code>:</p>
+<pre><code>[stepper_x]
+<p>step_distance: 0.0125 ; 1/80 (шаги/мм)</code></pre></p>
+<p>Где <code>step_distance = 1 / шаги_на_мм</code>. После изменений выполните:</p>
+<pre><code>RESTART
+<p>M500 ; Сохранить настройки</code></pre></p>
+
+<h3>4.3. Prusa (оригинальная прошивка)</h3>
+<p>Используйте меню принтера:</p>
+<ol>
+  <li>Перейдите в <code>Настройки → Настройки принтера → Движение → Шаги/мм</code>.</li>
+  <li>Введите новые значения для каждой оси.</li>
+  <li>Сохраните и перезагрузите принтер.</li>
+</ol>
+
+
+<p>Marlin|Klipper|Prusa|Другую|Не знаю--></p>
+
+<h2 id="5-типичные-ошибки-и-как-их-избежать">5. Типичные ошибки и как их избежать</h2>
+
+<p>Даже опытные пользователи допускают ошибки при калибровке. Вот самые распространённые:</p>
+
+<blockquote>⚠️ <strong>Внимание:</strong> Если после изменения шагов принтер начал "дергаться" или издавать скрипы, вероятно, вы задали слишком высокое значение. Уменьшите шаги на 5–10% и проверьте ток драйверов (возможно, требуется увеличить <code>VREF</code>).</blockquote>
+
+<ul>
+  <li>❌ <strong>Игнорирование микрошагов</strong>: в формулах используйте реальное значение из прошивки (проверьте в <code>Configuration.h</code> строку <code>#define MICROSTEP_MODES</code>).</li>
+  <li>❌ <strong>Калибровка "на глаз"</strong>: всегда используйте штангенциркуль или точную линейку. Погрешность в 1 мм на 100 мм даёт ошибку в 1%!</li>
+  <li>❌ <strong>Забывают сохранить настройки</strong>: в <em>Marlin</em> после изменения <code>Configuration.h</code> нужно перепрошить принтер, а в <em>Klipper</em> — выполнить <code>SAVE_CONFIG</code>.</li>
+  <li>❌ <strong>Не учитывают редуктор экструдера</strong>: у <em>Titan Aero</em> или <em>Orbiter</em> передаточное отношение отличается от стандартного боуден-экструдера.</li>
+</ul>
+
+<p>Ещё одна частая проблема — <strong>нелинейность движения</strong>. Например, при перемещении на 10 мм ось проходит ровно 10 мм, а на 100 мм — 95 мм. Это признак:</p>
+<ul>
+  <li>🔧 Люфта в ремне или винте (проверьте натяжение).</li>
+  <li>🔌 Нестабильного питания драйверов (измерьте <code>VREF</code> мультиметром).</li>
+  <li>📉 Некорректных ускорений (уменьшите <code>MAX_ACCELERATION</code> в прошивке).</li>
+</ul>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если после калибровки ось <code>Z</code> "проседает" при печати, проверьте <strong>вес каретки</strong> — возможно, шаговый двигатель не тянет нагрузку. Решение: увеличьте ток драйвера или установите двухмоторный привод.</p></div>
+
+<h2 id="6-проверка-результатов-и-тонкая-настройка">6. Проверка результатов и тонкая настройка</h2>
+
+<p>После калибровки обязательно протестируйте принтер на реальной печати. Используйте тестовые модели:</p>
+<ul>
+  <li>📏 <strong>Куб 20×20×20 мм</strong>: проверьте размеры штангенциркулем (допуск ±0.1 мм).</li>
+  <li>⭕ <strong>Цилиндр</strong>: оцените круглость (при неверных шагах <code>X/Y</code> будут "грани").</li>
+  <li>🔄 <strong>Спиральный тест</strong>: для проверки плавности движения по всем осям.</li>
+</ul>
+
+<p>Если размеры всё ещё неточные:</p>
+<ul>
+  <li>🔄 Повторите калибровку с меньшим тестовым расстоянием (например, <code>50 мм</code> вместо <code>100 мм</code>).</li>
+  <li>📊 Проверьте <strong>ускорения и jerk</strong> в прошивке — высокие значения могут приводить к пропуску шагов.</li>
+  <li>🔧 Убедитесь, что <strong>ремни натянуты</strong>, а ходовые винты смазаны.</li>
+</ul>
+
+<p><mark>Критическая ошибка: если после калибровки экструдера расход филамента вырос на 20% и более, но модель всё равно недопечатывается, проблема не в шагах, а в засоре сопла или неверной температуре печати.</mark></p>
+
+<blockquote>⚠️ <strong>Внимание:</strong> На принтерах с системой <em>Auto Bed Leveling</em> (ABL) после изменения шагов <code>Z</code> может сбиться offset датчика. Обнулите настройки Z-offset и повторно выполните калибровку стола.</blockquote>
+
+<h2 id="7-частые-вопросы-и-решения">7. Частые вопросы и решения</h2>
+
+<details>
+  <summary>❓ Почему после калибровки ось движется рывками?</summary>
+  <p>Это признак <strong>пропуска шагов</strong>. Возможные причины:</p>
+  <ul>
+    <li>Слишком высокие шаги на мм (уменьшите значение на 5–10%).</li>
+    <li>Низкий ток драйверов (увеличьте <code>VREF</code> на 0.05–0.1 В).</li>
+    <li>Механическое сопротивление (проверьте ходовые винты на загрязнение).</li>
+  </ul>
+</details>
+
+<details>
+  <summary>❓ Как узнать текущие шаги на мм без подключения к ПК?</summary>
+  <p>В большинстве прошивок можно отправить команду <code>M503</code> через терминал принтера. В ответе найдите строку:</p>
+  <pre><code>Steps per unit:
+<p>M92 X80.00 Y80.00 Z400.00 E93.00</code></pre></p>
+  <p>Или посмотрите в меню принтера (раздел <code>Motion</code> или <code>Advanced Settings</code>).</p>
+</details>
+
+<details>
+  <summary>❓ Нужно ли калибровать шаги после замены ремня GT2 на GT3?</summary>
+  <p>Да! У ремня <em>GT3</em> шаг <code>3 мм</code> вместо <code>2 мм</code> у <em>GT2</em>. Пересчитайте шаги по формуле для ременной передачи, подставив новое значение.</p>
+</details>
+
+<details>
+  <summary>❓ Можно ли использовать автокалибровку шагов?</summary>
+  <p>Некоторые прошивки (например, <em>Klipper</em> с плагином <code>stepper_calibrate</code>) поддерживают автокалибровку. Однако она менее точна, чем ручной метод, и может не учитывать механические люфты. Рекомендуем использовать её только для предварительной настройки.</p>
+</details>
+
+<details>
+  <summary>❓ Почему после обновления прошивки сбились шаги?</summary>
+  <p>В новых версиях прошивок иногда меняются значения по умолчанию. Всегда сохраняйте текущие настройки перед обновлением (командой <code>M500</code> в <em>Marlin</em> или <code>SAVE_CONFIG</code> в <em>Klipper</em>) и проверяйте их после прошивки.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#1-что-такое-шаги-на-мм-и-почему-их-нужно-калибровать">1. Что такое шаги на мм и почему их нужно калибровать</a></li><li><a href="#2-формулы-расчёта-шагов-для-разных-типов-передач">2. Формулы расчёта шагов для разных типов передач</a></li><li><a href="#3-практическая-калибровка-пошаговая-инструкция">3. Практическая калибровка: пошаговая инструкция</a></li><li><a href="#4-как-изменить-шаги-в-прошивке">4. Как изменить шаги в прошивке</a></li><li><a href="#5-типичные-ошибки-и-как-их-избежать">5. Типичные ошибки и как их избежать</a></li><li><a href="#6-проверка-результатов-и-тонкая-настройка">6. Проверка результатов и тонкая настройка</a></li><li><a href="#7-частые-вопросы-и-решения">7. Частые вопросы и решения</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kakoj-iz-obektov-mozhet-yavlyatsya-ispolnitelem-luna-karta-printer-kniga.html" class="related-card">Объекты в системах маркировки: Луна, Карта, Принтер и Книга</a></li><li><a href="/articles/c/ch/chto-takoe-zakanchivaetsya-toner-v-printere.html" class="related-card">Принтер пишет заканчивается тонер: что делать, замена картриджа</a></li><li><a href="/articles/h/hp/hp-78a-kartridzh-kakoj-printer.html" class="related-card">HP 78A картридж: модели принтеров и совместимость</a></li><li><a href="/articles/k/ka/kak-vstavit-kartridzhi-v-printer-canon-pixma-mg3640s.html" class="related-card">Как вставить картриджи в принтер Canon Pixma MG3640S: Пошаговая инструкция</a></li><li><a href="/articles/k/ka/kak-vstavit-bumagu-v-printer.html" class="related-card">Как правильно вставить бумагу в принтер: пошаговая инструкция</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kakoj-iz-obektov-mozhet-yavlyatsya-ispolnitelem-luna-karta-printer-kniga.html" class="related-bottom-card"><span class="related-bottom-title">Объекты в системах маркировки: Луна, Карта, Принтер и Книга</span><span class="related-bottom-desc">Разбираем, какой объект является исполнителем в связке с Луной, картой, принтером и книгой. Роль обо</span></a><a href="/articles/c/ch/chto-takoe-zakanchivaetsya-toner-v-printere.html" class="related-bottom-card"><span class="related-bottom-title">Принтер пишет заканчивается тонер: что делать, замена картриджа</span><span class="related-bottom-desc">Разбираем, что значит сообщение «заканчивается тонер» на принтере. Как проверить уровень, продолжить</span></a><a href="/articles/h/hp/hp-78a-kartridzh-kakoj-printer.html" class="related-bottom-card"><span class="related-bottom-title">HP 78A картридж: модели принтеров и совместимость</span><span class="related-bottom-desc">Полный список принтеров, работающих на картридже HP 78A (CE278A). Характеристики, отличия версий и с</span></a><a href="/articles/k/ka/kak-vstavit-kartridzhi-v-printer-canon-pixma-mg3640s.html" class="related-bottom-card"><span class="related-bottom-title">Как вставить картриджи в принтер Canon Pixma MG3640S: Пошаговая инструкция</span><span class="related-bottom-desc">Подробная замена картриджей в МФУ Canon Pixma MG3640S. Инструкция по снятию крышки, установке чернил</span></a><a href="/articles/k/ka/kak-vstavit-bumagu-v-printer.html" class="related-bottom-card"><span class="related-bottom-title">Как правильно вставить бумагу в принтер: пошаговая инструкция</span><span class="related-bottom-desc">Подробное руководство по загрузке бумаги в принтер и МФУ. Изучите настройки лотка, тип носителя и ус</span></a><a href="/articles/k/ka/kak-zapravit-kartridzh-canon-fc128.html" class="related-bottom-card"><span class="related-bottom-title">Как заправить картридж Canon FC-128: пошаговая инструкция и советы</span><span class="related-bottom-desc">Полное руководство по заправке картриджа Canon FC-128 для принтеров LBP. Разбор этапов, выбор тонера</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

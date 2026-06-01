@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как отправить команды принтеру: PCL, PostScript, ESC/POS и драйверы — Принтер Мастер</title>
+    <meta name="description" content="Пошаговое руководство по отправке команд печати через драйверы, RAW-порты и консоль. Разбор языков PCL, PostScript и ESC/POS для настройки и диагностики.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-otpravit-komandy-printeru.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как отправить команды принтеру: PCL, PostScript, ESC/POS и драйверы">
+    <meta property="og:description" content="Пошаговое руководство по отправке команд печати через драйверы, RAW-порты и консоль. Разбор языков PCL, PostScript и ESC/POS для настройки и диагностики.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как отправить команды принтеру: PCL, PostScript, ESC/POS и драйверы</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Полное руководство: как отправить команды принтеру напрямую и через драйвер</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#основы-взаимодействия-с-устройством-печати">Основы взаимодействия с устройством печати</a></li><li><a href="#языки-программирования-печати-pcl-и-postscript">Языки программирования печати: PCL и PostScript</a></li><li><a href="#прямая-отправка-команд-через-tcpip-и-raw-порт">Прямая отправка команд через TCP/IP и RAW-порт</a></li><li><a href="#работа-с-торговым-оборудованием-escpos">Работа с торговым оборудованием: ESC/POS</a></li><li><a href="#командная-строка-и-утилиты-управления">Командная строка и утилиты управления</a></li><li><a href="#таблица-популярных-команд-управления">Таблица популярных команд управления</a></li><li><a href="#диагностика-и-устранение-сбоев-при-отправке">Диагностика и устранение сбоев при отправке</a></li><li><a href="#faq-частые-вопросы-по-управлению-принтером">FAQ: Частые вопросы по управлению принтером</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="основы-взаимодействия-с-устройством-печати">Основы взаимодействия с устройством печати</h2>
+<p>Отправка команд принтеру — это фундаментальный процесс, который происходит каждый раз, когда вы нажимаете кнопку"Печать" в текстовом редакторе или браузере. <strong>Язык описания страницы</strong> превращает ваш документ в набор инструкций, понятных аппаратной части устройства. Без корректной интерпретации этих сигналов принтер останется"слепым", неспособным воспроизвести изображение или текст на бумаге.</p>
+<p>Важно понимать разницу между отправкой данных через стандартный <em>драйвер</em> и прямой передачей сырых команд. В первом случае операционная система берет на себя сложную работу по конвертации, а во втором — вы, как администратор или разработчик, напрямую управляете логикой работы печатающей головки или лазера. Это особенно критично при настройке <strong>сетевых принтеров</strong> или интеграции кассового оборудования.</p>
+<p>Многие пользователи сталкиваются с ситуациями, когда стандартный интерфейс ОС не дает нужных возможностей, например, при сбросе счетчика или принудительной очистке памяти устройства. В таких случаях знание того, как отправить команду напрямую через <code>RAW-порт</code> или <strong>ADB</strong>, становится незаменимым навыком для технического специалиста.</p>
+
+<h2 id="языки-программирования-печати-pcl-и-postscript">Языки программирования печати: PCL и PostScript</h2>
+<p>Большинство современных офисных устройств используют два основных языка описания страницы: <strong>PCL</strong> (Printer Command Language) от HP и <em>PostScript</em> от Adobe. Каждый из них имеет свою историю и специфику применения в зависимости от типа задач.</p>
+<p>PCL ориентирован на высокую скорость обработки и работу с текстом, что делает его идеальным для стандартных офисных документов. Команды здесь часто представляют собой последовательности байтов, управляющие положением курсора, размером шрифта и выбором лотка. Например, для сброса принтера в PCL используется код <code>\x1B E</code>, который отправляет команду аппаратного сброса.</p>
+<p>PostScript, напротив, является языком программирования второго уровня, способным описывать сложную векторную графику и шрифты с высокой точностью. Он чаще встречается в профессиональных полиграфических системах и устройствах <em>Xerox</em> или <em>Canon</em> высокого класса. <strong>Интерпретатор PostScript</strong> находится непосредственно в памяти принтера и выполняет скрипт, описывающий каждую точку на странице.</p>
+<p>Выбор между ними зависит от вашей задачи: если вам нужна быстрая печать накладных, выбирайте PCL. Если вы печатаете сложные чертежи или макеты с множеством цветовых переходов, <em>PostScript</em> обеспечит лучшее качество рендеринга.</p>
+
+<blockquote>⚠️ Внимание: Неправильная кодировка при отправке PostScript-команд может привести к ошибке"Error: invalidaccess" и зависанию устройства. Всегда проверяйте соответствие версии языка прошивке принтера.</blockquote>
+
+<h2 id="прямая-отправка-команд-через-tcpip-и-raw-порт">Прямая отправка команд через TCP/IP и RAW-порт</h2>
+<p>Для администрирования сетевых устройств часто требуется послать команду напрямую, минуя очередь печати Windows. Самый надежный способ — использовать <strong>Raw-порт</strong>, обычно это порт 9100. Через него данные передаются в"чистом" виде прямо на контроллер принтера.</p>
+<p>Вы можете использовать консольные утилиты или простые скрипты на Python для отправки данных. Например, чтобы отправить команду сброса памяти, нужно установить соединение с IP-адресом устройства и отправить последовательность байтов. Это позволяет обойти ограничения драйверов и выполнить специфические действия, такие как <strong>калибровка цвета</strong> или тест печатающей головки.</p>
+<p>Процесс выглядит следующим образом: вы открываете сокеты, подключаетесь к порту 9100 по протоколу TCP, передаете строку с кодом команды и закрываете соединение. Устройство мгновенно реагирует на сигнал, так как он воспринимается как поток данных для печати, который игнорирует стандартные фильтры очереди.</p>
+
+<div class="poll-widget" id="poll-a80e2bb7"><div class="poll-widget-question">📊 Используете ли вы прямую отправку команд для диагностики?</div><div class="poll-widget-option" data-poll="a80e2bb7" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Да, регулярно</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="a80e2bb7" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Иногда, для сброса ошибок</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="a80e2bb7" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Только через драйвер</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="a80e2bb7" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Никогда не пробовал</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="работа-с-торговым-оборудованием-escpos">Работа с торговым оборудованием: ESC/POS</h2>
+<p>Если вы работаете с фискальными принтерами и чековыми терминалами, вы столкнетесь с языком <strong>ESC/POS</strong>. Это стандарт, разработанный Epson, который стал де-факто стандартом для кассового оборудования. Команды здесь начинаются с байта <code>0x1B</code> (ESC) или <code>0x1C</code> (FS).</p>
+<p>Каждая команда имеет четкую структуру: код инициации, параметры и данные. Например, чтобы напечатать жирный текст, используется последовательность <code>0x1B 0x21 0x08</code>. Для отправки команды"отрезать бумагу" (Full Cut) требуется код <code>0x1D 0x56 0x00</code>. Понимание этих последовательностей критично для настройки кассовых программ.</p>
+<p>Современные библиотеки для Java, C# и Python позволяют инкапсулировать эти байты в удобные объекты, но знание исходного кода помогает при отладке. Часто проблема заключается не в программном обеспечении, а в неверно переданном байте инициализации, из-за чего принтер игнорирует команду отреза или форматирования.</p>
+
+<div class="checklist-block"><h4>☑️ Проверка подключения каталогизатора</h4><label class="check-item"><input type="checkbox"><span>Проверка IP-адреса принтера</span></label><label class="check-item"><input type="checkbox"><span>Открытие порта 9100</span></label><label class="check-item"><input type="checkbox"><span>Валидация кодовой страницы (CP1251/UTF-8)</span></label><label class="check-item"><input type="checkbox"><span>Тестовая отправка байта 0x1B</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="командная-строка-и-утилиты-управления">Командная строка и утилиты управления</h2>
+<p>В операционных системах семейства Linux и macOS управление печатью часто осуществляется через <code>CUPS</code> и консольные утилиты. Команда <code>lp</code> или <code>lpr</code> позволяет отправлять файлы на печать, но существуют более специфические инструменты для отправки команд.</p>
+<p>Для сброса принтера или очистки очереди можно использовать команду <code>cupsenable</code> и <code>cupsdisable</code>, а также <code>lpadmin</code> для настройки портов. В среде Windows для этих целей подходит <code>printui.dll</code> или утилита <code>net print</code>. Однако для отправки специфических PCL-команд лучше использовать <strong>PowerShell</strong> с объектами.NET.</p>
+<p>Пример скрипта на PowerShell для отправки команды очистки памяти через порт 9100 выглядит так:</p>
+<pre><code>$printerIP ="192.168.1.50"
+<p>$port = 9100</p>
+<p>$client = New-Object System.Net.Sockets.TcpClient($printerIP, $port)</p>
+<p>$stream = $client.GetStream</p>
+<p>$command = [System.Text.Encoding]::ASCII.GetBytes("\x1B E")</p>
+<p>$stream.Write($command, 0, $command.Length)</p>
+<p>$client.Close</code></pre></p>
+<p>Такой подход дает полный контроль над устройством. Вы можете отправлять команды последовательно, ожидая подтверждения от принтера, если протокол это поддерживает.</p>
+
+<details class="faq-item"><summary>Что такое LPD-протокол?</summary><div class="faq-answer"><p>LPD (Line Printer Daemon) — это старый сетевой протокол, который используется для отправки заданий печати. Он менее надежен, чем RAW, так как очередь управления может задерживать мгновенные команды.</p></div></details>
+
+<h2 id="таблица-популярных-команд-управления">Таблица популярных команд управления</h2>
+<p>Ниже приведена сводная таблица, содержащая наиболее часто используемые команды для различных типов устройств. Эти данные помогут вам быстро найти нужный код при настройке или ремонте.</p>
+<table>
+<thead>
+<tr>
+<th>Тип команды</th>
+<th>Язык</th>
+<th>Код (Hex)</th>
+<th>Описание действия</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Сброс</td>
+<td>PCL / Generic</td>
+<td><code>1B 45</code></td>
+<td>Аппаратный сброс принтера</td>
+</tr>
+<tr>
+<td>Отрез бумаги</td>
+<td>ESC/POS</td>
+<td><code>1D 56 00</code></td>
+<td>Полный отрез (Full Cut)</td>
+</tr>
+<tr>
+<td>Половина отреза</td>
+<td>ESC/POS</td>
+<td><code>1D 56 01</code></td>
+<td>Отрез с оставлением части бумаги</td>
+</tr>
+<tr>
+<td>Сдвиг строки</td>
+<td>PCL</td>
+<td><code>1B 3D</code></td>
+<td>Установка формы (Form Feed)</td>
+</tr>
+<tr>
+<td>Инициализация</td>
+<td>ESC/POS</td>
+<td><code>1B 40</code></td>
+<td>Сброс всех настроек (по умолчанию)</td>
+</tr>
+</tbody>
+</table>
+
+<p>Использование этих кодов требует точности. Даже один лишний байт может изменить смысл команды. Например, в <em>ESC/POS</em> изменение одной цифры в параметре отреза может привести к тому, что принтер просто пропустит бумагу, не отрезав её, что вызовет замятие.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Всегда делайте резервную копию конфигурации принтера перед отправкой команд сброса, чтобы не потерять настройки сети и макросов.</p></div>
+
+<blockquote>⚠️ Внимание: Некоторые производители блокируют доступ к определенным командам через стандартный порт 9100. Для доступа к расширенным функциям может потребоваться специальный режим администратора или порт управления (обычно 9101 или 9102).</blockquote>
+
+<h2 id="диагностика-и-устранение-сбоев-при-отправке">Диагностика и устранение сбоев при отправке</h2>
+<p>Если принтер не реагирует на отправленные команды, необходимо проверить физическое соединение и настройки сети. Часто проблема кроется в <strong>базовом соединении</strong> — если пинг не проходит, ни одна команда не будет доставлена. Также стоит убедиться, что порт 9100 открыт на файрволе сервера.</p>
+<p>Второй распространенной причиной является неверная <strong>кодировка</strong>. Если вы отправляете текст в кодировке UTF-8, а принтер ожидает Windows-1251, на выходе вы получите"кракозябры". Используйте утилиты для конвертации текста перед отправкой, например, <code>iconv</code> в Linux или встроенные методы в Python.</p>
+<p>Иногда устройство перехватывает команды в очередь и обрабатывает их с задержкой. В этом случае полезно использовать команду <strong>очистки очереди</strong> перед отправкой критических инструкций. Для этого можно отправить команду <code>1B 40</code> (если поддерживается) или перезагрузить службу печати в ОС.</p>
+
+<p>Для продвинутых пользователей доступен анализ трафика с помощью <em>Wireshark</em>. Это позволяет увидеть, какие именно пакеты уходят на принтер и какие ответы он возвращает. Если принтер отправляет <code>RST</code> (Reset connection), значит, он отклонил запрос. Это может быть связано с превышением лимита скорости или некорректным форматом данных.</p>
+<p>Помните, что <mark>прямая отправка команд bypass-ом драйвера</mark> может привести к потере гарантии, если устройство выйдет из строя. Используйте этот метод только для диагностики или в специфических сценариях интеграции, когда стандартные средства не работают.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Наиболее безопасный способ отправки команд — использование официальных утилит производителя, а не прямой доступ к портам, если это не критично для задачи.</p></div>
+
+<h2 id="faq-частые-вопросы-по-управлению-принтером">FAQ: Частые вопросы по управлению принтером</h2>
+<details>
+<summary>Можно ли отправить команду сброса через веб-интерфейс?</summary>
+<p>В большинстве случаев да. В меню веб-интерфейса (обычно по адресу IP-адреса принтера) есть раздел"Service" или"Diagnostics", где можно найти кнопки"Reset Printer" или"Clear Memory". Однако это работает только для стандартных действий.</p>
+</details>
+<details>
+<summary>Какой порт использовать для отправки команд на Epson?</summary>
+<p>Стандартный порт для печати и команд — <code>9100</code>. Для кассовых принтеров Epson часто используется также порт <code>9101</code> для прямого доступа к интерфейсу, если он открыт в настройках.</p>
+</details>
+<details>
+<summary>Что делать, если принтер"завис" после отправки команды?</summary>
+<p>Немедленно отключите питание устройства на 10-15 секунд, чтобы сбросить буфер памяти. После включения проверьте настройки сети и попробуйте отправить команду сброса через стандартный драйвер.</p>
+</details>
+<details>
+<summary>Нужен ли драйвер для отправки RAW-команд?</summary>
+<p>Нет, драйвер не нужен. Вы подключаетесь к IP-адресу и порту напрямую через сокеты. Однако для корректной работы некоторых функций может потребоваться, чтобы драйвер был установлен и настроен как"Generic / Text Only".</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#основы-взаимодействия-с-устройством-печати">Основы взаимодействия с устройством печати</a></li><li><a href="#языки-программирования-печати-pcl-и-postscript">Языки программирования печати: PCL и PostScript</a></li><li><a href="#прямая-отправка-команд-через-tcpip-и-raw-порт">Прямая отправка команд через TCP/IP и RAW-порт</a></li><li><a href="#работа-с-торговым-оборудованием-escpos">Работа с торговым оборудованием: ESC/POS</a></li><li><a href="#командная-строка-и-утилиты-управления">Командная строка и утилиты управления</a></li><li><a href="#таблица-популярных-команд-управления">Таблица популярных команд управления</a></li><li><a href="#диагностика-и-устранение-сбоев-при-отправке">Диагностика и устранение сбоев при отправке</a></li><li><a href="#faq-частые-вопросы-по-управлению-принтером">FAQ: Частые вопросы по управлению принтером</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/c/ch/chto-znachit-printer-priostanovlen.html" class="related-card">Принтер приостановлен: как исправить ошибку и возобновить печать</a></li><li><a href="/articles/p/pr/printer-gryazno-pechataet-kak.html" class="related-card">Принтер грязно печатает: 7 причин и как исправить самостоятельно</a></li><li><a href="/articles/k/ka/kak-nadet-remeshok-na-kameru-canon.html" class="related-card">Как надеть ремешок на камеру Canon: пошаговая инструкция</a></li><li><a href="/articles/c/ca/canon-mp190-kartridzhi-kakie-podkhodyat.html" class="related-card">Какие картриджи подходят для Canon MP190: полные аналоги и оригинал</a></li><li><a href="/articles/k/ka/kak-vstavit-bumagu-10kh15-v-printer.html" class="related-card">Как правильно заправить бумагу 10х15 в принтер: пошаговая инструкция</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/c/ch/chto-znachit-printer-priostanovlen.html" class="related-bottom-card"><span class="related-bottom-title">Принтер приостановлен: как исправить ошибку и возобновить печать</span><span class="related-bottom-desc">Почему принтер показывает статус приостановлен? Полное руководство по устранению ошибки: проверка оч</span></a><a href="/articles/p/pr/printer-gryazno-pechataet-kak.html" class="related-bottom-card"><span class="related-bottom-title">Принтер грязно печатает: 7 причин и как исправить самостоятельно</span><span class="related-bottom-desc">Размытый текст, полосы или блеклые цвета при печати? Узнайте, почему принтер грязно печатает и как п</span></a><a href="/articles/k/ka/kak-nadet-remeshok-na-kameru-canon.html" class="related-bottom-card"><span class="related-bottom-title">Как надеть ремешок на камеру Canon: пошаговая инструкция</span><span class="related-bottom-desc">Подробный гайд по установке ремешка на фотоаппараты Canon. Разбор типов креплений, советы по безопас</span></a><a href="/articles/c/ca/canon-mp190-kartridzhi-kakie-podkhodyat.html" class="related-bottom-card"><span class="related-bottom-title">Какие картриджи подходят для Canon MP190: полные аналоги и оригинал</span><span class="related-bottom-desc">Полный обзор совместимых картриджей для принтера Canon MP190. Информация о чернилах PG-40 и CL-41, ч</span></a><a href="/articles/k/ka/kak-vstavit-bumagu-10kh15-v-printer.html" class="related-bottom-card"><span class="related-bottom-title">Как правильно заправить бумагу 10х15 в принтер: пошаговая инструкция</span><span class="related-bottom-desc">Подробный гайд по установке фотобумаги 10х15 в лотки принтеров Canon, HP, Epson. Избегайтеjam, настр</span></a><a href="/articles/k/ka/kak-napechatat-birki-na-odezhdu-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Печать бирок на одежду на принтере: выбор материалов и инструкция</span><span class="related-bottom-desc">Пошаговое руководство по печати бирок на одежду. Обзор материалов, настройки принтеров и технологии </span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

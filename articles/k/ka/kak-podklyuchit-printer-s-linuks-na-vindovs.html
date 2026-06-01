@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как подключить принтер с Linux к Windows: пошаговая инструкция — Принтер Мастер</title>
+    <meta name="description" content="Узнайте, как настроить совместное использование принтера Linux в сети Windows. Пошаговое руководство по CUPS, Samba и драйверам для стабильной печати.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-podklyuchit-printer-s-linuks-na-vindovs.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как подключить принтер с Linux к Windows: пошаговая инструкция">
+    <meta property="og:description" content="Узнайте, как настроить совместное использование принтера Linux в сети Windows. Пошаговое руководство по CUPS, Samba и драйверам для стабильной печати.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как подключить принтер с Linux к Windows: пошаговая инструкция</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как подключить принтер с Linux к Windows: полное руководство по настройке сети</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#подготовка-сервера-linux-и-настройка-cups">Подготовка сервера Linux и настройка CUPS</a></li><li><a href="#настройка-общего-доступа-через-samba">Настройка общего доступа через Samba</a></li><li><a href="#подключение-принтера-на-клиенте-windows-1011">Подключение принтера на клиенте Windows 10/11</a></li><li><a href="#сравнение-методов-подключения-и-их-особенности">Сравнение методов подключения и их особенности</a></li><li><a href="#устранение-типичных-ошибок-при-подключении">Устранение типичных ошибок при подключении</a></li><li><a href="#оптимизация-производительности-и-мониторинг">Оптимизация производительности и мониторинг</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><p>Переход между операционными системами часто создает сложности с периферийным оборудованием, особенно когда принтер физически подключен к машине на базе <strong>Linux</strong>, а пользователи работают в среде <strong>Windows</strong>. В корпоративной среде или домашних офисах, где сервер печати работает на <em>Ubuntu</em> или <em>Debian</em>, задача становится актуальной: необходимо обеспечить бесперебойную печать документов со всех рабочих станций.</p>
+
+<p>Самая частая ошибка заключается в попытке установить драйверы Windows непосредственно на сервер Linux в надежде, что система "узнает" устройство. На самом деле, решение кроется в правильной настройке сетевого протокола и сервиса <strong>CUPS</strong>, который выступает мостом между аппаратным обеспечением и клиентскими компьютерами. Понимание архитектуры печати в Unix-подобных системах — это ключ к успеху.</p>
+
+<p>В этой статье мы разберем два основных сценария: использование стандартного протокола IPP и настройку общего доступа через <strong>Samba</strong>. Вы научитесь конфигурировать сервер так, чтобы он был виден в сети, и научитесь добавлять принтер на клиентской машине Windows без лишних ошибок и переустановки ОС.</p>
+
+<h2 id="подготовка-сервера-linux-и-настройка-cups">Подготовка сервера Linux и настройка CUPS</h2>
+
+<p>Первым шагом является проверка того, что принтер корректно определён самой операционной системой Linux. Без этого этапа дальнейшая настройка сети невозможна. Откройте терминал и введите команду <code>lpstat -p</code>, чтобы увидеть список доступных устройств. Если принтер отображается как <em>idle</em> или <em>running</em>, значит, драйвер установлен верно.</p>
+
+<p>Сервис печати в Linux по умолчанию называется <strong>CUPS</strong> (Common Unix Printing System). Для удаленного доступа к нему необходимо изменить конфигурационный файл. Откройте файл <code>/etc/cups/cupsd.conf</code> с правами суперпользователя. Вам нужно будет найти секцию, отвечающую за доступ к локальной сети, и разрешить подключения с IP-адресов ваших Windows-компьютеров.</p>
+
+<p>Добавьте в раздел <code>Location /</code> или <code>Listen</code> строки, указывающие на подсеть вашего офиса или дома. Например, если ваша сеть 192.168.1.x, разрешите доступ для <code>192.168.1.*</code>. Это критически важно, иначе Windows-клиенты просто не увидят сервер печати, даже если физическое соединение стабильно. <mark>Изменения в конфигурации CUPS применяются только после перезапуска службы печати через команду sudo systemctl restart cups.</mark></p>
+
+<p>Перед тем как переходить к Windows, убедитесь, что порт 631 открыт в брандмауэре. Если вы используете <em>UFW</em> или <em>firewalld</em>, разрешите входящие соединения. Игнорирование этого шага приведет к тому, что при попытке подключения вы получите ошибку тайм-аута, хотя физическая связь с принтером будет работать исправно.</p>
+
+<blockquote>⚠️ Внимание: Убедитесь, что статический IP-адрес вашего Linux-сервера не меняется после перезагрузки. Динамическая смена адреса приведет к потере связи с принтером на всех клиентских машинах Windows.</blockquote>
+
+<div class="poll-widget" id="poll-69925c1e"><div class="poll-widget-question">📊 Какая ОС работает на вашем сервере печати?</div><div class="poll-widget-option" data-poll="69925c1e" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Ubuntu</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="69925c1e" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Debian</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="69925c1e" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Fedora</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="69925c1e" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">CentOS</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="69925c1e" data-idx="4" onclick="pbPollVote(this)"><span class="poll-widget-label">RHEL</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="настройка-общего-доступа-через-samba">Настройка общего доступа через Samba</h2>
+
+<p>Многие администраторы предпочитают использовать <strong>Samba</strong> для эмуляции Windows-сервера печати, так как это упрощает интеграцию в доменные сети Active Directory. Суть метода заключается в том, что Linux-машина притворяется обычным Windows-принтером, используя протокол SMB. Это позволяет подключить устройство без настройки сложных правил брандмауэра для порта 631.</p>
+
+<p>Для начала установите пакет <code>samba</code> и <code>samba-common</code>. Затем отредактируйте файл <code>/etc/samba/smb.conf</code>. Вам нужно создать новый раздел [printers], где указать путь к каталогу временных файлов и разрешить гостевой доступ или указать конкретные пользователи. Конфигурация выглядит примерно так: <code>browseable = yes</code> и <code>writable = no</code>.</p>
+
+<p>После сохранения файла необходимо добавить принтер в базу данных <strong>Samba</strong>. Используйте утилиту <code>net rpc printer add</code> или настройте это через графический интерфейс, если он установлен. Важно сопоставить имя принтера в CUPS с именем ресурса в Samba. Несоответствие имен приведет к тому, что Windows увидит пустой список или не сможет установить драйвер.</p>
+
+<p>Не забудьте создать пользователя в базе Samba, который будет использоваться для аутентификации на стороне Windows. Используйте команду <code>smbpasswd -a имя_пользователя</code>. Без пароля многие версии Windows 10 и 11 откажутся подключаться к сетевому ресурсу из соображений безопасности.</p>
+
+<div class="checklist-block"><h4>☑️ Проверка настройки Samba</h4><label class="check-item"><input type="checkbox"><span>Установлен пакет samba</span></label><label class="check-item"><input type="checkbox"><span>Настроен smb.conf</span></label><label class="check-item"><input type="checkbox"><span>Добавлен принтер через net rpc</span></label><label class="check-item"><input type="checkbox"><span>Создан пользователь smbpasswd</span></label><label class="check-item"><input type="checkbox"><span>Перезапуск службы smbd</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 5</div></div>
+
+<blockquote>⚠️ Внимание: Версии протокола SMB меняются с обновлениями Windows. Если подключение не работает, проверьте настройки безопасности в реестре Windows, разрешив SMB 1.0 или добавив принтер как локальный с портом LPR.</blockquote>
+
+<h2 id="подключение-принтера-на-клиенте-windows-1011">Подключение принтера на клиенте Windows 10/11</h2>
+
+<p>Теперь, когда сервер готов, переходим к настройке рабочей станции. Откройте <code>Параметры</code> → <strong>Устройства</code> → <strong>Принтеры и сканеры</code>. Нажмите кнопку <strong>Добавить принтер или сканер</strong>. Система начнет поиск, но часто он не находит сетевые принтеры, настроенные через Linux, автоматически.</p>
+
+<p>Вам потребуется подключить принтер вручную. Выберите опцию <strong>Нужный принтер отсутствует в списке</strong>. В открывшемся окне выберите "Добавить принтер, используя IP-адрес или имя узла". В поле "Имя или IP-адрес" введите статический IP вашего Linux-сервера. Тип устройства выберите "TCP/IP Device".</p>
+
+<p>На следующем этапе появится окно настройки порта. Убедитесь, что галочка "Опросить и выбрать автоматическим способом" снята, если вы знаете точный путь. В поле "Имя принтера" введите ресурс, который вы создали в CUPS или Samba (например, <code>HPLaserJet</code>). Система предложит установить драйвер. Если драйвер Windows не найден автоматически, нажмите "Установить с диска" и укажите путь к файлу <code>.inf</code> для вашего принтера.</p>
+
+<p>Если вы используете метод Samba, путь будет выглядеть иначе: <code>\\IP-адрес-сервера\Имя-принтера</code>. Введите эти данные в поле поиска сети или в адресную строку проводника. После ввода логина и пароля от Samba-аккаунта, мастер установки автоматически подтянет конфигурацию и предложит завершить настройку.</p>
+
+<details class="faq-item"><summary>Что делать, если Windows не видит порт?Иногда служба Print Spooler на Windows зависает. Попробуйте перезапустить её через services.msc, найдя службу "Диспетчер печати", или проверьте, не блокирует ли антивирус входящие соединения на порт 9100.-->
+
+<h2 id="сравнение-методов-подключения-и-их-особенности">Сравнение методов подключения и их особенности</h2>
+
+<p>Выбор между протоколом IPP и Samba зависит от вашей инфраструктуры. IPP (Internet Printing Protocol) является стандартом де-факто для современных сетей и обеспечивает лучшую совместимость с мобильными устройствами и облачными сервисами. Samba же незаменима, если вы работаете в среде, где критична совместимость со старыми офисными программами или специфическими требованиями домена.</p>
+
+<p>Ниже приведена таблица, сравнивающая ключевые параметры обоих методов, чтобы помочь вам сделать осознанный выбор</summary><div class="faq-answer"><p></p>
+
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Протокол IPP (CUPS)</th>
+<th>Протокол SMB (Samba)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Сложность настройки</td>
+<td>Средняя (требуется конфиг CUPS)</td>
+<td>Высокая (требует настройки Samba)</td>
+</tr>
+<tr>
+<td>Совместимость с Windows 11</td>
+<td>Высокая (нативная поддержка)</td>
+<td>Средняя (проблемы с SMB 1.0)</td>
+</tr>
+<tr>
+<td>Скорость передачи данных</td>
+<td>Высокая</td>
+<td>Средняя (зависит от версий SMB)</td>
+</tr>
+<tr>
+<td>Безопасность</td>
+<td>Поддержка TLS/SSL</td>
+<td>Зависит от настроек шифрования</td>
+</tr>
+</tbody>
+</table>
+
+<p>Для простых домашних сетей часто достаточно подключения по IPP, так как оно требует меньше манипуляций с правами доступа. В то же время, если у вас уже настроена файловая система через Samba, логично использовать её и для принтеров, чтобы не поднимать дополнительные сервисы.</p>
+
+<p>Важно учитывать, что некоторые старые модели принтеров могут требовать специфических драйверов, которые не всегда корректно работают через сетевой стек Windows. В таких случаях использование <strong>Linux</strong> в качестве шлюза позволяет использовать родные драйверы сервера, эмулируя устройство как универсальное.</p>
+
+
+
+<h2 id="устранение-типичных-ошибок-при-подключении">Устранение типичных ошибок при подключении</h2>
+
+<p>Самая распространенная проблема — ошибка 0x0000011b или 0x00000709, возникающая при обновлении систем безопасности Windows. Microsoft закрывает уязвимости в протоколе печати, что ломает старые схемы подключения. Решение часто лежит в редактировании реестра Windows, где необходимо разрешить удаленные вызовы RPC.</p>
+
+<p>Другая частая ошибка — отсутствие прав на печать. Даже если принтер добавлен, система может выдавать сообщение "Доступ запрещен". Это происходит, если в настройках CUPS не добавлен пользователь из группы <code>lpadmin</code> или не настроены права доступа в Samba. Проверьте, входит ли ваш Windows-пользователь в доверенные группы на сервере.</p>
+
+<p>Иногда проблема кроется в DNS. Если вы подключаетесь по имени компьютера (например, <code>\\printserver</code>), убедитесь, что Windows может разрешить это имя в IP-адрес. В локальных сетях без DNS-сервера это может не работать, и лучше использовать прямой IP-адрес в формате <code>http://192.168.1.50:631/printers/printer_name</code>.</p>
+
+<blockquote>⚠️ Внимание: После установки крупных обновлений Windows (например, 21H2 или 22H2) настройки безопасности RPC могут сброситься. Если печать внезапно остановилась, проверьте параметры реестра <code>RestrictRemoteClients</code>.</blockquote>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Проверка прав доступа и корректности IP-адресов — это 90% успешного устранения ошибок при подключении принтера Linux к Windows.</p></div>
+
+<h2 id="оптимизация-производительности-и-мониторинг">Оптимизация производительности и мониторинг</h2>
+
+<p>После успешного подключения важно настроить мониторинг очереди печати. Через веб-интерфейс <code>http://IP-адрес:631</code> вы можете управлять задачами, отменять печати и видеть статус картриджей в реальном времени. Это особенно полезно, если у вас несколько пользователей, отправляющих документы одновременно.</p>
+
+<p>Для оптимизации скорости печати можно настроить буферизацию на уровне Linux. Увеличение размера очереди в <code>cupsd.conf</code> позволяет накапливать задачи, когда сеть перегружена. Также стоит проверить, не используется ли сжатие данных, которое может быть избыточным для простых текстовых документов, но критичным для графических изображений.</p>
+
+<p>Регулярно обновляйте пакеты <strong>CUPS</strong> и драйверы оборудования. Разработчики часто выпускают патчи, исправляющие ошибки совместимости с новыми версиями Windows. Игнорирование обновлений может привести к тому, что после обновления клиентской ОС принтер перестанет отвечать на запросы.</p>
+
+<p>В заключение, настройка печати между Linux и Windows — это стандартная задача, решаемая правильными инструментами. Главное — понять принцип работы сетевых протоколов и не бояться редактировать конфигурационные файлы.</p>
+
+
+
+<details>
+<summary>Что делать, если Windows не видит принтер при подключении по IP?</summary>
+<p>Проверьте, открыт ли порт 631 (для IPP) или 9100 (для Raw) на Linux-сервере в фаерволе. Убедитесь, что вы ввели правильный IP-адрес и имя принтера без ошибок. Попробуйте отключить брандмауэр Windows временно для теста.</p>
+</details>
+
+<details>
+<summary>Нужны ли драйверы для Windows, если принтер на Linux?</summary>
+<p>Да, драйвер должен быть установлен на клиентской машине Windows. Сервер Linux лишь передает данные, но интерпретировать их в команды для принтера должен драйвер на компьютере, отправляющем печать. Если драйвер не найден автоматически, скачайте его с сайта производителя.</p>
+</details>
+
+<details>
+<summary>Можно ли подключить принтер Linux к Windows без Samba?</summary>
+<p>Да, наиболее простой и современный способ — использование протокола IPP. В Windows это реализуется через добавление принтера по IP-адресу и выбору типа устройства "TCP/IP Device" или "Standard TCP/IP Port", указав адрес сервера CUPS.</p>
+</details>
+
+<details>
+<summary>Как устранить ошибку 0x0000011b при подключении?</summary>
+<p>Эта ошибка связана с обновлениями безопасности Windows (RPC restriction). Необходимо добавить ключ в реестре Windows на клиенте или сервере: <code>HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Print</code>, создать параметр <code>RpcAuthnLevelPrivacyEnabled</code> типа DWORD со значением 0. После этого перезапустите службу диспетчера печати.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#подготовка-сервера-linux-и-настройка-cups">Подготовка сервера Linux и настройка CUPS</a></li><li><a href="#настройка-общего-доступа-через-samba">Настройка общего доступа через Samba</a></li><li><a href="#подключение-принтера-на-клиенте-windows-1011">Подключение принтера на клиенте Windows 10/11</a></li><li><a href="#сравнение-методов-подключения-и-их-особенности">Сравнение методов подключения и их особенности</a></li><li><a href="#устранение-типичных-ошибок-при-подключении">Устранение типичных ошибок при подключении</a></li><li><a href="#оптимизация-производительности-и-мониторинг">Оптимизация производительности и мониторинг</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-podklyuchit-printer-xerox-b205.html" class="related-card">Подключение принтера Xerox B205: пошаговая инструкция 2026</a></li><li><a href="/articles/k/ka/kak-zapustit-drajver-na-printer.html" class="related-card">Как установить драйвер на принтер: пошаговая инструкция 2026</a></li><li><a href="/articles/v/v-/v-kakoj-papke-khranyatsya-drajvera-na-printer.html" class="related-card">Где хранятся драйвера принтера в Windows: полный путь и поиск</a></li><li><a href="/articles/c/ch/chto-delat-esli-printer-ne-vidit-kartridzha.html" class="related-card">Принтер не видит картридж: причины, диагностика и решения</a></li><li><a href="/articles/k/ka/kak-ostanovit-pechat-printerom.html" class="related-card">Как экстренно остановить печать на принтере: 7 способов</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-podklyuchit-printer-xerox-b205.html" class="related-bottom-card"><span class="related-bottom-title">Подключение принтера Xerox B205: пошаговая инструкция 2026</span><span class="related-bottom-desc">Как подключить Xerox B205 к ПК, ноутбуку или сети: через USB, Wi-Fi, Ethernet. Решение ошибок, устан</span></a><a href="/articles/k/ka/kak-zapustit-drajver-na-printer.html" class="related-bottom-card"><span class="related-bottom-title">Как установить драйвер на принтер: пошаговая инструкция 2026</span><span class="related-bottom-desc">Не работает принтер? Узнайте, как правильно скачать и установить драйвер для HP, Canon, Epson, Broth</span></a><a href="/articles/v/v-/v-kakoj-papke-khranyatsya-drajvera-na-printer.html" class="related-bottom-card"><span class="related-bottom-title">Где хранятся драйвера принтера в Windows: полный путь и поиск</span><span class="related-bottom-desc">Найдите, в какой папке хранятся драйвера на принтер в Windows 10/11. Пошаговая инструкция по поиску </span></a><a href="/articles/c/ch/chto-delat-esli-printer-ne-vidit-kartridzha.html" class="related-bottom-card"><span class="related-bottom-title">Принтер не видит картридж: причины, диагностика и решения</span><span class="related-bottom-desc">Почему принтер не видит картридж? Разбираем причины: от загрязнения чипа до поломки контактов. Пошаг</span></a><a href="/articles/k/ka/kak-ostanovit-pechat-printerom.html" class="related-bottom-card"><span class="related-bottom-title">Как экстренно остановить печать на принтере: 7 способов</span><span class="related-bottom-desc">Принтер завис или печатает лишние страницы? Узнайте, как безопасно прервать печать на струйных, лазе</span></a><a href="/articles/n/no/noutbuk-ne-raspoznaet-printer-cherez-usb-chto-delat.html" class="related-bottom-card"><span class="related-bottom-title">Ноутбук не видит принтер через USB: полное руководство по решению</span><span class="related-bottom-desc">Ноутбук не распознает принтер через USB? Разбираем причины: от плохого кабеля до сбоев драйверов. По</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

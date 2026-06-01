@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как очистить очередь печати (Spool): полное руководство по очистке — Принтер Мастер</title>
+    <meta name="description" content="Избавьтесь от зависших заданий печати с помощью очистки очереди Spooler. Пошаговая инструкция для Windows: службы, командная строка и удаление файлов.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-ochistit-spool-printera.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как очистить очередь печати (Spool): полное руководство по очистке">
+    <meta property="og:description" content="Избавьтесь от зависших заданий печати с помощью очистки очереди Spooler. Пошаговая инструкция для Windows: службы, командная строка и удаление файлов.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/remont-i-oshibki/">Ремонт и ошибки</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как очистить очередь печати (Spool): полное руководство по очистке</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как очистить очередь спула принтера: полное руководство</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#проблемы-с-очередью-печати-и-застрявшими-заданиями">Проблемы с очередью печати и застрявшими заданиями</a></li><li><a href="#метод-через-графический-интерфейс-windows">Метод через графический интерфейс Windows</a></li><li><a href="#остановка-службы-и-ручная-очистка-папки">Остановка службы и ручная очистка папки</a></li><li><a href="#использование-командной-строки-для-автоматизации">Использование командной строки для автоматизации</a></li><li><a href="#устранение-ошибок-и-профилактика-заторов">Устранение ошибок и профилактика заторов</a></li><li><a href="#частые-причины-зависания-очереди-и-их-таблица">Частые причины зависания очереди и их таблица</a></li><li><a href="#дополнительные-настройки-и-режим-отладки">Дополнительные настройки и режим отладки</a></li><li><a href="#faq-часто-задаваемые-вопросы">FAQ: Часто задаваемые вопросы</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="проблемы-с-очередью-печати-и-застрявшими-заданиями">Проблемы с очередью печати и застрявшими заданиями</h2>
+<p>Иногда процесс печати превращается в настоящую головную боль, когда документ зависает в очереди и не отправляется на устройство. Проблема может заключаться в сбоях <strong>службы диспетчера печати</strong>, поломке драйвера или просто в перегрузке буфера памяти. В таком случае принтер просто игнорирует новые команды, а на экране компьютера висит красная иконка с восклицательным знаком.</p>
+<p>Очистка <em>спула печати</em> (Spool) — это стандартная процедура, которая позволяет сбросить все накопленные данные и вернуть оборудование в рабочее состояние. Если вы не знаете, как это сделать, то можете потратить часы на перезагрузку техники без всякого результата. Мы разберем несколько надежных способов решения проблемы, от простых до продвинутых.</p>
+<p>Важно понимать, что файлы в очереди — это временные данные, которые могут быть безопасно удалены без вреда для системы. Однако перед началом любых манипуляций нужно убедиться, что сама служба печати корректно остановлена. Иначе файлы просто не удалятся или система выдаст ошибку доступа.</p>
+
+<h2 id="метод-через-графический-интерфейс-windows">Метод через графический интерфейс Windows</h2>
+<p>Самый простой и очевидный путь для большинства пользователей — использование стандартного меню управления принтером. Этот метод не требует ввода команд или работы с системными файлами, поэтому он подходит даже новичкам. Вам нужно открыть окно <code>Устройства и принтеры</code> в панели управления. Найдите там свой принтер, нажмите правой кнопкой мыши и выберите пункт <strong>Очередь печати</strong>.</p>
+<p>В открывшемся окне вы увидите список всех задач, ожидающих обработки. Если там есть несколько зависших документов, выделите их все, используя комбинацию клавиш <code>Ctrl + A</code>. После этого в меню сверху нажмите на кнопку <code>Документ</code> и выберите <strong>Отмена</strong>. Система попытается сбросить все выбранные элементы в один клик.</p>
+<p>К сожалению, этот способ часто оказывается бессильным, если служба зависла намертво. В таком случае файл не удаляется, а кнопка "Отмена" становится неактивной или просто игнорирует ваши действия. Если стандартный интерфейс не справляется, придется переходить к более радикальным мерам через системные службы.</p>
+<blockquote>⚠️ Внимание: Если кнопка "Отмена" не реагирует, не пытайтесь перезагружать компьютер принудительно без остановки службы, так как это может привести к повреждению драйверов и повторному зависанию очереди после включения.</blockquote>
+
+<h2 id="остановка-службы-и-ручная-очистка-папки">Остановка службы и ручная очистка папки</h2>
+<p>Для гарантированного удаления всех застрявших файлов необходимо остановить системную службу, которая управляет процессом. Нажмите сочетание клавиш <code>Win + R</code>, введите команду <code>services.msc</code> и нажмите Enter. В открывшемся списке найдите службу с названием <em>Диспетчер печати</em> (Print Spooler). Кликните по ней правой кнопкой и выберите <strong>Остановить</strong>.</p>
+<p>Теперь нужно перейти в системную папку, где физически хранятся временные файлы очереди. Снова нажмите <code>Win + R</code>, вставьте следующую строку и нажмите OK: <code>C:\Windows\System32\spool\PRINTERS</code>. В этой директории вы увидите файлы с расширением <code>.SPL</code> и <code>.SHD</code>. Их можно и нужно удалить без страха, так как это лишь временные данные для печати.</p>
+<p>Выделите все файлы в этой папке (<code>Ctrl + A</code>) и нажмите <strong>Delete</strong>. После того как папка станет полностью пустой, вернитесь в окно служб. Найдите ту же службу <em>Диспетчер печати</em>, нажмите правой кнопкой и выберите <strong>Запустить</strong>. Это перезапустит процесс и очистит очередь на аппаратном уровне.</p>
+<div class="checklist-block"><h4>☑️ Порядок действий</h4><label class="check-item"><input type="checkbox"><span>Остановить службу Диспетчер печати</span></label><label class="check-item"><input type="checkbox"><span>Открыть папку System32\spool\PRINTERS</span></label><label class="check-item"><input type="checkbox"><span>Удалить все файлы .SPL и .SHD</span></label><label class="check-item"><input type="checkbox"><span>Запустить службу обратно</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+<p>Этот метод является наиболее эффективным, так как он удаляет физическое содержимое буфера. Даже если драйвер работает некорректно, отсутствие файлов в папке гарантирует, что принтер не будет пытаться их обработать. После запуска службы попробуйте отправить на печать тестовую страницу.</p>
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Ручное удаление файлов из папки spool — самый надежный способ сброса очереди, если стандартные методы не помогают.</p></div>
+
+<h2 id="использование-командной-строки-для-автоматизации">Использование командной строки для автоматизации</h2>
+<p>Для тех, кто предпочитает работать с консоли или нужно выполнить процедуру быстро, существует команда, объединяющая все шаги в один скрипт. Запустите командную строку от имени администратора. Введите команду <code>net stop spooler</code> и нажмите Enter. Вы увидите сообщение об успешной остановке службы.</p>
+<p>Далее введите команду для удаления содержимого папки: <pre><code>del /Q /F /S "%systemroot%\System32\spool\printers\<em>.</em>"</code></pre> Эта команда принудительно удаляет все файлы в указанном пути, не спрашивая подтверждения. Как только процесс завершится, введите <code>net start spooler</code>, чтобы снова включить службу печати.</p>
+<p>Такой подход удобен тем, что не требует поиска файлов вручную и открытия проводника. Однако будьте осторожны: ввод команды с ошибками может привести к удалению не тех файлов. Всегда проверяйте путь перед нажатием Enter. Если вы используете сторонние утилиты для очистки, убедитесь, что они работают именно с этой папкой.</p>
+<p>Командная строка также позволяет проверить статус службы. Введите <code>sc query spooler</code>, чтобы увидеть, работает ли она в данный момент. Если статус <strong>RUNNING</strong>, значит, система готова принимать новые задания. Если статус <strong>STOPPED</strong>, нужно запустить её вручную.</p>
+
+<h2 id="устранение-ошибок-и-профилактика-заторов">Устранение ошибок и профилактика заторов</h2>
+<p>Иногда очистка очереди не помогает, и проблема возвращается снова и снова. Это может указывать на более глубокие проблемы с драйверами или самим оборудованием. В таких случаях рекомендуется полностью удалить драйвер принтера и установить его заново с официального сайта производителя.</p>
+<p>Важно проверить наличие вирусов или вредоносного ПО, которые могут блокировать системные процессы. Антивирусные сканеры иногда ошибочно принимают файлы спула за подозрительные объекты и блокируют доступ к ним. Попробуйте временно отключить защиту, чтобы исключить этот фактор.</p>
+<p>Также стоит обратить внимание на конфигурацию самого принтера. Иногда проблема кроется в переполненной памяти самого устройства, а не в компьютере. В этом случае нужно перезагрузить само печатающее устройство, выключив его из розетки на пару минут.</p>
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Перед удалением драйверов зайдите в диспетчер устройств и удалите устройство с галочкой "Удалить программы драйверов", чтобы система не восстановила старый сбойный драйвер автоматически.</p></div>
+<blockquote>⚠️ Внимание: Если вы используете сетевой принтер, убедитесь, что не блокируете доступ к нему через брандмауэр, иначе служба не сможет отправлять данные по сети.</blockquote>
+
+<h2 id="частые-причины-зависания-очереди-и-их-таблица">Частые причины зависания очереди и их таблица</h2>
+<p>Чтобы понять, почему очередь печати зависает, нужно рассмотреть основные причины. Ниже приведена таблица, описывающая распространенные проблемы и способы их устранения. Это поможет вам быстрее диагностировать проблему в будущем.</p>
+<table>
+<thead>
+<tr>
+<th>Причина</th>
+<th>Симптом</th>
+<th>Пути решения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Сбой драйвера</td>
+<td>Очередь зависает сразу после отправки</td>
+<td>Переустановка драйвера</td>
+</tr>
+<tr>
+<td>Поврежденные файлы</td>
+<td>Невозможно удалить задания</td>
+<td>Ручная очистка папки Spool</td>
+</tr>
+<tr>
+<td>Проблемы сети</td>
+<td>Принтер недоступен</td>
+<td>Проверка IP-адреса и кабеля</td>
+</tr>
+<tr>
+<td>Нехватка памяти</td>
+<td>Медленная обработка больших файлов</td>
+<td>Очистка памяти ПК или принтера</td>
+</tr>
+<tr>
+<td>Конфликт ПО</td>
+<td>Служба останавливается сама</td>
+<td>Проверка антивируса и других служб</td>
+</tr>
+</tbody>
+</table>
+<p>Анализ этих данных поможет вам определить, является ли проблема программной или аппаратной. В большинстве случаев достаточно регулярной очистки папки и обновления драйверов. Если же проблема носит системный характер, возможно, потребуется проверка целостности системных файлов через <code>sfc /scannow</code>.</p>
+<div class="poll-widget" id="poll-cc27af4e"><div class="poll-widget-question">📊 С какой проблемой вы чаще всего сталкиваетесь?</div><div class="poll-widget-option" data-poll="cc27af4e" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Очередь зависает раз в год</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="cc27af4e" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Принтер не видит компьютер</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="cc27af4e" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Файлы не удаляются</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="cc27af4e" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Печать идет с ошибками</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="дополнительные-настройки-и-режим-отладки">Дополнительные настройки и режим отладки</h2>
+<p>В некоторых случаях может потребоваться изменение настроек самой службы. Откройте <code>services.msc</code>, найдите <em>Диспетчер печати</em> и нажмите "Свойства". В разделе "Восстановление" можно настроить действия при сбоях. Установите для первого, второго и последующих сбоев действие "Перезапуск службы".</p>
+<p>Это позволит системе автоматически пытаться восстановить работу очереди без вашего вмешательства. Также можно проверить протоколирование событий. В разделе "Журналы Windows" можно найти логи ошибок, которые укажут на точную причину сбоя. Это особенно полезно для корпоративной среды.</p>
+<p>Некоторые пользователи предпочитают использовать сторонние утилиты для управления принтерами. Такие программы часто имеют функцию "Очистить очередь" в один клик, которая автоматически выполняет все необходимые команды. Однако перед установкой любого стороннего ПО убедитесь в его надежности.</p>
+<details class="faq-item"><summary>Что делать, если служба не запускается?</summary><div class="faq-answer"><p>Попробуйте восстановить системные файлы через командную строку: sfc /scannow, а также проверьте реестр на наличие поврежденных ключей, связанных с печатью.</p></div></details>
+<p>Если ни один из методов не помогает, возможно, проблема кроется в аппаратной части жесткого диска или в повреждении системного раздела. В таком случае рекомендуется обратиться к специалисту или проверить диск на наличие битых секторов.</p>
+
+<h2 id="faq-часто-задаваемые-вопросы">FAQ: Часто задаваемые вопросы</h2>
+<details>
+<summary>Можно ли удалять файлы из папки Spool, пока принтер печатает?</summary>
+<p>Нет, удалять файлы во время работы принтера нельзя. Это может привести к повреждению структуры очереди и зависанию службы. Сначала остановите печать и службу, а затем удаляйте файлы.</p>
+</details>
+<details>
+<summary>Почему служба Диспетчер печати не запускается?</summary>
+<p>Это может быть связано с повреждением системных файлов, отсутствием прав администратора или конфликтом с другими службами. Попробуйте проверить целостность системы командой sfc /scannow.</p>
+</details>
+<details>
+<summary>Как сделать так, чтобы принтер печатал сразу без сохранения в очередь?</summary>
+<p>В свойствах принтера во вкладке "Дополнительно" можно выбрать параметр "Печатать непосредственно на принтер". Это ускорит печать, но заставит принтер работать дольше.</p>
+</details>
+<details>
+<summary>Что делать, если после очистки очередь снова заполняется?</summary>
+<p>Это говорит о том, что драйвер работает некорректно или сам принтер имеет аппаратную неисправность. Попробуйте обновить драйвер или сбросить настройки принтера до заводских.</p>
+</details>
+<blockquote>⚠️ Внимание: Регулярная очистка очереди не заменяет необходимости обновлять драйверы и поддерживать принтер в исправном состоянии.</blockquote></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#проблемы-с-очередью-печати-и-застрявшими-заданиями">Проблемы с очередью печати и застрявшими заданиями</a></li><li><a href="#метод-через-графический-интерфейс-windows">Метод через графический интерфейс Windows</a></li><li><a href="#остановка-службы-и-ручная-очистка-папки">Остановка службы и ручная очистка папки</a></li><li><a href="#использование-командной-строки-для-автоматизации">Использование командной строки для автоматизации</a></li><li><a href="#устранение-ошибок-и-профилактика-заторов">Устранение ошибок и профилактика заторов</a></li><li><a href="#частые-причины-зависания-очереди-и-их-таблица">Частые причины зависания очереди и их таблица</a></li><li><a href="#дополнительные-настройки-и-режим-отладки">Дополнительные настройки и режим отладки</a></li><li><a href="#faq-часто-задаваемые-вопросы">FAQ: Часто задаваемые вопросы</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-snyat-pechatayushchuyu-golovku-canon-pixma-mp250.html" class="related-card">Как снять печатающую головку Canon Pixma MP250: пошаговая инструкция</a></li><li><a href="/articles/c/ch/chem-otmyt-chernila-ot-printera-s-ruk.html" class="related-card">Как отмыть чернила от принтера с рук: лучшие способы и меры предосторожности</a></li><li><a href="/articles/k/ka/kak-razobrat-i-pochistit-obektiv-canon.html" class="related-card">Как разобрать и почистить объектив Canon: пошаговая инструкция</a></li><li><a href="/articles/p/po/pochemu-printer-pokazyvaet-chto-net-bumagi.html" class="related-card">Принтер пишет «нет бумаги»: 7 причин и способы ремонта</a></li><li><a href="/articles/p/pr/printer-kak-pochinit.html" class="related-card">Принтер как починить: полное руководство по устранению отказов</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-snyat-pechatayushchuyu-golovku-canon-pixma-mp250.html" class="related-bottom-card"><span class="related-bottom-title">Как снять печатающую головку Canon Pixma MP250: пошаговая инструкция</span><span class="related-bottom-desc">Подробное руководство по демонтажу печатающей головки принтера Canon Pixma MP250. Инструкция по заме</span></a><a href="/articles/c/ch/chem-otmyt-chernila-ot-printera-s-ruk.html" class="related-bottom-card"><span class="related-bottom-title">Как отмыть чернила от принтера с рук: лучшие способы и меры предосторожности</span><span class="related-bottom-desc">Эффективные методы удаления чернил с кожи. Разбор средств для струйных и лазерных устройств, техника</span></a><a href="/articles/k/ka/kak-razobrat-i-pochistit-obektiv-canon.html" class="related-bottom-card"><span class="related-bottom-title">Как разобрать и почистить объектив Canon: пошаговая инструкция</span><span class="related-bottom-desc">Подробное руководство по разборке, чистке и сборке объективов Canon. Узнайте, какие инструменты нужн</span></a><a href="/articles/p/po/pochemu-printer-pokazyvaet-chto-net-bumagi.html" class="related-bottom-card"><span class="related-bottom-title">Принтер пишет «нет бумаги»: 7 причин и способы ремонта</span><span class="related-bottom-desc">Принтер сигнализирует о пустом лотке, хотя бумага есть? Разбираем поломки датчиков, настройки драйве</span></a><a href="/articles/p/pr/printer-kak-pochinit.html" class="related-bottom-card"><span class="related-bottom-title">Принтер как починить: полное руководство по устранению отказов</span><span class="related-bottom-desc">Пошаговая инструкция: как починить принтер самостоятельно. Решение проблем с печатью, головкой, лотк</span></a><a href="/articles/p/po/pochemu-printer-kenon-ne-zakhvatyvaet-bumagu-chto-delat.html" class="related-bottom-card"><span class="related-bottom-title">Принтер Canon не берет бумагу: 7 причин и решений 2026</span><span class="related-bottom-desc">Принтер Canon не захватывает бумагу? Узнайте 7 основных причин и пошаговые инструкции по устранению </span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

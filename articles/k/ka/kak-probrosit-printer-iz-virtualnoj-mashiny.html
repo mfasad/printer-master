@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Проброс принтера из виртуальной машины: пошаговая инструкция 2026 — Принтер Мастер</title>
+    <meta name="description" content="Как настроить доступ к принтеру из виртуальной машины (VMware, VirtualBox, Hyper-V)? Подробная инструкция с решениями для Windows, Linux и macOS. Устраняем ошибки проброса USB и сетевых принтеров.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-probrosit-printer-iz-virtualnoj-mashiny.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Проброс принтера из виртуальной машины: пошаговая инструкция 2026">
+    <meta property="og:description" content="Как настроить доступ к принтеру из виртуальной машины (VMware, VirtualBox, Hyper-V)? Подробная инструкция с решениями для Windows, Linux и macOS. Устраняем ошибки проброса USB и сетевых принтеров.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Проброс принтера из виртуальной машины: пошаговая инструкция 2026</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как пробросить принтер из виртуальной машины: полное руководство для VMware, VirtualBox и Hyper-V</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#1-подготовка-к-пробросу-принтера-требования-и-ограничения">1. Подготовка к пробросу принтера: требования и ограничения</a></li><li><a href="#2-проброс-usb-принтера-в-vmware-workstationplayer">2. Проброс USB-принтера в VMware Workstation/Player</a></li><li><a href="#3-настройка-принтера-в-virtualbox-usb-и-сетевые-устройства">3. Настройка принтера в VirtualBox: USB и сетевые устройства</a></li><li><a href="#4-проброс-принтера-в-hyper-v-ограничения-и-обходные-пути">4. Проброс принтера в Hyper-V: ограничения и обходные пути</a></li><li><a href="#5-решение-распространённых-проблем">5. Решение распространённых проблем</a></li><li><a href="#6-проброс-принтера-в-корпоративной-среде-active-directory-и-групповые-политики">6. Проброс принтера в корпоративной среде: Active Directory и групповые политики</a></li><li><a href="#7-альтернативные-решения-облачная-печать-и-usb-серверы">7. Альтернативные решения: облачная печать и USB-серверы</a></li><li><a href="#8-оптимизация-производительности-печати-в-виртуальной-машине">8. Оптимизация производительности печати в виртуальной машине</a></li><li><a href="#faq-частые-вопросы-по-пробросу-принтера-из-вм">FAQ: Частые вопросы по пробросу принтера из ВМ</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><p>Проброс принтера из виртуальной машины (ВМ) — задача, с которой сталкиваются как системные администраторы, так и обычные пользователи, работающие с виртуализацией. Возможность печатать документы напрямую из гостевой ОС без необходимости переноса файлов на хост-машину экономит время и упрощает рабочий процесс. Однако настройка этого функционала часто сопровождается ошибками: принтер не определяется, драйвера не устанавливаются, или устройство просто "исчезает" после перезагрузки ВМ.</p>
+
+<p>В этой статье мы разберём все актуальные способы проброса принтера — от USB-устройств до сетевых МФУ — с учётом особенностей популярных гипервизоров: <strong>VMware Workstation/Player</strong>, <em>Oracle VirtualBox</em> и <em>Microsoft Hyper-V</em>. Отдельное внимание уделим типичным проблемам (например, ошибке <code>USB device is busy</code> в VirtualBox) и способам их решения. Если вы используете принтер в корпоративной среде или для удалённой работы, здесь вы найдёте ответы на вопросы совместимости с <em>Active Directory</em>, <em>CUPS</em> (для Linux) и облачными сервисами печати.</p>
+
+<h2 id="1-подготовка-к-пробросу-принтера-требования-и-ограничения">1. Подготовка к пробросу принтера: требования и ограничения</h2>
+
+<p>Прежде чем приступать к настройке, убедитесь, что ваша система соответствует минимальным требованиям. Основные условия для успешного проброса принтера:</p>
+
+<ul>
+  <li>🖥️ <strong>Хост-машина</strong>: Windows 10/11, macOS 12+ или Linux (Ubuntu/Debian/CentOS) с последними обновлениями. Для Hyper-V требуется Windows 10/11 Pro или Enterprise.</li>
+  <li>🔌 <strong>Гипервизор</strong>: VMware Workstation 17+, VirtualBox 7.0+, Hyper-V (встроенный в Windows). Бесплатные версии (например, VMware Player) могут иметь ограничения на USB-проброс.</li>
+  <li>🖨️ <strong>Принтер</strong>: Современные модели (2018 года и новее) с поддержкой <code>USB 2.0/3.0</code> или сетевого подключения. Устаревшие устройства (например, <em>HP LaserJet 1020</em>) могут требовать ручной установки драйверов.</li>
+  <li>🔄 <strong>Драйвера</strong>: На хосте и в гостевой ОС должны быть установлены актуальные драйвера для принтера и виртуальных USB-контроллеров.</li>
+</ul>
+
+<p>Важно: если принтер подключён по <strong>USB</strong>, убедитесь, что он не используется другими программами на хосте (например, <em>Adobe Acrobat</em> или <em>Microsoft Office</em> может блокировать устройство). Для сетевых принтеров проверьте, что гостевая ОС находится в той же подсети, что и МФУ, или имеет доступ к нему через <code>IP-адрес</code>.</p>
+
+<blockquote>⚠️ <strong>Внимание:</strong> В корпоративных сетях проброс USB-устройств может быть заблокирован политиками безопасности (например, через <em>Group Policy</em> или <em>Endpoint Protection</em>). Перед настройкой уточните ограничения у администратора.</blockquote>
+
+<table>
+  <thead>
+    <tr>
+      <th>Гипервизор</th>
+      <th>Поддерживаемые ОС гостя</th>
+      <th>USB-проброс</th>
+      <th>Сетевой проброс</th>
+      <th>Требуемые дополнения</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>VMware Workstation/Player</td>
+      <td>Windows, Linux, macOS</td>
+      <td>Да (USB 2.0/3.0)</td>
+      <td>Да (через IP)</td>
+      <td><em>VMware Tools</em></td>
+    </tr>
+    <tr>
+      <td>Oracle VirtualBox</td>
+      <td>Windows, Linux, macOS, Solaris</td>
+      <td>Да (USB 1.1/2.0/3.0)</td>
+      <td>Да (через <code>RDP</code> или IP)</td>
+      <td><em>VirtualBox Extension Pack</em> + <em>Guest Additions</em></td>
+    </tr>
+    <tr>
+      <td>Microsoft Hyper-V</td>
+      <td>Windows, Linux (ограниченно)</td>
+      <td>Нет (только через <code>Enhanced Session</code>)</td>
+      <td>Да (через IP или <em>Print Services</em>)</td>
+      <td><em>Integration Services</em></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="poll-widget" id="poll-f4341d77"><div class="poll-widget-question">📊 Какой гипервизор вы используете?</div><div class="poll-widget-option" data-poll="f4341d77" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">VMware Workstation/Player</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="f4341d77" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Oracle VirtualBox</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="f4341d77" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Microsoft Hyper-V</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="f4341d77" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Другой</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="2-проброс-usb-принтера-в-vmware-workstationplayer">2. Проброс USB-принтера в VMware Workstation/Player</h2>
+
+<p>VMware предлагает один из самых стабильных механизмов проброса USB-устройств. Чтобы подключить принтер:</p>
+
+<ol>
+  <li>Подключите принтер к хост-машине и убедитесь, что он определяется в <code>Диспетчере устройств</code> (Windows) или <code>lsusb</code> (Linux/macOS).</li>
+  <li>Запустите виртуальную машину и перейдите в меню <code>VM → Removable Devices → [Название принтера] → Connect</code>.</li>
+  <li>В гостевой ОС принтер появится как новое USB-устройство. Установите драйвера вручную или дождитесь автоматической установки.</li>
+</ol>
+
+<p>Если принтер не отображается в списке устройств:</p>
+<ul>
+  <li>🔧 Проверьте, включена ли опция <code>USB Controller</code> в настройках ВМ (<code>VM → Settings → USB Controller</code>). Для USB 3.0 выберите <code>xHCI</code>.</li>
+  <li>🔄 Переподключите принтер физически (вытащите/вставьте кабель).</li>
+  <li>📥 Обновите <em>VMware Tools</em> в гостевой ОС (<code>VM → Install VMware Tools</code>).</li>
+</ul>
+
+<blockquote>⚠️ <strong>Внимание:</strong> В VMware Player бесплатной версии проброс USB 3.0 может работать нестабильно. Для корректной работы принтеров <em>Canon</em> или <em>Epson</em> с высокой скоростью печати рекомендуется использовать VMware Workstation Pro.</blockquote>
+
+
+<p>Убедиться, что принтер включён и распознаётся хостом|</p>
+<p>Проверить версию VMware Tools в гостевой ОС|</p>
+<p>Выбрать правильный USB-контроллер (xHCI для USB 3.0)|</p>
+<p>Отключить принтер от других программ на хосте (например, Photoshop или Word)--></p>
+
+<h2 id="3-настройка-принтера-в-virtualbox-usb-и-сетевые-устройства">3. Настройка принтера в VirtualBox: USB и сетевые устройства</h2>
+
+<p><em>Oracle VirtualBox</em> требует дополнительных шагов для проброса USB-устройств. Главное отличие от VMware — необходимость установки <em>Extension Pack</em> (для USB 2.0/3.0) и <em>Guest Additions</em> (для интеграции устройств).</p>
+
+<p>Инструкция для USB-принтера:</p>
+<ol>
+  <li>Скачайте и установите <a href="https://www.virtualbox.org/wiki/Downloads"><em>VirtualBox Extension Pack</em></a> (соответствует версии VirtualBox).</li>
+  <li>В настройках ВМ перейдите в <code>Порты → USB</code> и добавьте новый фильтр для принтера (кнопка <code>+</code>).</li>
+  <li>Запустите ВМ и подключите принтер через меню <code>Устройства → USB → [Название принтера]</code>.</li>
+</ol>
+
+<p>Для сетевых принтеров:</p>
+<ul>
+  <li>🌐 В гостевой ОС (Windows/Linux) добавьте принтер через его <code>IP-адрес</code> или имя хоста (например, <code>\\192.168.1.100\PrinterName</code>).</li>
+  <li>🖥️ В VirtualBox включите <code>Сетевой адаптер</code> в режиме <code>Сетевой мост (Bridged)</code> или <code>NAT</code> (если принтер в локальной сети).</li>
+</ul>
+
+<p>Типичные ошибки в VirtualBox:</p>
+<ul>
+  <li>🚫 <code>USB device is busy</code> — принтер используется другой ВМ или программой на хосте. Решение: отключите устройство от всех процессов через <code>Диспетчер задач</code> (Windows) или <code>lsof</code> (Linux).</li>
+  <li>⚠️ <code>Failed to attach USB device</code> — отсутствует <em>Extension Pack</em> или несовместимость версий. Обновите VirtualBox.</li>
+</ul>
+
+<details class="faq-item"><summary>Как проверить, занято ли USB-устройство в Linux?</summary><div class="faq-answer"><p>
+<p>В терминале выполните команду <code>lsusb</code>, чтобы увидеть список устройств, затем найдите процесс, использующий принтер, с помощью <code>lsof /dev/bus/usb/XXX/YYY</code> (где XXX и YYY — идентификаторы устройства из <code>lsusb -t</code>).</p></div></details></p>
+
+<h2 id="4-проброс-принтера-в-hyper-v-ограничения-и-обходные-пути">4. Проброс принтера в Hyper-V: ограничения и обходные пути</h2>
+
+<p><em>Microsoft Hyper-V</em> не поддерживает прямой проброс USB-устройств в гостевые ОС (за исключением <em>Windows 10/11</em> с включённым <code>Enhanced Session Mode</code>). Однако есть несколько рабочих решений:</p>
+
+<h3>Способ 1: Enhanced Session Mode (только для Windows-гостей)</h3>
+<p>Если гостевая ОС — Windows 10/11:</p>
+<ol>
+  <li>Включите <code>Enhanced Session Mode</code> в настройках Hyper-V (<code>Hyper-V Manager → [Имя ВМ] → Settings → Enhanced Session Mode Policy</code>).</li>
+  <li>Подключитесь к ВМ через <code>VMConnect</code> и выберите <code>Show Options → Local Resources → Printers</code>.</li>
+  <li>Принтеры хоста станут доступны в гостевой ОС как сетевые.</li>
+</ol>
+
+<h3>Способ 2: Сетевой проброс (универсально)</h3>
+<p>Для любых гостевых ОС (включая Linux):</p>
+<ol>
+  <li>На хосте <strong>расшарьте принтер</strong> через <code>Панель управления → Устройства и принтеры → [ПКМ на принтере] → Свойства принтера → Доступ</code>.</li>
+  <li>В гостевой ОС добавьте принтер по сетевому пути <code>\\[IP хоста]\[Имя принтера]</code>.</li>
+</ol>
+
+<p>Для Linux-гостей используйте <em>CUPS</em>:</p>
+<pre><code>sudo apt install cups  # Установка (Debian/Ubuntu)
+<p>sudo systemctl start cups</p>
+</code></pre>
+<p>Затем добавьте принтер через веб-интерфейс <code>http://localhost:631</code>, выбрав <code>Windows Printer via SAMBA</code>.</p>
+
+<blockquote>⚠️ <strong>Внимание:</strong> В Hyper-V проброс USB-принтеров на Linux-гости официально не поддерживается. Альтернатива — использование <em>USB over Network</em> (например, программ <em>USB Network Gate</em> или <em>VirtualHere</em>), но это требует покупки лицензии.</blockquote>
+
+<h2 id="5-решение-распространённых-проблем">5. Решение распространённых проблем</h2>
+
+<p>Даже при правильной настройке проброс принтера может работать некорректно. Рассмотрим типичные сценарии и способы их устранения.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Проблема</th>
+      <th>Возможная причина</th>
+      <th>Решение</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Принтер подключается, но не печатает</td>
+      <td>Несовместимые драйвера в гостевой ОС</td>
+      <td>Скачайте драйвер с сайта производителя принтера для конкретной ОС (например, <em>HP Universal Print Driver</em> для Linux).</td>
+    </tr>
+    <tr>
+      <td>USB-устройство исчезает после перезагрузки ВМ</td>
+      <td>Не сохранены настройки USB-фильтра в VirtualBox</td>
+      <td>Закройте ВМ через <code>Сохранить состояние</code>, а не <code>Выключить</code>.</td>
+    </tr>
+    <tr>
+      <td>Ошибка <code>Insufficient USB bandwidth</code> в VMware</td>
+      <td>Слишком много USB-устройств подключено к ВМ</td>
+      <td>Отключите ненужные устройства или увеличьте лимит USB-портов в настройках ВМ.</td>
+    </tr>
+    <tr>
+      <td>Принтер не виден в сетевом окружении</td>
+      <td>Брандмауэр блокирует доступ</td>
+      <td>На хосте разрешите порты <code>139 (NetBIOS)</code> и <code>445 (SMB)</code> в брандмауэре.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Если принтер определяется, но печатает "мусор" (некорректные символы или пустые листы), проблема кроется в <strong>драйверах</strong> или <strong>режиме эмуляции</strong>. Попробуйте:</p>
+<ul>
+  <li>🔄 Установить драйвер в режиме совместимости (например, для <em>Windows 7</em>, если гостевая ОС — Windows 10).</li>
+  <li>📄 Изменить настройки печати в гостевой ОС: выберите <code>Общие → Напечатать напрямую на принтер</code> (обход очереди печати).</li>
+  <li>🖨️ Для <em>PostScript</em>-принтеров (например, <em>Xerox</em>) установите флаг <code>Эмуляция PostScript</code> в свойствах устройства.</li>
+</ul>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если принтер <em>Brother</em> или <em>Kyocera</em> не печатает из Linux-гостя, попробуйте установить пакет <code>foomatic-db</code> и выбрать драйвер <code>Recommended</code> в CUPS. Это часто решает проблемы с поддержкой PPD-файлов.</p></div>
+
+<h2 id="6-проброс-принтера-в-корпоративной-среде-active-directory-и-групповые-политики">6. Проброс принтера в корпоративной среде: Active Directory и групповые политики</h2>
+
+<p>В офисных сетях проброс принтера осложняется настройками <em>Active Directory (AD)</em> и <em>Group Policy</em>. Если принтер подключён к домену, следуйте этим рекомендациям:</p>
+
+<h3>Для Windows-гостей:</h3>
+<ul>
+  <li>🏢 Убедитесь, что ВМ присоединена к домену (или используйте те же учётные данные, что и на хосте).</li>
+  <li>🔑 В <code>gpedit.msc</code> проверьте политики в разделе <code>Конфигурация пользователя → Административные шаблоны → Принтеры</code>. Отключите ограничения на установку драйверов.</li>
+  <li>📡 Для сетевых принтеров используйте <code>PushPrinterConnections</code> (групповая политика для автоматического подключения).</li>
+</ul>
+
+<h3>Для Linux-гостей:</h3>
+<p>В корпоративных Linux-дистрибутивах (например, <em>RHEL</em> или <em>SUSE</em>):</p>
+<ol>
+  <li>Настройте <em>Samba</em> для аутентификации в AD:
+  <pre><code>sudo yum install samba winbind krb5-workstation
+<p>sudo authconfig --enablenis --enablekrb5 --enablewinbind --enablewinbindusedefaultdomain --update</code></pre></p>
+  </li>
+  <li>Добавьте принтер через <em>CUPS</em> с аутентификацией Kerberos.</li>
+</ol>
+
+<p><mark>В доменных средах проброс USB-принтеров может быть заблокирован политикой <code>Device Installation Restrictions</code>. В этом случае единственный вариант — сетевой проброс или использование специализированного ПО (например, <em>ThinPrint</em> для виртуализированных десктопов).</mark></p>
+
+<h2 id="7-альтернативные-решения-облачная-печать-и-usb-серверы">7. Альтернативные решения: облачная печать и USB-серверы</h2>
+
+<p>Если стандартные методы проброса не работают (например, из-за ограничений гипервизора или ОС), рассмотрите альтернативные подходы:</p>
+
+<ul>
+  <li>☁️ <strong>Облачная печать</strong>: Сервисы вроде <em>Google Cloud Print</em> (устарел, но есть альтернативы), <em>Microsoft Universal Print</em> или <em>PaperCut</em> позволяют печатать с любой ВМ через интернет. Требуется регистрация принтера в облаке.</li>
+  <li>🔌 <strong>USB-сервер</strong>: Аппаратные устройства (например, <em>Digi AnywhereUSB</em> или <em>SEH UTN Manager</em>) подключаются к принтеру и предоставляют доступ по сети. Поддерживают до 4–8 USB-устройств одновременно.</li>
+  <li>🖥️ <strong>Удалённый рабочий стол (RDP)</strong>: Если ВМ — Windows, подключитесь к ней по RDP с хоста и включите проброс принтеров в настройках клиента (<code>mstsc /v:IP_ВМ /drive:printers</code>).</li>
+</ul>
+
+<p>Для облачной печати настройка обычно сводится к:</p>
+<ol>
+  <li>Регистрации принтера в сервисе (например, через <em>Microsoft Universal Print</em> портал).</li>
+  <li>Установке агента на хост-машину (если требуется).</li>
+  <li>Добавлению принтера в гостевой ОС как облачного устройства.</li>
+</ol>
+
+<blockquote>⚠️ <strong>Внимание:</strong> Облачные сервисы печати могут сохранять данные документов на своих серверах. Для конфиденциальных материалов используйте только решения с шифрованием (например, <em>PaperCut</em> с поддержкой <code>TLS 1.3</code>).</blockquote>
+
+<h2 id="8-оптимизация-производительности-печати-в-виртуальной-машине">8. Оптимизация производительности печати в виртуальной машине</h2>
+
+<p>Печать из ВМ может быть медленнее, чем с физического ПК, из-за накладных расходов на виртуализацию. Чтобы ускорить процесс:</p>
+
+<ul>
+  <li>⚡ <strong>Для USB-принтеров</strong>: В настройках ВМ выделите отдельный виртуальный <code>USB-контроллер</code> (например, <code>EHCI + xHCI</code> в VMware).</li>
+  <li>📶 <strong>Для сетевых принтеров</strong>: Используйте проводное подключение (а не Wi-Fi) для хоста и ВМ. В VirtualBox выберите <code>Паравиртуализованный сетевой адаптер (virtio-net)</code>.</li>
+  <li>🗃️ <strong>Для больших документов</strong>: Печатайте через <code>XPS</code> или <code>PDF</code>, а затем отправляйте файл на принтер с хоста (это снизит нагрузку на ВМ).</li>
+</ul>
+
+<p>Если принтер "зависает" при печати из ВМ:</p>
+<ul>
+  <li>🔄 Перезапустите службу печати:
+  <pre><code>net stop spooler &amp;&amp; net start spooler  # Windows
+<p>sudo systemctl restart cups               # Linux</code></pre></p>
+  </li>
+  <li>📋 Уменьшите разрешение печати в настройках принтера (например, с <code>1200 dpi</code> до <code>600 dpi</code>).</li>
+</ul>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Для максимальной производительности печати из ВМ используйте сетевой проброс вместо USB — это снижает нагрузку на виртуальные контроллеры и устраняет задержки, связанные с эмуляцией USB.</p></div>
+
+<h2 id="faq-частые-вопросы-по-пробросу-принтера-из-вм">FAQ: Частые вопросы по пробросу принтера из ВМ</h2>
+
+<details>
+  <summary>Можно ли пробросить принтер в ВМ на macOS (host)?</summary>
+  <p>Да, но с ограничениями:</p>
+  <ul>
+    <li>В <em>VMware Fusion</em> проброс USB работает аналогично Windows-версии (требуется <em>VMware Tools</em>).</li>
+    <li>В <em>VirtualBox</em> на macOS проброс USB 3.0 может не работать стабильно — используйте USB 2.0 или сетевой принтер.</li>
+    <li>Для <em>Parallels Desktop</em> включите опцию <code>Share Mac Printers</code> в настройках ВМ.</li>
+  </ul>
+  <p>На macOS с чипом <em>Apple Silicon (M1/M2)</em> проброс USB в ВМ x86 (например, через <em>UTM</em>) официально не поддерживается.</p>
+</details>
+
+<details>
+  <summary>Почему принтер <em>HP LaserJet</em> определяется в ВМ, но не печатает?</summary>
+  <p>Это типичная проблема для принтеров <em>HP</em> с проприетарными драйверами. Решения:</p>
+  <ol>
+    <li>Удалите текущий драйвер в гостевой ОС и установите <em>HP Universal Print Driver (UPD)</em> с официального сайта.</li>
+    <li>В настройках принтера отключите <code>Двусторонняя печать</code> и <code>Экономия тонера</code> — эти опции иногда конфликтуют с виртуальными контроллерами.</li>
+    <li>Для Linux используйте драйвер <code>foo2zjs</code> (для лазерных принтеров) или <code>hplip</code> (установите через <code>sudo apt install hplip</code>).</li>
+  </ol>
+</details>
+
+<details>
+  <summary>Как пробросить принтер в ВМ на <em>ESXi</em>?</summary>
+  <p>В <em>VMware ESXi</em> прямой проброс USB-устройств к ВМ невозможен без дополнительного ПО. Альтернативы:</p>
+  <ul>
+    <li>Используйте <strong>сетевой принтер</strong> (расшарьте его на хосте или подключите напрямую к сети).</li>
+    <li>Установите на хост <em>USB-сервер</em> (например, <em>VirtualHere</em>) и подключите принтер как сетевое устройство.</li>
+    <li>Для Windows-гостей настройте <em>RDP с пробросом принтеров</em> (требуется <em>VMware Horizon</em> или аналоги).</li>
+  </ul>
+  <p>ESXi не поддерживает USB-passthrough для отдельных устройств (только целиком контроллер, что небезопасно).</p>
+</details>
+
+<details>
+  <summary>Можно ли пробросить принтер в ВМ на <em>Android</em> (host)?</summary>
+  <p>Нет, гипервизоры для Android (например, <em>UserLAnd</em> или <em>Termux:X11</em>) не поддерживают проброс USB-устройств или принтеров. Альтернативы:</p>
+  <ul>
+    <li>Используйте облачную печать (например, <em>Google Cloud Print</em> через браузер).</li>
+    <li>Подключитесь к ВМ по <code>SSH/RDP</code> и настройте сетевой принтер.</li>
+    <li>Для физической печати экспортируйте документ из ВМ на Android, а затем распечатайте через локальное приложение (например, <em>HP Smart</em>).</li>
+  </ul>
+</details>
+
+<details>
+  <summary>Как пробросить принтер в <em>Docker</em>-контейнер?</summary>
+  <p>Docker не поддерживает проброс USB-устройств напрямую, но есть обходные пути:</p>
+  <ol>
+    <li>Для <strong>сетевых принтеров</strong> добавьте устройство в контейнер через параметр <code>--device=/dev/usb/lp0</code> (требуются права <code>--privileged</code>).</li>
+    <li>Используйте <em>CUPS</em> в контейнере:
+    <pre><code>docker run -d --name cupsd -p 631:631 -v /var/run/dbus:/var/run/dbus olbat/cupsd</code></pre>
+<p>Затем добавьте принтер через веб-интерфейс <code>http://localhost:631</code>.</li></p>
+    <li>Для Windows-контейнеров настройте проброс через <em>RDP</em> (если контейнер поддерживает GUI).</li>
+  </ol>
+  <p>Обратите внимание: проброс USB в Docker небезопасен и рекомендуется только в изолированных средах.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#1-подготовка-к-пробросу-принтера-требования-и-ограничения">1. Подготовка к пробросу принтера: требования и ограничения</a></li><li><a href="#2-проброс-usb-принтера-в-vmware-workstationplayer">2. Проброс USB-принтера в VMware Workstation/Player</a></li><li><a href="#3-настройка-принтера-в-virtualbox-usb-и-сетевые-устройства">3. Настройка принтера в VirtualBox: USB и сетевые устройства</a></li><li><a href="#4-проброс-принтера-в-hyper-v-ограничения-и-обходные-пути">4. Проброс принтера в Hyper-V: ограничения и обходные пути</a></li><li><a href="#5-решение-распространённых-проблем">5. Решение распространённых проблем</a></li><li><a href="#6-проброс-принтера-в-корпоративной-среде-active-directory-и-групповые-политики">6. Проброс принтера в корпоративной среде: Active Directory и групповые политики</a></li><li><a href="#7-альтернативные-решения-облачная-печать-и-usb-серверы">7. Альтернативные решения: облачная печать и USB-серверы</a></li><li><a href="#8-оптимизация-производительности-печати-в-виртуальной-машине">8. Оптимизация производительности печати в виртуальной машине</a></li><li><a href="#faq-частые-вопросы-по-пробросу-принтера-из-вм">FAQ: Частые вопросы по пробросу принтера из ВМ</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/p/pr/printer-hp-kak-raspechatat-plakat.html" class="related-card">Как распечатать плакат на принтере HP: Пошаговая инструкция</a></li><li><a href="/articles/p/po/pochemu-ne-pechataet-podklyuchennyj-printer.html" class="related-card">Почему не печатает принтер: 7 причин и способы ремонта</a></li><li><a href="/articles/k/ka/kak-udalit-printer-kenon.html" class="related-card">Как удалить принтер Canon: пошаговая инструкция для Windows, Mac и Linux</a></li><li><a href="/articles/k/ka/kak-menyat-kartridzh-v-printere-hp.html" class="related-card">Как заменить картридж в принтере HP: Инструкция для всех серий</a></li><li><a href="/articles/k/ka/kakie-est-printery-strujnye.html" class="related-card">Какие бывают струйные принтеры: виды, технологии и выбор</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/p/pr/printer-hp-kak-raspechatat-plakat.html" class="related-bottom-card"><span class="related-bottom-title">Как распечатать плакат на принтере HP: Пошаговая инструкция</span><span class="related-bottom-desc">Пошаговое руководство: настройка драйвера HP, масштабирование и печать плаката на нескольких листах.</span></a><a href="/articles/p/po/pochemu-ne-pechataet-podklyuchennyj-printer.html" class="related-bottom-card"><span class="related-bottom-title">Почему не печатает принтер: 7 причин и способы ремонта</span><span class="related-bottom-desc">Принтер не печатает, но подключен? Узнайте, как быстро диагностировать ошибку, обновить драйверы, оч</span></a><a href="/articles/k/ka/kak-udalit-printer-kenon.html" class="related-bottom-card"><span class="related-bottom-title">Как удалить принтер Canon: пошаговая инструкция для Windows, Mac и Linux</span><span class="related-bottom-desc">Подробное руководство по удалению принтера Canon с ПК, ноутбука или сервера. Сбросим драйверы, очист</span></a><a href="/articles/k/ka/kak-menyat-kartridzh-v-printere-hp.html" class="related-bottom-card"><span class="related-bottom-title">Как заменить картридж в принтере HP: Инструкция для всех серий</span><span class="related-bottom-desc">Пошаговая замена картриджа в принтерах HP LaserJet и DeskJet. Как снять старые чернила, установить н</span></a><a href="/articles/k/ka/kakie-est-printery-strujnye.html" class="related-bottom-card"><span class="related-bottom-title">Какие бывают струйные принтеры: виды, технологии и выбор</span><span class="related-bottom-desc">Полный гид по струйным принтерам: от компактных фотопечати до промышленных моделей. Разбор технологи</span></a><a href="/articles/m/ml/mlt-d104s-kartridzh-dlya-kakikh-printerov.html" class="related-bottom-card"><span class="related-bottom-title">MLT-D104S картридж: для каких принтеров Samsung подходит</span><span class="related-bottom-desc">Полный список совместимых моделей принтеров Samsung ML-W, ML-T, SL-M2020 под картридж MLT-D104S. Сов</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

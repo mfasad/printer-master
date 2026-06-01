@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как подключить 3D принтер к WiFi: полное руководство по настройке — Принтер Мастер</title>
+    <meta name="description" content="Инструкция по подключению 3D принтера к беспроводной сети. Настройка прошивки Marlin, Klipper, OctoPrint. Решение проблем с IP-адресом и стабильностью соединения.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-podklyuchit-3d-printer-k-wifi.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как подключить 3D принтер к WiFi: полное руководство по настройке">
+    <meta property="og:description" content="Инструкция по подключению 3D принтера к беспроводной сети. Настройка прошивки Marlin, Klipper, OctoPrint. Решение проблем с IP-адресом и стабильностью соединения.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как подключить 3D принтер к WiFi: полное руководство по настройке</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как подключить 3D принтер к WiFi для беспроводной печати</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#выбор-оборудования-и-проверка-совместимости">Выбор оборудования и проверка совместимости</a></li><li><a href="#настройка-встроенного-wi-fi-модуля-в-прошивке-marlin">Настройка встроенного Wi-Fi модуля в прошивке Marlin</a></li><li><a href="#использование-octoprint-как-посредника-для-подключения">Использование OctoPrint как посредника для подключения</a></li><li><a href="#конфигурация-klipper-и-moonraker">Конфигурация Klipper и Moonraker</a></li><li><a href="#решение-типичных-проблем-с-подключением">Решение типичных проблем с подключением</a></li><li><a href="#безопасность-беспроводной-сети">Безопасность беспроводной сети</a></li><li><a href="#тестирование-и-первые-шаги">Тестирование и первые шаги</a></li><li><a href="#альтернативные-методы-подключения">Альтернативные методы подключения</a></li><li><a href="#faq-частые-вопросы-пользователей">FAQ: Частые вопросы пользователей</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body">
+
+<p>Современная аддитивная индустрия стремительно движется в сторону полной автономности оборудования. Подключение 3D принтера к беспроводной сети открывает перед пользователем принципиально новые возможности удаленного управления процессом создания объектов. Больше не нужно привязываться к компьютеру или постоянно переносить файлы через SD-карту, что снижает риск повреждения носителя и экономит время.</p>
+
+<p>Процесс интеграции устройства в локальную сеть существенно различается в зависимости от архитектуры электроники и установленной прошивки. Некоторые бюджетные модели require использование сторонних модулей, тогда как продвинутые платы имеют встроенные Wi-Fi адаптеры. Понимание технических нюансов настройки маршрутизации и безопасности данных является ключевым фактором успешной эксплуатации оборудования.</p>
+
+<h2 id="выбор-оборудования-и-проверка-совместимости">Выбор оборудования и проверка совместимости</h2>
+
+<p>Перед началом настройки необходимо убедиться, что ваш аппарат технически способен работать в беспроводном режиме. Большинство современных экосистем, таких как <em>Ender</em> с платой <em>Creality 4.2.2</em> или <em>Prusa</em> MK4, уже оснащены необходимыми чипами, но старые модели требуют доработки.</p>
+
+<p>Критически важным моментом является соответствие стандартов беспроводной связи. Сетевые адаптеры в 3D принтерах чаще всего поддерживают только протокол <code>802.11 b/g/n</code> на частоте <code>2.4 ГГц</code>. Убедитесь, что ваш роутер не отключил эту частоту в пользу исключительно <code>5 ГГц</code>, так как большинство контроллеров не видят сети на высокой частоте.</p>
+
+<p>Если встроенного модуля нет, потребуется внешнее решение. Популярным вариантом является использование одноплатных компьютеров, таких как <em>Raspberry Pi</em> или <em>ESP32</em>, которые подключаются к USB-порту принтера или материнской плате. Это превращает обычную машину в умное устройство, управляемое через веб-интерфейс.</p>
+
+<h2 id="настройка-встроенного-wi-fi-модуля-в-прошивке-marlin">Настройка встроенного Wi-Fi модуля в прошивке Marlin</h2>
+
+<p>Для устройств на базе прошивки <em>Marlin</em> процесс подключения часто осуществляется через меню LCD-дисплея, если он поддерживает эту функцию. Зайдите в раздел <code>Prepare</code> или <code>Configure</code> и найдите пункт <code>Wi-Fi Setup</code>. Введите SSID вашей сети и пароль, используя экранный ввод.</p>
+
+<p>В более сложных случаях потребуется компиляция новой версии прошивки. Вам нужно будет скачать исходный код, открыть файл <code>Configuration.h</code> и раскомментировать секцию <code>WIFI_CONFIG</code>. Здесь указываются параметры сети, которые будут зашиты в память контроллера при перезагрузке.</p>
+
+<p>После успешной компиляции и прошивки платы, устройство автоматически попытается подключиться к указанной сети. Проверьте статус подключения, запустив команду <code>M111</code> через консоль управления или посмотрев на индикатор на дисплее. Если соединение установлено, система выдаст IP-адрес, по которому можно будет обратиться к принтеру.</p>
+
+<blockquote>⚠️ Внимание: При компиляции прошивки убедитесь, что выбранный вариант <strong>WiFi</strong> соответствует версии вашего аппаратного модуля (ESP8266 или ESP32), иначе плата может выйти из строя или не запуститься.</blockquote>
+
+<div class="poll-widget" id="poll-62ccda58"><div class="poll-widget-question">📊 Какую версию прошивки вы используете на своем 3D принтере?</div><div class="poll-widget-option" data-poll="62ccda58" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Marlin 2.x</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="62ccda58" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Klipper</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="62ccda58" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Cura</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="62ccda58" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Другая</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="62ccda58" data-idx="4" onclick="pbPollVote(this)"><span class="poll-widget-label">Свой вариант</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="использование-octoprint-как-посредника-для-подключения">Использование OctoPrint как посредника для подключения</h2>
+
+<p>Самый надежный способ получить доступ к управлению принтером через Wi-Fi — это использование программного обеспечения <em>OctoPrint</em>. Этот сервис работает на отдельном устройстве (например, том же <em>Raspberry Pi</em>) и служит мостом между интернетом и вашим 3D принтером.</p>
+
+<p>Вам необходимо установить <em>OctoPrint</em> на мини-компьютер, подключить его к принтеру через USB-кабель и к роутеру через Wi-Fi. После загрузки веб-интерфейса вы сможете загружать файлы печати, следить за температурой сопла и перемещать оси прямо с телефона или ноутбука.</p>
+
+<p>Для стабильной работы важно настроить статический IP-адрес для устройства с OctoPrint в настройках роутера. Это исключит ситуацию, когда после перезагрузки сети адрес меняется, и вы теряете доступ к управлению оборудованием. Также рекомендуется включить плагин <code>OctoEverywhere</code> для удаленного доступа из любой точки мира.</p>
+
+<div class="checklist-block"><h4>☑️ Подготовка к настройке OctoPrint</h4><label class="check-item"><input type="checkbox"><span>Установить Raspberry Pi OS</span></label><label class="check-item"><input type="checkbox"><span>Подключить USB-кабель к принтеру</span></label><label class="check-item"><input type="checkbox"><span>Настроить статический IP</span></label><label class="check-item"><input type="checkbox"><span>Установить плагины безопасности</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="конфигурация-klipper-и-moonraker">Конфигурация Klipper и Moonraker</h2>
+
+<p>Продвинутые пользователи все чаще отказываются от Marlin в пользу <em>Klipper</em>, который выносит вычисления на внешний компьютер. Для подключения к Wi-Fi в этой связке используется компонент <code>Moonraker</code>. Именно он предоставляет веб-интерфейс (обычно <code>Fluidd</code> или <code>Mainsail</code>) для управления.</p>
+
+<p>Настройка происходит через файл конфигурации <code>moonraker.conf</code>. Вам нужно указать параметры сети, где расположен сам <code>klippy.conf</code>. Если вы используете <em>Raspberry Pi</em>, сеть настраивается стандартными средствами операционной системы Linux (например, через <code>raspi-config</code> или <code>nmcli</code>).</p>
+
+<p>Особенностью Klipper является возможность работы через SSH. Вы можете настроить принтер, не имея под рукой дисплея, используя только терминал. Это требует базовых знаний командной строки, но дает максимальную гибкость в настройке параметров сети и безопасности.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>В настройках Moonraker обязательно укажите правильные права доступа, чтобы случайно не открыть управление принтером в публичную сеть без пароля.</tip</p></div>
+
+<p>Для интеграции с домашней сетью часто требуется создание отдельной VLAN для IoT-устройств. Это изолирует принтер от ваших компьютеров и телефонов, защищая личную информацию в случае взлома уязвимости в прошивке.</p>
+
+<h2 id="решение-типичных-проблем-с-подключением">Решение типичных проблем с подключением</h2>
+
+<p>Самая частая проблема при подключении — это нестабильный сигнал или потеря соединения во время печати. Это может быть вызвано электромагнитными помехами от шаговых двигателей и нагревательных блоков. Убедитесь, что антенна Wi-Fi модуля вынесена за пределы металлического корпуса принтера.</p>
+
+<p>Иногда устройство не может получить IP-адрес из-за переполнения таблицы DHCP на роутере. Попробуйте перезагрузить маршрутизатор или выделить принтеру статический адрес вручную через настройки роутера, привязав его по MAC-адресу.</p>
+
+<p>Ваше соединение может быть заблокировано настройками безопасности самого роутера. Проверьте, не включен ли режим изоляции клиентов (<strong>AP Isolation</strong>), который запрещает устройствам в одной Wi-Fi сети общаться друг с другом. Отключите эту функцию для локального доступа к принтеру.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Проблема</th>
+      <th>Возможная причина</th>
+      <th>Решение</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Принтер не видит сеть</td>
+      <td>Поддержка только 2.4 ГГц</td>
+      <td>Включить частоту 2.4 ГГц на роутере</td>
+    </tr>
+    <tr>
+      <td>Постоянные разрывы</td>
+      <td>Помехи от двигателей</td>
+      <td>Удлиннить антенну или использовать экранированный кабель</td>
+    </tr>
+    <tr>
+      <td>Нельзя зайти по IP</td>
+      <td>Изоляция клиентов</td>
+      <td>Отключить AP Isolation в настройках Wi-Fi</td>
+    </tr>
+    <tr>
+      <td>Медленная скорость печати</td>
+      <td>Потеря пакетов данных</td>
+      <td>Переключиться на кабельное соединение или усилить сигнал</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>⚠️ Внимание: Электромагнитные помехи от мощных нагревателей могут полностью заглушить слабый сигнал Wi-Fi. Обязательно используйте экранированные кабели и качественное заземление.</blockquote>
+
+<h2 id="безопасность-беспроводной-сети">Безопасность беспроводной сети</h2>
+
+<p>Подключая 3D принтер к интернету, вы вводите в свою сеть потенциальную точку входа для злоумышленников. Стандартные пароли, установленные производителями по умолчанию, должны быть немедленно изменены. Используйте сложные наборы символов для доступа к веб-интерфейсу управления.</p>
+
+<p>Не оставляйте управление открытым для всего интернета без защиты. Если вам нужен удаленный доступ, используйте VPN-соединение или сервисы с двухфакторной аутентификацией, такие как Tailscale. Прямой доступ через проброс портов на роутере крайне не рекомендуется из соображений безопасности.</p>
+
+<p>Регулярно обновляйте прошивку контроллера и ПО на управляющем компьютере. Разработчики часто выпускают патчи, закрывающие уязвимости, которые могут позволить перехватить управление устройством или вывести его из строя.</p>
+
+<details class="faq-item"><summary>Почему нельзя использовать WEP шифрование?</summary><div class="faq-answer"><p>Шифрование WEP устарело и может быть взломано за несколько минут. Используйте только WPA2 или WPA3 для защиты вашей беспроводной сети.</spoiler</p></div></details>
+
+<h2 id="тестирование-и-первые-шаги">Тестирование и первые шаги</h2>
+
+<p>После завершения всех настроек проведите тестовую печать, чтобы убедиться в стабильности связи. Загрузите файл с удаленного носителя и запустите процесс. Наблюдайте за журналом событий (Log) в интерфейсе управления, чтобы видеть, не теряются ли команды.</p>
+
+<p>Проверьте реакцию интерфейса при изменении настроек температуры или перемещении осей. Задержка (пинг) должна быть минимальной. Если вы замечаете "зависания" или команды выполняются с задержкой, это может указывать на перегрузку беспроводного канала.</p>
+
+<p>Успешное подключение к Wi-Fi — это только начало. Теперь вы можете использовать скрипты автоматизации, получать уведомления о завершении печати и даже интегрировать принтер в систему "Умный дом". <mark>Статичный IP-адрес является обязательным условием для корректной работы всех автоматизированных сценариев.</mark></p>
+
+<blockquote>⚠️ Внимание: Нестабильное соединение может привести к остановке печати в середине процесса, что испортит деталь. Всегда имейте возможность отключить беспроводной интерфейс и перейти на локальное управление.</blockquote>
+
+<h2 id="альтернативные-методы-подключения">Альтернативные методы подключения</h2>
+
+<p>Помимо стандартного Wi-Fi, существуют специализированные решения, такие как <em>Creality Cloud</em> или <em>Prusa Connect</em>. Эти облачные сервисы позволяют управлять принтером через интернет, используя шлюзы безопасности, встроенные в экосистему бренда.</p>
+
+<p>Для моделей, не поддерживающих прямое подключение, можно использовать <strong>USB-кабель</strong> для прямого соединения с компьютером, который, в свою очередь, подключен к Wi-Fi. Это позволяет делиться принтером в локальной сети без изменения его электроники.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Использование облачных сервисов от производителя упрощает настройку, но ограничивает функционал возможностями платформы и может вызывать вопросы конфиденциальности данных.</keypoint</p></div>
+
+<p>В некоторых случаях проще использовать внешний модуль на базе <em>ESP32</em> с прошивкой <em>DWC2</em> (Duet Web Control). Это дает мощный веб-интерфейс даже на самых простых принтерах, превращая их в полноценные сетевые узлы.</p>
+
+<h2 id="faq-частые-вопросы-пользователей">FAQ: Частые вопросы пользователей</h2>
+
+<details>
+  <summary>Можно ли подключить 3D принтер к 5 ГГц Wi-Fi сети?</summary>
+  <p>Большинство встроенных модулей в 3D принтерах поддерживают только частоту 2.4 ГГц. Для подключения к сети 5 ГГц потребуется внешний адаптер или использование роутера, который разделяет диапазоны, и настройка принтера на поиске только 2.4 ГГц.</p>
+</details>
+
+<details>
+  <summary>Как узнать IP-адрес принтера без дисплея?</summary>
+  <p>Вы можете узнать IP-адрес, зайдя в панель управления вашим роутером через браузер и посмотрев список подключенных устройств (DHCP Client List). Ищите устройство с именем, содержащим "ESP", "Marlin" или имя модели вашего принтера.</p>
+</details>
+
+<details>
+  <summary>Что делать, если принтер постоянно теряет соединение?</summary>
+  <p>Причина может быть в помехах от нагревательного стола или двигателей. Попробуйте установить статический IP, переместить антенну подальше от электроники или использовать кабельное соединение Ethernet, если плата поддерживает его.</p>
+</details>
+
+<details>
+  <summary>Нужен ли компьютер для работы принтера по Wi-Fi?</summary>
+  <p>Нет, если принтер имеет встроенный Wi-Fi модуль и веб-интерфейс. Если используется <em>OctoPrint</em> или <em>Klipper</em>, то нужен постоянно работающий мини-компьютер (например, Raspberry Pi), который может находиться в одном месте, а управляться — с любого устройства.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#выбор-оборудования-и-проверка-совместимости">Выбор оборудования и проверка совместимости</a></li><li><a href="#настройка-встроенного-wi-fi-модуля-в-прошивке-marlin">Настройка встроенного Wi-Fi модуля в прошивке Marlin</a></li><li><a href="#использование-octoprint-как-посредника-для-подключения">Использование OctoPrint как посредника для подключения</a></li><li><a href="#конфигурация-klipper-и-moonraker">Конфигурация Klipper и Moonraker</a></li><li><a href="#решение-типичных-проблем-с-подключением">Решение типичных проблем с подключением</a></li><li><a href="#безопасность-беспроводной-сети">Безопасность беспроводной сети</a></li><li><a href="#тестирование-и-первые-шаги">Тестирование и первые шаги</a></li><li><a href="#альтернативные-методы-подключения">Альтернативные методы подключения</a></li><li><a href="#faq-частые-вопросы-пользователей">FAQ: Частые вопросы пользователей</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-ustanovit-printer-canon-mg2545s.html" class="related-card">Установка принтера Canon Pixma MG2545S: драйверы и настройка</a></li><li><a href="/articles/k/ka/kak-ustanovit-printer-hp-laserjet-professional-m1132-mfp.html" class="related-card">Как установить принтер HP LaserJet M1132 MFP: Полная инструкция</a></li><li><a href="/articles/k/ka/kak-podklyuchit-mfu-canon-k-vaj-faj.html" class="related-card">Как подключить МФУ Canon к Wi-Fi: пошаговая инструкция 2026</a></li><li><a href="/articles/c/c7/c7115a-na-kakoj-printer.html" class="related-card">Картридж C7115A: на какой принтер HP подходит, характеристики и замена</a></li><li><a href="/articles/k/ka/kak-zapravit-kartridzh-printera-svoimi-rukami-canon-pg-445.html" class="related-card">Заправка картриджа Canon PG-445 своими руками: пошаговая инструкция 2026</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-ustanovit-printer-canon-mg2545s.html" class="related-bottom-card"><span class="related-bottom-title">Установка принтера Canon Pixma MG2545S: драйверы и настройка</span><span class="related-bottom-desc">Пошаговая инструкция по установке принтера Canon MG2545S на Windows и macOS. Загрузка драйверов, под</span></a><a href="/articles/k/ka/kak-ustanovit-printer-hp-laserjet-professional-m1132-mfp.html" class="related-bottom-card"><span class="related-bottom-title">Как установить принтер HP LaserJet M1132 MFP: Полная инструкция</span><span class="related-bottom-desc">Пошаговая настройка драйверов и подключение МФУ HP LaserJet M1132 MFP к ПК через USB и сеть. Решаем </span></a><a href="/articles/k/ka/kak-podklyuchit-mfu-canon-k-vaj-faj.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить МФУ Canon к Wi-Fi: пошаговая инструкция 2026</span><span class="related-bottom-desc">Детальное руководство по настройке беспроводного подключения МФУ Canon к Wi-Fi. Схемы для моделей PI</span></a><a href="/articles/c/c7/c7115a-na-kakoj-printer.html" class="related-bottom-card"><span class="related-bottom-title">Картридж C7115A: на какой принтер HP подходит, характеристики и замена</span><span class="related-bottom-desc">Экспертный обзор картриджа HP C7115A. Узнайте совместимые модели принтеров, ресурс печати, отличия в</span></a><a href="/articles/k/ka/kak-zapravit-kartridzh-printera-svoimi-rukami-canon-pg-445.html" class="related-bottom-card"><span class="related-bottom-title">Заправка картриджа Canon PG-445 своими руками: пошаговая инструкция 2026</span><span class="related-bottom-desc">Как правильно заправить картридж Canon PG-445 в домашних условиях: выбор чернил, разборка, промывка </span></a><a href="/articles/k/ka/kak-skachat-drajver-dlya-printera-iz-interneta.html" class="related-bottom-card"><span class="related-bottom-title">Как скачать драйвер для принтера: пошаговая инструкция и поиск ПО</span><span class="related-bottom-desc">Полное руководство по поиску и установке драйверов для принтеров HP, Canon, Epson и Brother. Советы </span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

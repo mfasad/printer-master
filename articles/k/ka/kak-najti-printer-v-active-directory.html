@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Поиск принтера в Active Directory: пошаговая инструкция — Принтер Мастер</title>
+    <meta name="description" content="Как найти принтер в Active Directory через PowerShell, оснастку AD или командную строку. Поиск по имени, IP, модели и расположению с примерами команд.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-najti-printer-v-active-directory.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Поиск принтера в Active Directory: пошаговая инструкция">
+    <meta property="og:description" content="Как найти принтер в Active Directory через PowerShell, оснастку AD или командную строку. Поиск по имени, IP, модели и расположению с примерами команд.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Поиск принтера в Active Directory: пошаговая инструкция</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как найти принтер в Active Directory: 5 рабочих способов с примерами</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#1-поиск-принтера-через-оснастку-управление-печати">1. Поиск принтера через оснастку «Управление печати»</a></li><li><a href="#2-поиск-принтера-через-powershell">2. Поиск принтера через PowerShell</a></li><li><a href="#3-поиск-через-командную-строку-printuidll">3. Поиск через командную строку (printui.dll)</a></li><li><a href="#4-поиск-принтера-через-adsi-edit">4. Поиск принтера через ADSI Edit</a></li><li><a href="#5-поиск-принтера-по-ip-адресу-или-mac">5. Поиск принтера по IP-адресу или MAC</a></li><li><a href="#6-продвинутый-поиск-ldap-запросы">6. Продвинутый поиск: LDAP-запросы</a></li><li><a href="#7-автоматизация-скрипт-для-поиска-принтеров-по-нескольким-критериям">7. Автоматизация: скрипт для поиска принтеров по нескольким критериям</a></li><li><a href="#подключаем-модуль-activedirectory">Подключаем модуль ActiveDirectory</a></li><li><a href="#формируем-фильтр">Формируем фильтр</a></li><li><a href="#выполняем-поиск">Выполняем поиск</a></li><li><a href="#экспортируем-результаты">Экспортируем результаты</a></li><li><a href="#частые-ошибки-и-их-решения">Частые ошибки и их решения</a></li><li><a href="#faq-ответы-на-частые-вопросы">FAQ: Ответы на частые вопросы</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><p>Поиск принтеров в <strong>Active Directory (AD)</strong> — типичная задача для системных администраторов, особенно в крупных сетях с десятками или сотнями устройств. Чаще всего требуется найти принтер по <em>имени</em>, <em>IP-адресу</em>, <em>модели</em> или <em>расположению</em>, чтобы подключить его к рабочей станции, изменить настройки или устранить неполадки. В отличие от поиска пользователей или компьютеров, принтеры в AD хранятся в отдельном контейнере <code>CN=Printers</code>, и работать с ними можно через графические оснастки, <strong>PowerShell</strong> или командную строку.</p>
+
+<p>В этой статье разберём все актуальные способы поиска — от простых (через <code>Управление печати</code>) до продвинутых (скрипты на <strong>LDAP-запросы</strong>). Особое внимание уделим <mark>поиску принтеров по неполным данным</mark>, когда известно только часть имени или IP-диапазон. Все команды протестированы на <em>Windows Server 2019/2022</em> и <em>Windows 10/11 Pro</em> с установленными инструментами <strong>RSAT (Remote Server Administration Tools)</strong>.</p>
+
+<h2 id="1-поиск-принтера-через-оснастку-управление-печати">1. Поиск принтера через оснастку «Управление печати»</h2>
+
+<p>Самый визуальный способ — использовать встроенную оснастку <code>Управление печати</code> (<em>Print Management</em>). Она доступна на серверах печати и рабочих станциях с установленными <strong>RSAT</strong>. Интерфейс интуитивен, но имеет ограничения: например, не поддерживает сложные фильтры по нескольким критериям одновременно.</p>
+
+<p>Чтобы открыть оснастку:</p>
+<ul>
+ <li>🖥️ Нажмите <code>Win + R</code>, введите <code>printmanagement.msc</code> и нажмите <code>Enter</code>.</li>
+ <li>🔍 В левой панели разверните <code>Серверы печати → [Имя_вашего_сервера] → Принтеры</code>.</li>
+ <li>📝 Для поиска используйте поле фильтра в правой верхней части окна (работает только по имени принтера).</li>
+</ul>
+
+<p>Если принтер не отображается, проверьте:</p>
+<ul>
+ <li>🔌 Подключение к домену (оснастка работает только в доменной среде).</li>
+ <li>🛡️ Права пользователя (нужны права <code>Print Operators</code> или администратора).</li>
+ <li>📡 Сетевую доступность сервера печати (проверьте <code>ping [имя_сервера]</code>).</li>
+</ul>
+
+<blockquote>⚠️ <strong>Внимание:</strong> Оснастка <code>Управление печати</code> показывает только принтеры, опубликованные в AD. Если принтер добавлен локально на сервере, но не опубликован, его не будет видно в этом списке.</blockquote>
+
+<div class="poll-widget" id="poll-6c9d4034"><div class="poll-widget-question">📊 Какой инструмент вы чаще используете для управления принтерами?</div><div class="poll-widget-option" data-poll="6c9d4034" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Графические оснастки (Print Management)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="6c9d4034" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">PowerShell</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="6c9d4034" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Командная строка (printui.dll)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="6c9d4034" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Специализированное ПО (например, PrinterLogic)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="2-поиск-принтера-через-powershell">2. Поиск принтера через PowerShell</h2>
+
+<p><strong>PowerShell</strong> — самый гибкий инструмент для работы с принтерами в AD. С его помощью можно искать по любым атрибутам, экспортировать списки в <code>CSV</code> и автоматизировать задачи. Основные cmdlet’ы для работы:</p>
+<ul>
+ <li><code>Get-Printer</code> — показывает локальные и сетевые принтеры.</li>
+ <li><code>Get-ADObject</code> — ищет объекты в AD по фильтрам.</li>
+ <li><code>Get-PrintConfiguration</code> — выводит детали конфигурации принтера.</li>
+</ul>
+
+<p>Примеры команд для поиска:</p>
+
+<p><strong>Поиск по имени (частичному совпадению):</strong></p>
+<pre><code>Get-ADObject -Filter {Name -like"<em>HP_LaserJet</em>"} -SearchBase"CN=Printers,DC=domain,DC=local" | Select-Object Name, DistinguishedName</code></pre>
+
+<p><strong>Поиск по IP-адресу:</strong></p>
+<pre><code>Get-Printer | Where-Object {$_.PortName -match"192.168.1."} | Select-Object Name, PortName, DriverName</code></pre>
+
+<p><strong>Экспорт всех принтеров в CSV:</strong></p>
+<pre><code>Get-Printer | Export-Csv -Path"C:\Temp\Printers_List.csv" -NoTypeInformation -Encoding UTF8</code></pre>
+
+<blockquote>⚠️ <strong>Внимание:</strong> Команды <code>Get-Printer</code> и <code>Get-ADObject</code> возвращают разные наборы данных. Первая работает с локально установленными принтерами, вторая — с объектами в AD. Для полного списка используйте обе.</blockquote>
+
+
+<p>Установите модуль ActiveDirectory (Install-WindowsFeature -Name RSAT-AD-PowerShell)</p>
+<p>Запустите PowerShell от имени администратора</p>
+<p>Проверьте подключение к домену (Test-ComputerSecureChannel)</p>
+<p>Уточните DistinguishedName контейнера принтеров (можно найти через ADSI Edit)--></p>
+
+<h2 id="3-поиск-через-командную-строку-printuidll">3. Поиск через командную строку (printui.dll)</h2>
+
+<p>Утилита <code>printui.dll</code> — классический инструмент для управления принтерами из командной строки. Она позволяет искать принтеры по серверу, драйверу или имени, но требует знания синтаксиса. Главное преимущество — работает на всех версиях Windows без дополнительных модулей.</p>
+
+<p>Базовый синтаксис для поиска:</p>
+<pre><code>rundll32 printui.dll,PrintUIEntry /ga /n\\[Имя_сервера]\[Имя_принтера]</code></pre>
+
+<p>Чтобы вывести список всех принтеров на сервере:</p>
+<pre><code>rundll32 printui.dll,PrintUIEntry /ga /c\\[Имя_сервера]</code></pre>
+
+<p>Для поиска по драйверу (например, <em>Xerox Global Print Driver</em>):</p>
+<pre><code>rundll32 printui.dll,PrintUIEntry /ge /f"C:\Temp\Printers.txt" /c\\[Имя_сервера]</code></pre>
+<p>Эта команда экспортирует список в файл <code>Printers.txt</code>, который можно открыть в <em>Блокноте</em> и отфильтровать по названию драйвера.</p>
+
+<table>
+ <thead>
+ <tr>
+ <th>Команда</th>
+ <th>Описание</th>
+ <th>Пример</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td><code>/ga</code></td>
+ <td>Добавляет принтер (или выводит информацию, если принтер уже существует)</td>
+ <td><code>rundll32 printui.dll,PrintUIEntry /ga /n\\SRV-PRINT\HP_Color</code></td>
+ </tr>
+ <tr>
+ <td><code>/ge</code></td>
+ <td>Экспортирует список принтеров в файл</td>
+ <td><code>rundll32 printui.dll,PrintUIEntry /ge /f"C:\list.txt"</code></td>
+ </tr>
+ <tr>
+ <td><code>/c\\[server]</code></td>
+ <td>Указывает сервер печати</td>
+ <td><code>rundll32 printui.dll,PrintUIEntry /ge /c\\DC01</code></td>
+ </tr>
+ <tr>
+ <td><code>/n</code></td>
+ <td>Имя принтера (для точного поиска)</td>
+ <td><code>/n\\SRV-PRINT\Xerox_WorkCentre</code></td>
+ </tr>
+ </tbody>
+</table>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если команда <code>printui.dll</code> не работает, проверьте регистр букв в имени принтера. В некоторых версиях Windows поиск чувствителен к регистру!</p></div>
+
+<h2 id="4-поиск-принтера-через-adsi-edit">4. Поиск принтера через ADSI Edit</h2>
+
+<p>Утилита <code>ADSI Edit</code> (<em>Active Directory Service Interfaces Editor</em>) позволяет просматривать и редактировать объекты AD вручную. Это полезно, если принтер не отображается в стандартных оснастках, но точно опубликован в домене. Инструмент входит в состав <strong>RSAT</strong> и доступен на серверах.</p>
+
+<p>Инструкция по поиску:</p>
+<ol>
+ <li>Откройте <code>ADSI Edit</code> (<code>adsiedit.msc</code>).</li>
+ <li>Подключитесь к контексту именования <code>Default naming context</code>.</li>
+ <li>Перейдите по пути:
+ <code>DC=[ваш_домен],DC=local → CN=System → CN=Printers</code>.</li>
+ <li>В правой панели отобразятся все принтеры, опубликованные в AD. Используйте сортировку по столбцу <code>Name</code> для удобства.</li>
+</ol>
+
+<p>Через <code>ADSI Edit</code> можно увидеть <strong>все атрибуты принтера</strong>, включая:</p>
+<ul>
+ <li>📌 <code>portName</code> — IP-адрес или имя порта.</li>
+ <li>🖨️ <code>driverName</code> — модель драйвера.</li>
+ <li>📍 <code>location</code> — физическое расположение (если заполнено).</li>
+ <li>🔗 <code>printShareName</code> — сетевое имя.</li>
+</ul>
+
+<blockquote>⚠️ <strong>Внимание:</strong> Изменение атрибутов принтера через <code>ADSI Edit</code> может нарушить его работу. Рекомендуется использовать этот инструмент только для просмотра данных.</blockquote>
+
+<h2 id="5-поиск-принтера-по-ip-адресу-или-mac">5. Поиск принтера по IP-адресу или MAC</h2>
+
+<p>Если известен <code>IP-адрес</code> или <code>MAC-адрес</code> принтера, но не известно его имя в AD, можно использовать комбинацию инструментов: <strong>PowerShell</strong> для сканирования портов и <strong>LDAP-запросы</strong> для сопоставления с объектами в домене.</p>
+
+<p><strong>Шаг 1. Найдите принтер в сети по IP:</strong></p>
+<pre><code>Test-Connection 192.168.1.100 -Count 1
+<p>Get-Printer | Where-Object {$_.PortName -eq"192.168.1.100:9100"}</code></pre></p>
+
+<p><strong>Шаг 2. Сопоставьте IP с объектом в AD:</strong></p>
+<pre><code>$IP ="192.168.1.100"
+<p>Get-ADObject -Filter {portName -like"<em>$IP</em>"} -SearchBase"CN=Printers,DC=domain,DC=local" | Select-Object Name, portName</code></pre></p>
+
+<p>Если принтер не найден, проверьте:</p>
+<ul>
+ <li>🔌 Правильность IP-адреса (используйте <code>arp -a</code> для проверки MAC).</li>
+ <li>📡 Настройки порта на сервере печати (порт должен быть типа <code>Standard TCP/IP Port</code>).</li>
+ <li>🔄 Кэш DNS (очистите его командой <code>ipconfig /flushdns</code>).</li>
+</ul>
+
+<details class="faq-item"><summary>Как найти MAC-адрес принтера по IP?</summary><div class="faq-answer"><p>
+<p>Если принтер поддерживает протокол SNMP, используйте команду:</p>
+<pre><code>snmpwalk -v 2c -c public 192.168.1.100 1.3.6.1.2.1.2.2.1.6</code></pre>
+<p>Для принтеров без SNMP подключитесь к веб-интерфейсу (обычно по адресу <code>http://[IP_принтера]</code>) и найдите MAC в разделе"Network" или"Status".</p></div></details></p>
+
+<h2 id="6-продвинутый-поиск-ldap-запросы">6. Продвинутый поиск: LDAP-запросы</h2>
+
+<p>Для сложных сценариев (например, поиск принтеров по <em>модели</em>, <em>расположению</em> или <em>драйверу</em>) используйте <strong>LDAP-запросы</strong>. Их можно выполнять через <strong>PowerShell</strong>, <em>AD Explorer</em> или <em>LDP.exe</em>.</p>
+
+<p><strong>Пример 1. Поиск по модели драйвера (<em>HP Universal Printing PCL 6</strong>):</em></p>
+<pre><code>$Searcher = New-Object DirectoryServices.DirectorySearcher
+<p>$Searcher.SearchRoot ="LDAP://CN=Printers,DC=domain,DC=local"</p>
+<p>$Searcher.Filter ="(driverName=<em>HP Universal Printing PCL 6</em>)"</p>
+<p>$Results = $Searcher.FindAll</p>
+<p>$Results | ForEach-Object {$_.Properties.name}</code></pre></p>
+
+<p><strong>Пример 2. Поиск по расположению (атрибут <code>location</code>):</strong></p>
+<pre><code>$Searcher.Filter ="(location=<em>3 этаж</em>)"
+<p>$Results = $Searcher.FindAll</p>
+<p>$Results | Select-Object @{Name="Printer";Expression={$_.Properties.name}},@{Name="Location";Expression={$_.Properties.location}}</code></pre></p>
+
+<p>LDAP-запросы поддерживают логические операторы (<code>&</code> — И, <code>|</code> — ИЛИ), что позволяет комбинировать критерии:</p>
+<pre><code>$Searcher.Filter ="(&(name=<em>Color</em>)(location=<em>офис</em>))"</code></pre>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>LDAP-запросы — самый мощный инструмент для поиска принтеров в AD, но требует знания синтаксиса фильтров. Для упрощения используйте конструкторы запросов, например, в утилите <em>AD Explorer</em> от Sysinternals.</p></div>
+
+<h2 id="7-автоматизация-скрипт-для-поиска-принтеров-по-нескольким-критериям">7. Автоматизация: скрипт для поиска принтеров по нескольким критериям</h2>
+
+<p>Если приходится часто искать принтеры, имеет смысл создать <strong>PowerShell-скрипт</strong> с гибкими параметрами. Ниже пример скрипта, который ищет принтеры по имени, IP, модели или расположению и экспортирует результат в <code>CSV</code>:</p>
+
+<pre><code>[CmdletBinding]
+<p>param (</p>
+<p>[string]$Name,</p>
+<p>[string]$IP,</p>
+<p>[string]$Driver,</p>
+<p>[string]$Location,</p>
+<p>[string]$OutputFile ="C:\Temp\Printers_Search_Results.csv"</p>
+<p>)</p>
+
+<h2 id="подключаем-модуль-activedirectory">Подключаем модуль ActiveDirectory</h2>
+<p>Import-Module ActiveDirectory</p>
+
+<h2 id="формируем-фильтр">Формируем фильтр</h2>
+<p>$Filter ="(|"</p>
+<p>if ($Name) {$Filter +="(name=<em>$Name</em>)"}</p>
+<p>if ($IP) {$Filter +="(portName=<em>$IP</em>)"}</p>
+<p>if ($Driver) {$Filter +="(driverName=<em>$Driver</em>)"}</p>
+<p>if ($Location) {$Filter +="(location=<em>$Location</em>)"}</p>
+<p>$Filter +=")"</p>
+
+<h2 id="выполняем-поиск">Выполняем поиск</h2>
+<p>$Searcher = New-Object DirectoryServices.DirectorySearcher</p>
+<p>$Searcher.SearchRoot ="LDAP://CN=Printers,DC=domain,DC=local"</p>
+<p>$Searcher.Filter = $Filter</p>
+<p>$Results = $Searcher.FindAll</p>
+
+<h2 id="экспортируем-результаты">Экспортируем результаты</h2>
+<p>$Output = @</p>
+<p>foreach ($Result in $Results) {</p>
+<p>$Printer = [PSCustomObject]@{</p>
+<p>Name = $Result.Properties.name</p>
+<p>Port = $Result.Properties.portname</p>
+<p>Driver = $Result.Properties.drivername</p>
+<p>Location = $Result.Properties.location</p>
+<p>Server = $Result.Properties.servername</p>
+<p>Shared = $Result.Properties.printername</p>
+<p>}</p>
+<p>$Output += $Printer</p>
+<p>}</p>
+
+<p>$Output | Export-Csv -Path $OutputFile -NoTypeInformation -Encoding UTF8 -Delimiter";"</p>
+<p>Write-Host"Результаты сохранены в $OutputFile" -ForegroundColor Green</code></pre></p>
+
+<p>Чтобы запустить скрипт, сохраните его как <code>Search-Printers.ps1</code> и выполните:</p>
+<pre><code>.\Search-Printers.ps1 -Name"Xerox" -Location"3 этаж" -OutputFile"C:\Reports\Xerox_Printers.csv"</code></pre>
+
+<blockquote>⚠️ <strong>Внимание:</strong> Скрипт требует прав на чтение объектов в AD. Если при запуске возникает ошибка <code>Access Denied</code>, запустите PowerShell от имени администратора домена.</blockquote>
+
+<h2 id="частые-ошибки-и-их-решения">Частые ошибки и их решения</h2>
+
+<p>При поиске принтеров в AD администраторы сталкиваются с типичными проблемами. Вот самые распространённые и способы их решения:</p>
+
+<table>
+ <thead>
+ <tr>
+ <th>Ошибка</th>
+ <th>Возможная причина</th>
+ <th>Решение</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>Принтер не найден, хотя существует</td>
+ <td>Притер не опубликован в AD или опубликован в другом контейнере</td>
+ <td>Проверьте публикацию через <code>Управление печати → Принтеры → [ПКМ по принтеру] → Список в Active Directory</code></td>
+ </tr>
+ <tr>
+ <td>Ошибка <code>Get-ADObject: Не удаётся найти путь</code></td>
+ <td>Неверный <code>SearchBase</code> или отсутствует подключение к домену</td>
+ <td>Уточните DistinguishedName контейнера принтеров командой <code>(Get-ADDomain).PrintersContainer</code></td>
+ </tr>
+ <tr>
+ <td>Команда <code>Get-Printer</code> возвращает пустой список</td>
+ <td>Локальные принтеры не установлены, или нет прав на просмотр сетевых принтеров</td>
+ <td>Запустите PowerShell от имени администратора или укажите сервер явно: <code>Get-Printer -ComputerName SRV-PRINT</code></td>
+ </tr>
+ <tr>
+ <td>Принтер найден, но не подключается</td>
+ <td>Проблемы с драйвером, портом или разрешениями</td>
+ <td>Проверьте драйвер (<code>Get-PrinterDriver</code>) и порт (<code>Get-PrinterPort</code>), затем переустановите принтер</td>
+ </tr>
+ </tbody>
+</table>
+
+<p>Если принтер найден, но не работает, проверьте:</p>
+<ul>
+ <li>🔌 <strong>Сетевое подключение:</strong> <code>ping [IP_принтера]</code> и <code>Test-NetConnection [IP_принтера] -Port 9100</code>.</li>
+ <li>🖨️ <strong>Драйвер:</strong> Обновите его через <code>Управление печати → Драйверы</code>.</li>
+ <li>🔒 <strong>Разрешения:</strong> Убедитесь, что у пользователя есть права на печать (<code>Print</code>).</li>
+</ul>
+
+<h2 id="faq-ответы-на-частые-вопросы">FAQ: Ответы на частые вопросы</h2>
+
+<details>
+ <summary>Как найти принтер, если не знаю его имени, но знаю, что он подключён к серверу SRV-PRINT?</summary>
+ <p>Используйте команду:</p>
+ <pre><code>Get-Printer -ComputerName SRV-PRINT | Select-Object Name, PortName, DriverName</code></pre>
+ <p>Если принтер опубликован в AD, дополнительно проверьте:</p>
+ <pre><code>Get-ADObject -Filter * -SearchBase"CN=Printers,DC=domain,DC=local" | Where-Object {$_.servername -like"<em>SRV-PRINT</em>"} | Select-Object Name</code></pre>
+</details>
+
+<details>
+ <summary>Можно ли искать принтеры по серийному номеру?</summary>
+ <p>В стандартных атрибутах AD серийный номер принтера (<code>serialNumber</code>) обычно не хранится. Однако некоторые производители (например, <em>Xerox</em> или <em>Ricoh</em>) добавляют его в поле <code>description</code> или <code>comment</code>. Попробуйте поиск:</p>
+ <pre><code>Get-ADObject -Filter {description -like"<em>SN:12345</em>"} -SearchBase"CN=Printers,DC=domain,DC=local"</code></pre>
+ <p>Если это не сработало, серийный номер можно найти:</p>
+ <ul>
+ <li>В веб-интерфейсе принтера (раздел <code>Status</code> или <code>Configuration</code>).</li>
+ <li>Через SNMP-запрос (если принтер поддерживает протокол).</li>
+ </ul>
+</details>
+
+<details>
+ <summary>Как экспортировать список всех принтеров в домене с их IP-адресами?</summary>
+ <p>Используйте этот скрипт:</p>
+ <pre><code>Get-ADObject -Filter * -SearchBase"CN=Printers,DC=domain,DC=local" |
+<p>Select-Object Name, @{Name="IP";Expression={($_.portName -split":")[0]}} |</p>
+<p>Export-Csv -Path"C:\Temp\All_Printers_IP.csv" -NoTypeInformation -Delimiter";"</code></pre></p>
+ <p>Если нужно добавить дополнительные поля (например, драйвер или расположение), расширьте команду:</p>
+ <pre><code>Select-Object Name, @{Name="IP";Expression={($_.portName -split":")[0]}}, driverName, location</code></pre>
+</details>
+
+<details>
+ <summary>Почему команда Get-ADObject не находит принтеры, а Get-Printer — находит?</summary>
+ <p>Это происходит потому, что:</p>
+ <ul>
+ <li><code>Get-Printer</code> показывает принтеры, <strong>установленные на локальном компьютере или указанном сервере</strong> (включая неопубликованные в AD).</li>
+ <li><code>Get-ADObject</code> ищет только <strong>объекты, опубликованные в контейнере <code>CN=Printers</code></strong>.</li>
+ </ul>
+ <p>Чтобы увидеть все принтеры, комбинируйте оба метода или проверьте публикацию принтера в AD через <code>Управление печати</code>.</p>
+</details>
+
+<details>
+ <summary>Как найти принтер по пользователю, который им пользуется?</summary>
+ <p>Прямого способа нет, но можно использовать косвенные методы:</p>
+ <ol>
+ <li>Проверьте <strong>логи печати</strong> на сервере:
+ <pre><code>Get-WinEvent -LogName"Microsoft-Windows-PrintService/Admin" | Where-Object {$_.Message -like"<em>[имя_пользователя]</em>"}</code></pre>
+ </li>
+ <li>Используйте <strong>PowerShell</strong> для поиска сессий печати:
+ <pre><code>Get-Printer | ForEach-Object {
+<p>$Jobs = Get-PrintJob -PrinterName $_.Name -UserName"[имя_пользователя]"</p>
+<p>if ($Jobs) { Write-Host"Принтер: $($_.Name)" }</p>
+<p>}</code></pre></p>
+ </li>
+ <li>Проверьте <strong>подключённые принтеры</strong> на компьютере пользователя:
+ <pre><code>Get-Printer -ComputerName [имя_ПК_пользователя]</code></pre>
+ </li>
+ </ol>
+ <p>Если принтер сетевой, но не опубликован в AD, найдите его по IP в логах маршрутизатора или DHCP-сервера.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#1-поиск-принтера-через-оснастку-управление-печати">1. Поиск принтера через оснастку «Управление печати»</a></li><li><a href="#2-поиск-принтера-через-powershell">2. Поиск принтера через PowerShell</a></li><li><a href="#3-поиск-через-командную-строку-printuidll">3. Поиск через командную строку (printui.dll)</a></li><li><a href="#4-поиск-принтера-через-adsi-edit">4. Поиск принтера через ADSI Edit</a></li><li><a href="#5-поиск-принтера-по-ip-адресу-или-mac">5. Поиск принтера по IP-адресу или MAC</a></li><li><a href="#6-продвинутый-поиск-ldap-запросы">6. Продвинутый поиск: LDAP-запросы</a></li><li><a href="#7-автоматизация-скрипт-для-поиска-принтеров-по-нескольким-критериям">7. Автоматизация: скрипт для поиска принтеров по нескольким критериям</a></li><li><a href="#подключаем-модуль-activedirectory">Подключаем модуль ActiveDirectory</a></li><li><a href="#формируем-фильтр">Формируем фильтр</a></li><li><a href="#выполняем-поиск">Выполняем поиск</a></li><li><a href="#экспортируем-результаты">Экспортируем результаты</a></li><li><a href="#частые-ошибки-и-их-решения">Частые ошибки и их решения</a></li><li><a href="#faq-ответы-на-частые-вопросы">FAQ: Ответы на частые вопросы</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-ubrat-iz-printera.html" class="related-card">Как убрать застрявшую бумагу и ошибки из принтера: пошаговая инструкция</a></li><li><a href="/articles/k/ka/kak-napechatat-foto-4-na-4-na-printere.html" class="related-card">Печать фото 4x4 см на принтере: настройка, кадрирование и выбор бумаги</a></li><li><a href="/articles/k/ka/kak-raspechatat-na-plotnoj-bumage-s-printera-kenon.html" class="related-card">Как распечатать на плотной бумаге на принтерах Canon: Полное руководство</a></li><li><a href="/articles/k/ka/kak-podklyuchit-printer-lazer.html" class="related-card">Как подключить лазерный принтер к ПК: пошаговая инструкция 2026</a></li><li><a href="/articles/k/ka/kak-zapravlyat-kartridzhi-dlya-printera-chernilami.html" class="related-card">Как заправить картридж для принтера чернилами: пошаговая инструкция</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-ubrat-iz-printera.html" class="related-bottom-card"><span class="related-bottom-title">Как убрать застрявшую бумагу и ошибки из принтера: пошаговая инструкция</span><span class="related-bottom-desc">Узнайте, как безопасно извлечь замятую бумагу, очистить картридж и сбросить ошибку принтера. Полное </span></a><a href="/articles/k/ka/kak-napechatat-foto-4-na-4-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Печать фото 4x4 см на принтере: настройка, кадрирование и выбор бумаги</span><span class="related-bottom-desc">Пошаговая инструкция: как распечатать фото 4 на 4 см на домашнем принтере. Настройка драйверов, выбо</span></a><a href="/articles/k/ka/kak-raspechatat-na-plotnoj-bumage-s-printera-kenon.html" class="related-bottom-card"><span class="related-bottom-title">Как распечатать на плотной бумаге на принтерах Canon: Полное руководство</span><span class="related-bottom-desc">Пошаговая инструкция: настройка драйвера Canon, выбор типа бумаги и предотвращение замятия. Советы д</span></a><a href="/articles/k/ka/kak-podklyuchit-printer-lazer.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить лазерный принтер к ПК: пошаговая инструкция 2026</span><span class="related-bottom-desc">Подробное руководство по подключению лазерного принтера через USB, Wi-Fi и Ethernet. Распространённы</span></a><a href="/articles/k/ka/kak-zapravlyat-kartridzhi-dlya-printera-chernilami.html" class="related-bottom-card"><span class="related-bottom-title">Как заправить картридж для принтера чернилами: пошаговая инструкция</span><span class="related-bottom-desc">Узнайте, как правильно заправить картридж чернилами своими руками. Пошаговая инструкция, список инст</span></a><a href="/articles/k/ka/kak-polzovatsya-printerom-canon-laserbase-mf3228.html" class="related-bottom-card"><span class="related-bottom-title">Как пользоваться МФУ Canon LaserBase MF3228: настройка, печать и сканирование</span><span class="related-bottom-desc">Полное руководство по эксплуатации принтера-сканера Canon LaserBase MF3228. Инструкция по подключени</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как собрать 3D принтер на Arduino: пошаговая инструкция и схемы — Принтер Мастер</title>
+    <meta name="description" content="Полное руководство по самостоятельной сборке 3D принтера на базе Arduino. Обзор компонентов, выбор прошивки Marlin, настройка стеков и нюансы электроники.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-sdelat-3d-printer-svoimi-rukami-na-arduino.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как собрать 3D принтер на Arduino: пошаговая инструкция и схемы">
+    <meta property="og:description" content="Полное руководство по самостоятельной сборке 3D принтера на базе Arduino. Обзор компонентов, выбор прошивки Marlin, настройка стеков и нюансы электроники.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как собрать 3D принтер на Arduino: пошаговая инструкция и схемы</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Создание собственного 3D принтера на платформе Arduino</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#введение-в-мир-самодельной-аддитивной-печати">Введение в мир самодельной аддитивной печати</a></li><li><a href="#выбор-электроники-и-микроконтроллеров">Выбор электроники и микроконтроллеров</a></li><li><a href="#механическая-конструкция-и-материалы-рамы">Механическая конструкция и материалы рамы</a></li><li><a href="#термическая-система-и-экструдер">Термическая система и экструдер</a></li><li><a href="#прошивка-и-настройка-arduino">Прошивка и настройка Arduino</a></li><li><a href="#сравнение-популярных-плат-и-комплектов">Сравнение популярных плат и комплектов</a></li><li><a href="#финальная-сборка-и-тестирование">Финальная сборка и тестирование</a></li><li><a href="#частые-вопросы-и-ответы">Частые вопросы и ответы</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="введение-в-мир-самодельной-аддитивной-печати">Введение в мир самодельной аддитивной печати</h2>
+
+<p>Сборка 3D принтера с нуля — это не просто способ сэкономить бюджет, но и глубокое погружение в механику и электронику. В отличие от покупки готового устройства, самостоятельная сборка на базе <strong>Arduino</strong> дает вам полный контроль над каждым аспектом работы машины, от калибровки степперов до настройки температурных профилей нагревателя.</p>
+
+<p>Фундаментом большинства самодельных устройств является открытая архитектура, позволяющая использовать проверенные решения, такие как дельта-принтеры или классические серии RepRap. Вы сможете выбрать компоненты, которые идеально подходят под ваши задачи: кто-то стремится к максимальной скорости, а кто-то — к высочайшей точности печати мелких деталей.</p>
+
+<h2 id="выбор-электроники-и-микроконтроллеров">Выбор электроники и микроконтроллеров</h2>
+
+<p>Сердцем вашей системы станет <em>Arduino Mega 2560</em> в связке с расширителем <em>RAMPS 1.4</em>. Эта комбинация является золотым стандартом для энтузиастов благодаря огромному количеству драйверов и портов. Однако, если вам нужна более современная скорость обработки команд, стоит рассмотреть переход на платы на базе <em>STM32</em>, которые часто совместимы с софтом для <strong>Arduino</strong>.</p>
+
+<p>Для управления шаговыми двигателями критически важны драйверы. Модули <em>A4988</em> или <em>TMC2208</em> обеспечивают необходимую точность и, в случае с TMC, работают практически бесшумно. Важно правильно установить напряжение на реостате драйвера, чтобы избежать перегрева моторов в процессе длительной печати.</p>
+
+<p>Питание всей системы требует отдельного внимания. Блок питания должен выдавать стабильное напряжение, способное одновременно запитать <strong>hotend</strong>, нагревательный стол и электронику. Недостаточная мощность приведет к просадкам напряжения и сбоям в работе контроллера.</p>
+
+<div class="poll-widget" id="poll-e7657407"><div class="poll-widget-question">📊 Какую архитектуру вы планируете собрать?</div><div class="poll-widget-option" data-poll="e7657407" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Классическая Cartesian</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="e7657407" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Дельта-принтер</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="e7657407" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">CoreXY</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="e7657407" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Серия Prusa i3</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="механическая-конструкция-и-материалы-рамы">Механическая конструкция и материалы рамы</h2>
+
+<p>Жесткость конструкции определяет качество печати. Использование <strong>алюминиевого профиля</strong> 2020 или 2040 позволяет создать надежную базу, которая не будет вибрировать при ускорении осей. В отличие от фанеры или пластика, металл обеспечивает стабильность геометрических параметров на протяжении всего срока службы устройства.</p>
+
+<p>Ключевым элементом механики являются направляющие. Линейные рельсы или валы с подшипниками должны быть установлены строго параллельно друг другу. Любое отклонение в пару миллиметров приведет к появлению артефактов на изделии и заклиниванию кареток.</p>
+
+<p>Для крепления экструдера и стола используйте качественные <em>POM-башмаки</em> или стандартные подшипники <strong>608ZZ</strong>. Не экономьте на крепеже: слабые винты со временем разбалтываются, вызывая люфты, которые невозможно устранить программно.</p>
+
+<div class="checklist-block"><h4>☑️ Проверка механической сборки</h4><label class="check-item"><input type="checkbox"><span>Проверка параллельности валов</span></label><label class="check-item"><input type="checkbox"><span>Затяжка всех винтов рамы</span></label><label class="check-item"><input type="checkbox"><span>Смазка направляющих</span></label><label class="check-item"><input type="checkbox"><span>Проверка хода ремней</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="термическая-система-и-экструдер">Термическая система и экструдер</h2>
+
+<p>Экструдер — это механизм подачи филамента, и от его надежности зависит отсутствие пропусков слоев. Модели типа <em>BMG</em> или <em>Direct Drive</em> обеспечивают лучшее сцепление с пластиком, но также требуют точной настройки силы прижима шестерен. <strong>Горячий конец</strong> (Hotend) должен быть выбран исходя из материалов, которые вы планируете печатать: для PLA достаточно стандартного решения, а для ABS потребуется термобарьер из PTFE или полного металла.</p>
+
+<p>Нагревательный стол (Bed) необходим для адгезии первого слоя. Используйте <em>PEI-лист</em> или стекло с клеем-спреем для получения ровной поверхности. </p>
+
+<p>Термисторы и термопары служат для контроля температур. Неправильный выбор типа датчика или плохой контакт провода могут привести к отключению принтера по аварийному сценарию или, в худшем случае, к перегреву. Убедитесь, что термистор плотно прижат к нагревателю и изолирован от внешних воздействий.</p>
+
+<details class="faq-item"><summary>Проблемы с термопарой</summary><div class="faq-answer"><p>Если температура прыгает скачками, проверьте целостность изоляции провода и плотность прилегания датчика к блоку heating. Часто помогает замена дешевого термистора на более качественный аналог.</p></div></details>
+
+<h2 id="прошивка-и-настройка-arduino">Прошивка и настройка Arduino</h2>
+
+<p>Мозгом вашего принтера станет прошивка <em>Marlin</em> или <em>Firmware</em>. Процесс настройки требует редактирования файла <code>Configuration.h</code> в среде разработки <em>Arduino IDE</em>. Здесь вы задаете размеры рабочего пространства, типы эндстопов, калибровку шагов на миллиметр и параметры нагрева.</p>
+
+<p>Необходимо корректно настроить <strong>шаговые двигатели</strong>. Значение <code>DEFAULT_AXIS_STEPS_PER_UNIT</code> должно быть рассчитано исходя из диаметра шкива и количества шагов мотора. Ошибка в этих параметрах приведет к тому, что принтер будет печатать детали неверного размера.</p>
+
+<p>Калибровка уровня стола (Bed Leveling) может быть ручной или автоматической с использованием датчика <em>BLTouch</em>. Автоматическая система saves время и гарантирует идеальный первый слой даже на неровных поверхностях. <mark>Без правильной калибровки первого слоя печать на 99% завалится</mark>.</p>
+
+ <p><strong>Внимание:</strong> При прошивке Arduino всегда отключайте питание от нагревательных элементов, чтобы избежать случайного включения при тестировании портов.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Используйте Serial Monitor в Arduino IDE для отладки ошибок. Команда M503 выведет текущие настройки прошивки, а M500 сохранит их в EEPROM.</p></div>
+
+<h2 id="сравнение-популярных-плат-и-комплектов">Сравнение популярных плат и комплектов</h2>
+
+<p>При выборе электроники важно сопоставить возможности платы с вашим бюджетом. Ниже приведена таблица основных характеристик популярных решений для сборки 3D принтеров.</p>
+
+<table>
+ <thead>
+  <tr>
+   <th>Плата</th>
+   <th>Тип драйверов</th>
+   <th>Поддержка 32 бит</th>
+   <th>Сложность сборки</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>Arduino Mega + RAMPS 1.4</td>
+   <td>A4988 / TMC2208</td>
+   <td>Нет (8 бит)</td>
+   <td>Средняя</td>
+  </tr>
+  <tr>
+   <td>SKR Mini E3 V3.0</td>
+   <td>TMC2209</td>
+   <td>Да (STM32)</td>
+   <td>Низкая</td>
+  </tr>
+  <tr>
+   <td>Arduino Due</td>
+   <td>Специфические</td>
+   <td>Да (ARM)</td>
+   <td>Высокая</td>
+  </tr>
+  <tr>
+   <td>Rumba</td>
+   <td>A4988</td>
+   <td>Нет (8 бит)</td>
+   <td>Средняя</td>
+  </tr>
+ </tbody>
+</table>
+
+<p>Платформа <em>Arduino Mega</em> остается популярной благодаря огромному количеству документации и совместимости с любыми модулями. Однако для новых проектов чаще выбирают 32-битные контроллеры, которые позволяют реализовать такие функции, как треддинг (скругление траекторий) и более плавное движение.</p>
+
+<p>Важно учитывать, что некоторые современные прошивки требуют именно 32-битные платформы для работы расширенных функций, таких как таймлапс или расширенная логика температур. Перед покупкой проверьте совместимость выбранного <strong>контроллера</strong> с версией Marlin, которую вы планируете использовать.</p>
+
+<h2 id="финальная-сборка-и-тестирование">Финальная сборка и тестирование</h2>
+
+<p>После монтажа электроники и механики наступает этап первичного запуска. Включите питание и проверьте направление вращения двигателей. Если мотор вращается не туда, измените перемычку на драйвере или параметр <code>INVERT_X_DIR</code> в прошивке.</p>
+
+<p>Тестирование нагревательных элементов проводите без филамента. Убедитесь, что стол и сопло нагреваются до заданных значений и удерживают температуру. Используйте мультиметр для проверки контактов и отсутствия коротких замыканий.</p>
+
+<p>Первая печать должна быть простой геометрической фигурой, например, кубом 20x20x20 мм. Это позволит проверить калибровку осей, адгезию к столу и отсутствие вибраций. Если фигура искажена, вернитесь к настройке шагов и натяжению ремней.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Регулярная проверка натяжения ремней и смазка направляющих — залог стабильной работы самодельного принтера в течение долгого времени.</p></div>
+
+<h2 id="частые-вопросы-и-ответы">Частые вопросы и ответы</h2>
+
+<details>
+ <summary>Нужен ли специальный источник питания для Arduino Mega?</summary>
+ <p>Arduino Mega потребляет мало энергии (около 5В), поэтому её можно питать от USB или отдельного стабилизатора. Однако для питания всей электроники (RAMPS, двигатели, нагреватели) требуется мощный блок питания 12В или 24В, который подключается отдельно к плате через разъемы.</p>
+</details>
+
+<details>
+ <summary>Можно ли печатать ABS пластиком на самодельном принтере?</summary>
+ <p>Да, но это сложнее. ABS требует закрытой камеры для предотвращения остывания и деформации (коробления), а также температуры стола не ниже 90-100°C. Убедитесь, что ваша конструкция и прошивка поддерживают эти температуры.</p>
+</details>
+
+<details>
+ <summary>Как часто нужно обновлять прошивку?</summary>
+ <p>Частота обновлений зависит от ваших задач. Если вы используете стабильную версию Marlin без багов, обновляться можно раз в полгода. Если возникают ошибки или вы хотите новые функции — обновляйте сразу после выхода стабильных релизов.</p>
+</details>
+
+<details>
+ <summary>Что делать, если принтер не реагирует на команды?</summary>
+ <p>Проверьте соединение USB-кабеля, правильность выбранного COM-порта и скорость обмена данными (обычно 115200). Также убедитесь, что драйверы CH340 или FT232 установлены корректно, если используется чип преобразователя.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#введение-в-мир-самодельной-аддитивной-печати">Введение в мир самодельной аддитивной печати</a></li><li><a href="#выбор-электроники-и-микроконтроллеров">Выбор электроники и микроконтроллеров</a></li><li><a href="#механическая-конструкция-и-материалы-рамы">Механическая конструкция и материалы рамы</a></li><li><a href="#термическая-система-и-экструдер">Термическая система и экструдер</a></li><li><a href="#прошивка-и-настройка-arduino">Прошивка и настройка Arduino</a></li><li><a href="#сравнение-популярных-плат-и-комплектов">Сравнение популярных плат и комплектов</a></li><li><a href="#финальная-сборка-и-тестирование">Финальная сборка и тестирование</a></li><li><a href="#частые-вопросы-и-ответы">Частые вопросы и ответы</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/c/ca/canon-mf3010-kak-rabotaet.html" class="related-card">Canon MF3010: принцип работы и настройка МФУ для дома и офиса</a></li><li><a href="/articles/k/ka/kak-skanirovat-na-vindovs-10-s-printera-hp.html" class="related-card">Как сканировать на Windows 10 с принтера HP: Полное руководство</a></li><li><a href="/articles/c/ch/chto-takoe-snpch-dlya-printera-canon-pixma.html" class="related-card">СНПЧ для принтеров Canon Pixma: обзор систем, установка и нюансы</a></li><li><a href="/articles/k/ka/kakoj-kartridzh-nuzhen-dlya-printera-pantum-m6500w.html" class="related-card">Какой картридж нужен для принтера Pantum M6500W: полный обзор</a></li><li><a href="/articles/n/na/najti-pin-kod-wps-dlya-printera-samsung-m2070w-gde.html" class="related-card">Пин-код WPS для Samsung M2070W: как найти и подключиться</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/c/ca/canon-mf3010-kak-rabotaet.html" class="related-bottom-card"><span class="related-bottom-title">Canon MF3010: принцип работы и настройка МФУ для дома и офиса</span><span class="related-bottom-desc">Как работает Canon MF3010: устройство, функции печати/сканирования, подключение к ПК и смартфону. Ин</span></a><a href="/articles/k/ka/kak-skanirovat-na-vindovs-10-s-printera-hp.html" class="related-bottom-card"><span class="related-bottom-title">Как сканировать на Windows 10 с принтера HP: Полное руководство</span><span class="related-bottom-desc">Пошаговая инструкция по настройке сканирования документов с принтеров HP на Windows 10. Методы через</span></a><a href="/articles/c/ch/chto-takoe-snpch-dlya-printera-canon-pixma.html" class="related-bottom-card"><span class="related-bottom-title">СНПЧ для принтеров Canon Pixma: обзор систем, установка и нюансы</span><span class="related-bottom-desc">Полный разбор систем непрерывной подачи чернил для Canon Pixma. Как выбрать, установить и избежать о</span></a><a href="/articles/k/ka/kakoj-kartridzh-nuzhen-dlya-printera-pantum-m6500w.html" class="related-bottom-card"><span class="related-bottom-title">Какой картридж нужен для принтера Pantum M6500W: полный обзор</span><span class="related-bottom-desc">Узнайте, какой расходный материал подходит для Pantum M6500W. Сравнение оригинальных картриджей и ан</span></a><a href="/articles/n/na/najti-pin-kod-wps-dlya-printera-samsung-m2070w-gde.html" class="related-bottom-card"><span class="related-bottom-title">Пин-код WPS для Samsung M2070W: как найти и подключиться</span><span class="related-bottom-desc">Пошаговая инструкция по поиску пин-кода WPS на принтере Samsung M2070W. Способы подключения к Wi-Fi,</span></a><a href="/articles/s/sk/skolko-elektroenergii-potreblyaet-printer.html" class="related-bottom-card"><span class="related-bottom-title">Сколько электроэнергии потребляет принтер: расчеты и экономия</span><span class="related-bottom-desc">Узнайте, сколько киловатт-часов тратит лазерный или струйный принтер. Расчет стоимости печати, режим</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Калибровка температуры 3D-принтера: пошаговое руководство 2026 — Принтер Мастер</title>
+    <meta name="description" content="Как точно откалибровать температуру сопла и стола 3D-принтера: PID-настройка, тесты PLA/ABS, таблицы значений и ошибки новичков. Подходит для Creality, Prusa, Anycubic.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-otkalibrovat-temperaturu-3d-printera.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Калибровка температуры 3D-принтера: пошаговое руководство 2026">
+    <meta property="og:description" content="Как точно откалибровать температуру сопла и стола 3D-принтера: PID-настройка, тесты PLA/ABS, таблицы значений и ошибки новичков. Подходит для Creality, Prusa, Anycubic.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Калибровка температуры 3D-принтера: пошаговое руководство 2026</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Калибровка температуры 3D-принтера: полное руководство с тестами и настройками</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#1-почему-заводские-настройки-температуры-часто-врут">1. Почему заводские настройки температуры часто врут?</a></li><li><a href="#2-pid-настройка-как-сделать-так-чтобы-температура-не-гуляла">2. PID-настройка: как сделать так, чтобы температура не "гуляла"?</a></li><li><a href="#3-тест-реальной-температуры-filament-почему-200c-200c">3. Тест реальной температуры filament: почему 200°C ≠ 200°C?</a></li><li><a href="#4-калибровка-температуры-стола-почему-модель-отваливается">4. Калибровка температуры стола: почему модель отваливается?</a></li><li><a href="#5-типичные-ошибки-при-калибровке-температуры">5. Типичные ошибки при калибровке температуры</a></li><li><a href="#6-как-сохранить-результаты-калибровки">6. Как сохранить результаты калибровки?</a></li><li><a href="#7-когда-повторять-калибровку">7. Когда повторять калибровку?</a></li><li><a href="#faq-частые-вопросы-по-калибровке-температуры">FAQ: Частые вопросы по калибровке температуры</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><p>Точная калибровка температуры — основа качественной 3D-печати. Даже небольшое отклонение в 5–10°C может привести к <strong>расслоению модели</strong>, <strong>забиванию сопла</strong> или <strong>отслоению первого слоя</strong>. Проблема в том, что заводские настройки редко учитывают особенности вашего принтера: тип термистора, окружающую температуру или даже марку filament. Например, <em>PLA</em> от <em>Prusament</em> и <em>PLA</em> от <em>Eryone</em> могут требовать разной температуры при одинаковых настройках slicer’а.</p>
+
+<p>В этой статье разберём <strong>три ключевых этапа калибровки</strong>: настройку PID-регулятора для сопла и стола, тестирование реальной температуры filament и корректировку профилей в slicer’e. Особое внимание уделим типичным ошибкам — например, почему <mark>калибровка при 20°C в комнате и при 30°C даст разные результаты, даже если принтер один и тот же</mark>. Также приведём актуальные данные для популярных материалов: от <em>PLA+</em> до <em>PETG</em> и <em>АBS</em>.</p>
+
+<h2 id="1-почему-заводские-настройки-температуры-часто-врут">1. Почему заводские настройки температуры часто врут?</h2>
+
+<p>Производители 3D-принтеров (включая <em>Creality Ender 3</em>, <em>Prusa i3</em> и <em>Anycubic Kobra</em>) устанавливают <strong>усреднённые значения PID</strong> — коэффициентов, отвечающих за скорость нагрева и стабильность температуры. Проблема в том, что эти значения:</p>
+
+<ul>
+  <li>🔹 <strong>Не учитывают тип термистора</strong>. Например, принтеры с термисторами <code>NTC 3950</code> и <code>NTC 100K</code> будут показывать разные данные при одной температуре.</li>
+  <li>🔹 <strong>Зависят от напряжения питания</strong>. Если ваш блок питания выдаёт не 24V, а 23.5V, нагрев будет медленнее.</li>
+  <li>🔹 <strong>Меняются со временем</strong>. После 500+ часов печати нагревательный элемент сопла (<em>heater cartridge</em>) деградирует, и его сопротивление растёт.</li>
+</ul>
+
+<p>Кроме того, <strong>окружающая температура</strong> сильно влияет на калибровку. Принтер в подвале при +15°C и тот же принтер в комнате при +25°C будут вести себя по-разному. Например, при низкой температуре воздуха <em>ABS</em> может <strong>отслаиваться от стола</strong>, даже если в slicer’e указано "правильное" значение 230°C.</p>
+
+<div class="poll-widget" id="poll-fda506c5"><div class="poll-widget-question">📊 Как часто вы калибруете температуру принтера?</div><div class="poll-widget-option" data-poll="fda506c5" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Никогда не калибровал</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="fda506c5" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Раз в полгода</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="fda506c5" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Перед каждой новой катушкой filament</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="fda506c5" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Только если есть проблемы</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="2-pid-настройка-как-сделать-так-чтобы-температура-не-гуляла">2. PID-настройка: как сделать так, чтобы температура не "гуляла"?</h2>
+
+<p>PID-регулятор (Proportional-Integral-Derivative) — это алгоритм, который поддерживает заданную температуру, корректируя мощность нагрева. Если он настроен неправильно, вы увидите:</p>
+<ul>
+  <li>🔥 <strong>Перегрев</strong> (температура скачет выше заданной на 10–15°C).</li>
+  <li>❄️ <strong>Недогрев</strong> (принтер не может выйти на целевую температуру).</li>
+  <li>📉 <strong>Колебания</strong> (график температуры похож на синусоиду).</li>
+</ul>
+
+<p>Для калибровки PID используйте <strong>терминал принтера</strong> (через <em>Pronterface</em>, <em>OctoPrint</em> или прямо с экрана, если есть функция). Команды для <em>Marlin</em> и <em>Klipper</em> отличаются:</p>
+
+<p>Для <em>Marlin</em> (большинство принтеров <em>Creality</em>, <em>Anycubic</em>):</p>
+<pre><code>M303 E0 S200 C8  ; Калибровка сопла (E0) на 200°C, 8 циклов
+<p>M303 E-1 S60 C8   ; Калибровка стола (E-1) на 60°C, 8 циклов</p>
+<p>M500             ; Сохранить настройки в EEPROM</code></pre></p>
+
+<p>Для <em>Klipper</em>:</p>
+<pre><code>PID_CALIBRATE HEATER=extruder TARGET=200
+<p>PID_CALIBRATE HEATER=heater_bed TARGET=60</p>
+<p>SAVE_CONFIG</code></pre></p>
+
+<p>После калибровки проверьте стабильность температуры командой <code>M105</code> (для <em>Marlin</em>) или через график в <em>OctoPrint</em>. Идеальный результат — колебания не более ±1°C.</p>
+
+
+<p>Включить принтер и прогреть 10 минут</p>
+<p>Убедиться, что вентиляторы выключены (кроме охлаждения драйверов)</p>
+<p>Подключиться к принтеру через терминал (Pronterface/OctoPrint)</p>
+<p>Записать текущие PID-значения (команда M503) на случай отката--></p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если после PID-калибровки температура всё равно "гуляет", проверьте <strong>качество питания</strong>. Подключите принтер через стабилизатор напряжения или ИБП — скачки в сети могут сбивать настройки.</p></div>
+
+<h2 id="3-тест-реальной-температуры-filament-почему-200c-200c">3. Тест реальной температуры filament: почему 200°C ≠ 200°C?</h2>
+
+<p>Даже после PID-калибровки <strong>реальная температура сопла</strong> может отличаться от показанной. Виной тому:</p>
+<ul>
+  <li>🔌 <strong>Погрешность термистора</strong> (до ±5°C).</li>
+  <li>🌡️ <strong>Теплопотери</strong> (например, если дует вентилятор охлаждения).</li>
+  <li>🔥 <strong>Неравномерный нагрев</strong> (в зоне плавления может быть холоднее, чем у термистора).</li>
+</ul>
+
+<p>Чтобы узнать реальную температуру, используйте <strong>инфракрасный термометр</strong> (стоит ~1000₽) или <strong>тестовые башни</strong> (<em>temperature tower</em>). Скачайте готовую модель с <em>Thingiverse</em> (например, <a href="https://www.thingiverse.com/thing:2759430" target="_blank" rel="nofollow">эту</a>) и напечатайте её с постепенным изменением температуры.</p>
+
+<p>Пример настройки в <em>PrusaSlicer</em> для тестовой башни:</p>
+<ol>
+  <li>Импортируйте модель башни.</li>
+  <li>В настройках filament установите <code>Temperature = 220°C</code>.</li>
+  <li>Добавьте <strong>модификатор температуры</strong> и создайте слои с шагом 5°C (220→215→210 и т.д.).</li>
+  <li>Напечатайте и оцените, на каком слое <strong>экструзия наиболее ровная</strong>.</li>
+</ol>
+
+<p>Для популярных материалов оптимальные диапазоны температур такие:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Материал</th>
+      <th>Рекомендуемая температура сопла, °C</th>
+      <th>Температура стола, °C</th>
+      <th>Особенности</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><em>PLA</em></td>
+      <td>190–210</td>
+      <td>50–60 (или без подогрева)</td>
+      <td>При перегреве (>220°C) становится жидким и "паутинится".</td>
+    </tr>
+    <tr>
+      <td><em>PLA+</em></td>
+      <td>200–220</td>
+      <td>55–65</td>
+      <td>Менее подвержен деформации, но требует более высокой температуры.</td>
+    </tr>
+    <tr>
+      <td><em>ABS</em></td>
+      <td>230–250</td>
+      <td>90–110</td>
+      <td>Чувствителен к сквознякам. Лучше печатать в закрытом корпусе.</td>
+    </tr>
+    <tr>
+      <td><em>PETG</em></td>
+      <td>230–250</td>
+      <td>70–85</td>
+      <td>Липнет к соплу при низкой температуре (<220°C).</td>
+    </tr>
+    <tr>
+      <td><em>TPU</em></td>
+      <td>210–230</td>
+      <td>30–50 (или без подогрева)</td>
+      <td>Требует медленной печати (20–30 мм/с).</td>
+    </tr>
+  </tbody>
+</table>
+
+<details class="faq-item"><summary>Что делать, если термометр показывает расхождение более 10°C?</summary><div class="faq-answer"><p>
+<p>Если разница между показанной и реальной температурой превышает 10°C, проблема может быть в:</p>
+<p>1. <strong>Неисправном термисторе</strong> — проверьте сопротивление мультиметром (для NTC 100K при 25°C оно должно быть ~100 кОм).</p>
+<p>2. <strong>Плохом контакте</strong> — переподключите разъёмы термистора и нагревателя.</p>
+<p>3. <strong>Неправильной прошивке</strong> — некоторые версии Marlin имеют баги с PID. Обновите прошивку до последней стабильной версии.</p></div></details></p>
+
+<h2 id="4-калибровка-температуры-стола-почему-модель-отваливается">4. Калибровка температуры стола: почему модель отваливается?</h2>
+
+<p>Подогреваемый стол (<em>heatbed</em>) не менее важен, чем сопло. Если температура стола слишком низкая, первый слой не прилипнет; если слишком высокая — модель может деформироваться. Оптимальные значения зависят от материала и <strong>тип покрытия стола</strong>:</p>
+<ul>
+  <li>🔹 <strong>Стекло с клеем (hairspray, Dimafix)</strong>: +5–10°C к рекомендуемой температуре.</li>
+  <li>🔹 <strong>PEI-плёнка (Prusa, Creality)</strong>: достаточно стандартных значений.</li>
+  <li>🔹 <strong>Алюминий без покрытия</strong>: требует +10–15°C (из-за высокой теплопроводности).</li>
+</ul>
+
+<p>Для калибровки стола:</p>
+<ol>
+  <li>Нагрейте стол до целевой температуры (например, 60°C для <em>PLA</em>).</li>
+  <li>Подождите 10 минут — температура должна стабилизироваться.</li>
+  <li>Измерьте реальную температуру поверхности ИК-термометром.</li>
+  <li>Если разница более 5°C, откорректируйте целевое значение в slicer’e.</li>
+</ol>
+
+<p>Для <em>ABS</em> и <em>PETG</em> важно <strong>равномерное распределение тепла</strong>. Проверьте это, проведя рукой над столом (осторожно, не обожгитесь!): если в центре горячее, а по краям холоднее, возможно, проблема в <strong>отслоении термопрокладки</strong> или <strong>неисправности нагревательного элемента</strong>.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Для <em>ABS</em> критично, чтобы температура стола была не ниже 90°C в течение всего процесса печати. Если стол остывает, модель начнёт отслаиваться по углам.</p></div>
+
+<h2 id="5-типичные-ошибки-при-калибровке-температуры">5. Типичные ошибки при калибровке температуры</h2>
+
+<p>Даже опытные пользователи иногда допускают ошибки, которые сводят на нет все усилия по калибровке. Вот самые распространённые:</p>
+
+<ul>
+  <li>❌ <strong>Калибровка в холодном помещении</strong>. Если комната ниже +18°C, принтер будет тратить больше энергии на поддержание температуры, и PID-значения получатся некорректными.</li>
+  <li>❌ <strong>Использование "чужого" профиля</strong>. Настройки PID с форума для <em>Creality Ender 3</em> могут не подойти вашему принтеру из-за разных термисторов.</li>
+  <li>❌ <strong>Игнорирование обдува</strong>. Вентилятор охлаждения сопла (<em>part cooling fan</em>) влияет на реальную температуру экструдера. Калибруйте с выключенным вентилятором!</li>
+  <li>❌ <strong>Печать тестовой башни без корпуса</strong>. Для <em>ABS</em> и <em>PETG</em> сквозняки искажают результаты.</li>
+</ul>
+
+<p>Ещё одна частая проблема — <strong>несоответствие температуры в slicer’e и на дисплее принтера</strong>. Например, в <em>PrusaSlicer</em> вы ставите 200°C, а на экране принтера отображается 195°C. Это происходит из-за:</p>
+<ul>
+  <li>🔹 Разницы в прошивках (некоторые версии <em>Marlin</em> округляют значения).</li>
+  <li>🔹 Неправильного <code>M140</code>/<code>M104</code> в стартовом G-коде (если температура задаётся до нагрева).</li>
+</ul>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если температура в slicer’e и на принтере расходится, добавьте в начало G-кода команду <code>M140 S[first_layer_bed_temperature]</code> и <code>M104 S[first_layer_temperature]</code> — это синхронизирует значения.</p></div>
+
+<h2 id="6-как-сохранить-результаты-калибровки">6. Как сохранить результаты калибровки?</h2>
+
+<p>После всех тестов важно <strong>зафиксировать настройки</strong>, чтобы не повторять калибровку перед каждой печатью. Способы сохранения зависят от прошивки:</p>
+
+<ul>
+  <li>🔹 <strong>Marlin</strong>: команды <code>M500</code> (сохранить в EEPROM) и <code>M501</code> (загрузить).</li>
+  <li>🔹 <strong>Klipper</strong>: <code>SAVE_CONFIG</code> после PID-калибровки.</li>
+  <li>🔹 <strong>Prusa Firmware</strong>: настройки сохраняются автоматически.</li>
+</ul>
+
+<p>Также <strong>экспортируйте профиль filament</strong> в slicer’e. В <em>PrusaSlicer</em> и <em>Cura</em> это делается так:</p>
+<ol>
+  <li>Откройте настройки filament (<code>Settings → Filament</code>).</li>
+  <li>Нажмите <code>Save</code> и присвойте профилю уникальное имя (например, <code>PLA_Prusament_200C_55C</code>).</li>
+  <li>Экспортируйте профиль в файл (<code>Export</code>) для резервной копии.</li>
+</ol>
+
+<p>Если вы используете несколько катушек одного материала (например, <em>PLA</em> от разных брендов), создайте <strong>отдельные профили</strong> для каждой. Например:</p>
+<ul>
+  <li>🔹 <em>PLA Prusament</em> — 210°C (сопло), 55°C (стол).</li>
+  <li>🔹 <em>PLA Eryone</em> — 205°C (сопло), 50°C (стол).</li>
+</ul>
+
+<details class="faq-item"><summary>Как перенести настройки на другой принтер?</summary><div class="faq-answer"><p>
+<p>Если у вас несколько принтеров одной модели, <strong>не копируйте PID-значения напрямую</strong>. Даже у двух <em>Creality Ender 3 V2</em> могут быть разные термисторы. Вместо этого:</p>
+<p>1. Проведите PID-калибровку на каждом принтере отдельно.</p>
+<p>2. Перенесите только температурные профили filament (если материалы одинаковые).</p>
+<p>3. Проверьте реальную температуру ИК-термометром на обоих устройствах.</p></div></details></p>
+
+<h2 id="7-когда-повторять-калибровку">7. Когда повторять калибровку?</h2>
+
+<p>Калибровка температуры — не разовое мероприятие. Повторять её нужно в следующих случаях:</p>
+
+<ul>
+  <li>🔹 <strong>Смена filament</strong> (даже если материал тот же, но другой бренд).</li>
+  <li>🔹 <strong>Замена сопла или нагревательного картриджа</strong>.</li>
+  <li>🔹 <strong>Сезонные изменения температуры</strong> (например, зимой в неотапливаемом помещении).</li>
+  <li>🔹 <strong>После обновления прошивки</strong> (особенно если менялась версия <em>Marlin</em> или <em>Klipper</em>).</li>
+  <li>🔹 <strong>После 200+ часов печати</strong> (нагревательные элементы деградируют).</li>
+</ul>
+
+<p>Если вы заметили <strong>ухудшение качества печати</strong> (расслоение, недопрессовку, "паутину"), первым делом проверьте температуру. Часто проблема решается простой перекалибровкой PID или корректировкой профиля filament на ±5°C.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Для <em>PETG</em> и <em>ABS</em> рекомендуется повторять калибровку каждые 3–4 месяца, так как эти материалы чувствительны к влажности и температуре окружающей среды.</p></div>
+
+<h2 id="faq-частые-вопросы-по-калибровке-температуры">FAQ: Частые вопросы по калибровке температуры</h2>
+
+<details>
+  <summary>Можно ли калибровать температуру без ИК-термометра?</summary>
+  <p>Да, но с оговорками. Вместо термометра используйте <strong>тестовую башню</strong> (<em>temperature tower</em>). Однако этот метод менее точный, так как не учитывает погрешность термистора. Для критических задач (например, печать деталей с высокими требованиями к прочности) лучше обзавестись ИК-термометром (стоит от 800₽).</p>
+</details>
+
+<details>
+  <summary>Почему после PID-калибровки температура всё равно скачет?</summary>
+  <p>Возможные причины:</p>
+  <ul>
+    <li>🔹 <strong>Нестабильное питание</strong> (проверьте блок питания мультиметром).</li>
+    <li>🔹 <strong>Плохой контакт термистора</strong> (переподключите разъёмы).</li>
+    <li>🔹 <strong>Слишком агрессивные PID-значения</strong> (попробуйте уменьшить коэффициент <code>Kp</code> вручную).</li>
+    <li>🔹 <strong>Внешние факторы</strong> (сквозняки, низкая температура в помещении).</li>
+  </ul>
+  <p>Если проблема остаётся, попробуйте <strong>уменьшить мощность нагревателя</strong> в прошивке (параметр <code>MAX_PWM</code> в <em>Marlin</em>).</p>
+</details>
+
+<details>
+  <summary>Как калибровать температуру для гибких filament (TPU, TPE)?</summary>
+  <p>Гибкие материалы требуют особого подхода:</p>
+  <ol>
+    <li>Установите <strong>нижнюю границу температуры</strong> (например, 210°C для <em>TPU 95A</em>).</li>
+    <li>Печатайте на <strong>низкой скорости</strong> (15–25 мм/с).</li>
+    <li>Отключите <strong>обдув</strong> (или установите минимальную мощность, 10–20%).</li>
+    <li>Используйте <strong>прямую экструзию</strong> (боуден не подходит для TPU).</li>
+  </ol>
+  <p>Тестовая башня для TPU должна иметь шаг 2–3°C (а не 5°C), так как материал очень чувствителен к перегреву.</p>
+</details>
+
+<details>
+  <summary>Нужно ли калибровать температуру для PLA? Ведь он нетребователен.</summary>
+  <p>Даже для <em>PLA</em> калибровка полезна, потому что:</p>
+  <ul>
+    <li>🔹 <strong>Разные бренды</strong> требуют разной температуры (например, <em>PLA от Prusament</em> печатается при 210°C, а <em>PLA от Eryone</em> — при 195°C).</li>
+    <li>🔹 <strong>Перегрев PLA</strong> приводит к "паутине" и потере прочности.</li>
+    <li>🔹 <strong>Недогрев</strong> вызывает недопрессовку и слабое сцепление слоёв.</li>
+  </ul>
+  <p>Для базового <em>PLA</em> достаточно однократной калибровки, но для <em>PLA+</em> или <em>PLA с добавками</em> (например, <em>PLA-CF</em>) требуется отдельная настройка.</p>
+</details>
+
+<details>
+  <summary>Можно ли использовать один профиль температуры для всех материалов?</summary>
+  <p>Нет, это приведёт к <strong>браку</strong>. Каждый материал имеет уникальные свойства:</p>
+  <ul>
+    <li>🔹 <em>ABS</em> требует высокой температуры стола (90–110°C), иначе отслаивается.</li>
+    <li>🔹 <em>PETG</em> прилипает к соплу при низкой температуре (<220°C).</li>
+    <li>🔹 <em>TPU</em> нужно печатать медленно и без обдува.</li>
+  </ul>
+  <p>Исключение — <strong>универсальные профили</strong> для близких материалов (например, <em>PLA</em> и <em>PLA+</em> одного бренда), но и тут могут быть нюансы.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#1-почему-заводские-настройки-температуры-часто-врут">1. Почему заводские настройки температуры часто врут?</a></li><li><a href="#2-pid-настройка-как-сделать-так-чтобы-температура-не-гуляла">2. PID-настройка: как сделать так, чтобы температура не "гуляла"?</a></li><li><a href="#3-тест-реальной-температуры-filament-почему-200c-200c">3. Тест реальной температуры filament: почему 200°C ≠ 200°C?</a></li><li><a href="#4-калибровка-температуры-стола-почему-модель-отваливается">4. Калибровка температуры стола: почему модель отваливается?</a></li><li><a href="#5-типичные-ошибки-при-калибровке-температуры">5. Типичные ошибки при калибровке температуры</a></li><li><a href="#6-как-сохранить-результаты-калибровки">6. Как сохранить результаты калибровки?</a></li><li><a href="#7-когда-повторять-калибровку">7. Когда повторять калибровку?</a></li><li><a href="#faq-частые-вопросы-по-калибровке-температуры">FAQ: Частые вопросы по калибровке температуры</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/c/ch/chto-takoe-dyuz-na-printere.html" class="related-card">Дюз на принтере: что это, как работает и как почистить</a></li><li><a href="/articles/u/up/upravlenie-hdmi-canon-chto-eto.html" class="related-card">Управление HDMI на Canon: чистая передача сигнала и настройка удаленного доступа</a></li><li><a href="/articles/q/q6/q6001a-kartridzh-dlya-kakikh-printerov.html" class="related-card">Q6001A картридж для каких принтеров: полный список моделей HP</a></li><li><a href="/articles/k/ka/kak-zapravlyat-bumagu-v-printer.html" class="related-card">Как правильно заправить бумагу в принтер: пошаговая инструкция</a></li><li><a href="/articles/k/ka/kak-sbrosit-nastrojki-vaj-faj-na-printere-hp.html" class="related-card">Как сбросить настройки Wi-Fi на принтере HP: Полная инструкция</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/c/ch/chto-takoe-dyuz-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Дюз на принтере: что это, как работает и как почистить</span><span class="related-bottom-desc">Разбираемся, что такое дюз (сопло) в 3D-принтере и принтерах с ЧПУ: устройство, типы, причины засоро</span></a><a href="/articles/u/up/upravlenie-hdmi-canon-chto-eto.html" class="related-bottom-card"><span class="related-bottom-title">Управление HDMI на Canon: чистая передача сигнала и настройка удаленного доступа</span><span class="related-bottom-desc">Разбираем функции управления HDMI на камерах Canon. Что такое CEC, как организовать удаленную съемку</span></a><a href="/articles/q/q6/q6001a-kartridzh-dlya-kakikh-printerov.html" class="related-bottom-card"><span class="related-bottom-title">Q6001A картридж для каких принтеров: полный список моделей HP</span><span class="related-bottom-desc">Узнайте совместимость картриджа Q6001A с принтерами HP Color LaserJet. Полный список моделей, замена</span></a><a href="/articles/k/ka/kak-zapravlyat-bumagu-v-printer.html" class="related-bottom-card"><span class="related-bottom-title">Как правильно заправить бумагу в принтер: пошаговая инструкция</span><span class="related-bottom-desc">Подробное руководство по установке бумаги в принтер разных типов: лазерный, струйный, МФУ. Избегайте</span></a><a href="/articles/k/ka/kak-sbrosit-nastrojki-vaj-faj-na-printere-hp.html" class="related-bottom-card"><span class="related-bottom-title">Как сбросить настройки Wi-Fi на принтере HP: Полная инструкция</span><span class="related-bottom-desc">Пошаговое руководство по сбросу сетевых настроек на принтерах HP. Методы для моделей с экраном и без</span></a><a href="/articles/k/ko/kompyuter-pishet-chto-printer-ne-v-seti.html" class="related-bottom-card"><span class="related-bottom-title">Принтер не в сети: 7 рабочих способов исправить ошибку</span><span class="related-bottom-desc">Компьютер пишет, что принтер не в сети? Узнайте, как быстро восстановить печать: от проверки кабелей</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

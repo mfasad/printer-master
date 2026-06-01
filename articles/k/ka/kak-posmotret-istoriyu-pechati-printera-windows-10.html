@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как посмотреть историю печати принтера в Windows 10 — 3 способа — Принтер Мастер</title>
+    <meta name="description" content="Пошаговая инструкция, как найти и просмотреть журнал печати принтера в Windows 10. Способы через «Панель управления», PowerShell и сторонние утилиты. Расшифровка логов и восстановление удалённых записей.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-posmotret-istoriyu-pechati-printera-windows-10.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как посмотреть историю печати принтера в Windows 10 — 3 способа">
+    <meta property="og:description" content="Пошаговая инструкция, как найти и просмотреть журнал печати принтера в Windows 10. Способы через «Панель управления», PowerShell и сторонние утилиты. Расшифровка логов и восстановление удалённых записей.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как посмотреть историю печати принтера в Windows 10 — 3 способа</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как посмотреть историю печати принтера в Windows 10: полное руководство</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#1-просмотр-истории-через-панель-управления-стандартный-метод">1. Просмотр истории через «Панель управления» (стандартный метод)</a></li><li><a href="#2-извлечение-истории-через-журнал-событий-windows">2. Извлечение истории через «Журнал событий Windows»</a></li><li><a href="#3-использование-powershell-для-глубокого-анализа">3. Использование PowerShell для глубокого анализа</a></li><li><a href="#4-сторонние-программы-для-мониторинга-печати">4. Сторонние программы для мониторинга печати</a></li><li><a href="#5-особенности-работы-с-сетевыми-принтерами">5. Особенности работы с сетевыми принтерами</a></li><li><a href="#6-восстановление-удалённой-истории-печати">6. Восстановление удалённой истории печати</a></li><li><a href="#7-настройка-аудита-печати-для-будущего-контроля">7. Настройка аудита печати для будущего контроля</a></li><li><a href="#faq-частые-вопросы-о-истории-печати">FAQ: Частые вопросы о истории печати</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body">
+
+<p>Контроль за распечатанными документами — критически важная задача как для офисов, так и для домашних пользователей. Возможно, вам нужно отследить, кто и когда печатал конфиденциальные файлы, восстановить список отправленных на принтер задач или просто проверить, прошёл ли документ на печать. В <strong>Windows 10</strong> история печати не всегда очевидна: система не сохраняет её в привычном виде, как, например, журнал загрузок в браузере.</p>
+
+<p>К счастью, есть несколько надёжных способов извлечь эту информацию — от встроенных инструментов до специализированного софта. В этой статье мы разберём <strong>все доступные методы</strong>, включая скрытые функции системы, команды <strong>PowerShell</strong> и программы сторонних разработчиков. Особое внимание уделим расшифровке логов и нюансам работы с сетевыми принтерами.</p>
+
+<p>⚠️ <strong>Внимание:</strong> История печати в Windows 10 по умолчанию хранится ограниченное время (обычно 1–7 дней) и может автоматически очищаться при перезагрузке или обновлении системы. Если вам нужны записи за длительный период, рассмотрите варианты с настройкой аудита или сторонними утилитами.</p>
+
+<h2 id="1-просмотр-истории-через-панель-управления-стандартный-метод">1. Просмотр истории через «Панель управления» (стандартный метод)</h2>
+
+<p>Самый простой способ — использовать встроенную утилиту <strong>«Просмотр очереди печати»</strong>. Она отображает текущие и последние завершённые задачи, но с ограничениями: данные хранятся только до перезагрузки ПК или очистки очереди.</p>
+
+<p>Чтобы открыть журнал:</p>
+<ol>
+  <li>Нажмите <code>Win + R</code>, введите <code>control printers</code> и нажмите <code>Enter</code>.</li>
+  <li>В списке принтеров дважды кликните по нужному устройству — откроется окно очереди.</li>
+  <li>Перейдите во вкладку <code>Принтер → Просмотр очереди печати</code>.</li>
+</ol>
+
+<p>Здесь вы увидите:</p>
+<ul>
+  <li>📄 <strong>Документы в очереди</strong> (активные задачи).</li>
+  <li>✅ <strong>Завершённые задания</strong> (если они ещё не удалены системой).</li>
+  <li>❌ <strong>Ошибки печати</strong> с кратким описанием (например, «нет бумаги»).</li>
+</ul>
+
+<p>⚠️ <strong>Внимание:</strong> Если очередь пуста, это не означает, что принтер не использовался. Windows 10 по умолчанию не ведёт долговременный журнал. Для глубокого анализа переходите к следующим методам.</p>
+
+<div class="checklist-block"><h4>☑️ Что делать, если очередь пустая</h4><label class="check-item"><input type="checkbox"><span>Проверьте настройки принтера на сохранение логов</span></label><label class="check-item"><input type="checkbox"><span>Используйте PowerShell для извлечения системных событий</span></label><label class="check-item"><input type="checkbox"><span>Установите стороннюю утилиту (см. раздел 4)</span></label><label class="check-item"><input type="checkbox"><span>Проверьте сетевой принтер через веб-интерфейс (если применимо)</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="2-извлечение-истории-через-журнал-событий-windows">2. Извлечение истории через «Журнал событий Windows»</h2>
+
+<p>Система ведёт скрытый журнал печати в <strong>«Просмотрщике событий»</strong> (<em>Event Viewer</em>). Здесь хранятся записи о всех действиях с принтерами, включая ошибки, подключения и отправленные задачи. Однако данные представлены в техническом формате и требуют расшифровки.</p>
+
+<p>Инструкция:</p>
+<ol>
+  <li>Откройте <code>Просмотр событий</code> через меню <code>Пуск</code> или командой <code>eventvwr.msc</code>.</li>
+  <li>Перейдите по пути: <code>Журналы приложений и служб → Microsoft → Windows → PrintService</code>.</li>
+  <li>Выберите подкатегорию <code>Operational</code> (операционные события).</li>
+</ol>
+
+<p>В таблице ищите события с <strong>ID 307</strong> (задача отправлена на печать) и <strong>ID 308</strong> (задача завершена). Чтобы быстро найти их:</p>
+<ul>
+  <li>🔍 Нажмите <code>Фильтр текущего журнала</code> в правой панели.</li>
+  <li>В поле <code>Коды событий</code> укажите <code>307, 308</code> через запятую.</li>
+  <li>📅 Установите диапазон дат, если нужно сузить поиск.</li>
+</ul>
+
+<p>Каждое событие содержит:</p>
+<ul>
+  <li>🖨️ <strong>Имя принтера</strong> (<code>PrinterName</code>).</li>
+  <li>📄 <strong>Имя документа</strong> (<code>DocumentName</code>).</li>
+  <li>👤 <strong>Пользователь</strong> (<code>UserName</code>).</li>
+  <li>⏱️ <strong>Время отправки/завершения</strong>.</li>
+</ul>
+
+<details class="faq-item"><summary>Как экспортировать журнал в файл?</summary><div class="faq-answer"><p>Выделите нужные события → ПКМ → «Сохранить выбранные события» → Выберите формат <code>.evtx</code> (для дальнейшего анализа) или <code>.csv</code> (для Excel).</p></div></details>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID события</th>
+      <th>Описание</th>
+      <th>Пример данных</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>307</code></td>
+      <td>Документ отправлен на печать</td>
+      <td><code>Document: "Отчёт_2026.docx", User: "Иванов\PC-123"</code></td>
+    </tr>
+    <tr>
+      <td><code>308</code></td>
+      <td>Документ напечатан</td>
+      <td><code>Pages: 5, Size: 1.2 MB, Printer: "HP LaserJet P1102"</code></td>
+    </tr>
+    <tr>
+      <td><code>805</code></td>
+      <td>Ошибка принтера</td>
+      <td><code>Error: "No Paper", Printer: "Brother HL-L2350DW"</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>⚠️ <strong>Внимание:</strong> Журнал событий может быть отключён администратором системы. Если папка <code>PrintService</code> отсутствует, проверьте настройки групповой политики (<code>gpedit.msc</code> → <code>Конфигурация компьютера → Административные шаблоны → Принтеры</code>).</p>
+
+<h2 id="3-использование-powershell-для-глубокого-анализа">3. Использование PowerShell для глубокого анализа</h2>
+
+<p>Для опытных пользователей <strong>PowerShell</strong> предлагает гибкие инструменты извлечения истории печати, включая фильтрацию по датам, принтерам и пользователям. Этот метод полезен для автоматизации или анализа больших объёмов данных.</p>
+
+<p>Основные команды:</p>
+
+<p><strong>1. Просмотр всех задач печати за последние 7 дней:</strong></p>
+<pre><code>Get-WinEvent -LogName "Microsoft-Windows-PrintService/Operational" -FilterXPath "*[System[TimeCreated[timediff(@SystemTime) <= 604800000] and (EventID=307 or EventID=308)]]" | Format-List</code></pre>
+
+<p><strong>2. Экспорт истории в CSV-файл (для Excel):</strong></p>
+<pre><code>Get-WinEvent -LogName "Microsoft-Windows-PrintService/Operational" -FilterXPath "*[System[(EventID=307 or EventID=308)]]" |
+<p>Select-Object TimeCreated, Id, Message |</p>
+<p>Export-Csv -Path "C:\PrintHistory.csv" -NoTypeInformation -Encoding UTF8</code></pre></p>
+
+<p><strong>3. Поиск задач конкретного пользователя:</strong></p>
+<pre><code>Get-WinEvent -LogName "Microsoft-Windows-PrintService/Operational" |
+<p>Where-Object { $_.Message -like "<em>UserName: DOMEN\Ivanov</em>" } |</p>
+<p>Format-Table TimeCreated, Id, Message -AutoSize</code></pre></p>
+
+<p>🔹 <strong>Расшифровка ключевых полей в выводе:</strong></p>
+<ul>
+  <li><code>TimeCreated</code> — дата и время события.</li>
+  <li><code>Id</code> — <mark>ID 307 = отправка на печать, ID 308 = завершение</mark>.</li>
+  <li><code>Message</code> — детали задачи (имя документа, принтер, пользователь).</li>
+</ul>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если PowerShell выдаёт ошибку "доступ запрещён", запустите его от имени администратора (ПКМ по иконке → "Запуск от имени администратора").</p></div>
+
+<p>⚠️ <strong>Внимание:</strong> Команды PowerShell могут отличаться в зависимости от версии Windows 10 и настроек безопасности. В корпоративных сетях доступ к журналам часто ограничен политиками домена.</p>
+
+<div class="poll-widget" id="poll-36087887"><div class="poll-widget-question">📊 Какой метод вам кажется самым удобным?</div><div class="poll-widget-option" data-poll="36087887" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Через "Панель управления"</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="36087887" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Журнал событий (Event Viewer)</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="36087887" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">PowerShell</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="36087887" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Стороние утилиты</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="4-сторонние-программы-для-мониторинга-печати">4. Сторонние программы для мониторинга печати</h2>
+
+<p>Если встроенные инструменты Windows не дают достаточно данных, обратите внимание на специализированный софт. Эти программы не только сохраняют историю дольше, но и предлагают дополнительные функции: учёт расходов, контроль доступа, уведомления о печати.</p>
+
+<p><strong>Топ-3 утилиты для Windows 10:</strong></p>
+<ul>
+  <li>🛡️ <em><strong>PaperCut NG</em></em> — корпоративное решение с веб-интерфейсом, поддержкой квот и отчётами по пользователям. Подходит для офисов.</li>
+  <li>📊 <em><strong>Print Logger</em></strong> — лёгкая утилита для домашнего использования. Сохраняет историю в базе данных, экспортирует в Excel.</li>
+  <li>🔍 <em><strong>PrinterActivityMonitor</em></em> — мониторит печать в реальном времени, показывает превью документов (требует прав администратора).</li>
+</ul>
+
+<p><strong>Как работает <em>Print Logger</em>:</em></p>
+<ol>
+  <li>Скачайте и установите программу с <a href="https://www.printlogger.com/" target="_blank">официального сайта</a>.</li>
+  <li>Запустите утилиту от имени администратора.</li>
+  <li>Перейдите во вкладку <code>History</code> — здесь отобразятся все задачи печати с момента установки.</li>
+  <li>Для экспорта нажмите <code>Export → CSV/HTML</code>.</li>
+</ol>
+
+<table>
+  <thead>
+    <tr>
+      <th>Программа</th>
+      <th>Бесплатная версия</th>
+      <th>Хранение истории</th>
+      <th>Дополнительные функции</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><em>PaperCut NG</em></td>
+      <td>Нет (триал 30 дней)</td>
+      <td>Неограничено</td>
+      <td>Квоты, оплата печати, интеграция с AD</td>
+    </tr>
+    <tr>
+      <td><em>Print Logger</strong></td>
+      <td>Да (с ограничениями)</td>
+      <td>До 10 000 записей</td>
+      <td>Экспорт в Excel, фильтры по пользователям</td>
+    </tr>
+    <tr>
+      <td><em>PrinterActivityMonitor</em></td>
+      <td>Да</td>
+      <td>30 дней</td>
+      <td>Превью документов, мониторинг в реальном времени</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>⚠️ <strong>Внимание:</em> Утилиты для мониторинга печати могут конфликтовать с антивирусами (например, <em>Kaspersky</em> или <em>ESET</em> блокируют перехват задач печати). Добавьте программу в исключения или временно отключите защиту во время установки.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Стороние утилиты — единственный способ сохранить историю печати на годы. Встроенные инструменты Windows 10 хранят данные максимум несколько дней.</p></div>
+
+<h2 id="5-особенности-работы-с-сетевыми-принтерами">5. Особенности работы с сетевыми принтерами</h2>
+
+<p>Если принтер подключён по сети (например, через <em>Wi-Fi</em> или <em>Ethernet</em>), история печати может храниться не только на вашем ПК, но и на самом устройстве или сервере печати. Это актуально для офисных МФУ <em>Canon</em>, <em>Xerox</em> или <em>HP</strong>.</p>
+
+<p><strong>Где искать логи:</strong></p>
+<ul>
+  <li>🌐 <strong>Веб-интерфейс принтера</strong>: Введите IP-адрес устройства в браузере (например, <code>192.168.1.100</code>). Ищите разделы <code>Job Log</code>, <code>Print History</code> или <code>Reports</code>.</li>
+  <li>🖥️ <strong>Сервер печати</em>: В корпоративных сетях задачи могут логироваться на сервере (например, <em>Windows Print Server</em> или <em>CUPS</em> для Linux).</li>
+  <li>📡 <strong>Маршрутизатор</strong>: Некоторые роутеры (например, <em>ASUS RT-AX88U</em>) ведут журнал сетевой активности, где можно найти упоминания принтера.</li>
+</ul>
+
+<p><strong>Пример доступа к веб-интерфейсу <em>HP LaserJet</strong>:</strong></p>
+<ol>
+  <li>Найдите IP-адрес принтера (распечатайте страницу самотестирования или проверьте в настройках роутера).</li>
+  <li>Введите IP в адресную строку браузера (например, <code>http://192.168.1.150</code>).</li>
+  <li>Авторизуйтесь (логин/пароль по умолчанию часто <code>admin/admin</code> или указаны на наклейке устройства).</li>
+  <li>Перейдите в раздел <code>Reports → Job Log</code>.</li>
+</ol>
+
+<p>⚠️ <strong>Внимание:</em> Сетевые принтеры могут очищать логи автоматически при переполнении памяти. Настройте архивацию или экспорт отчётов, если нужна долговременная история.</p>
+
+<details class="faq-item"><summary>Как найти IP-адрес принтера?</summary><div class="faq-answer"><p>1. На принтере: распечатайте страницу конфигурации (обычно кнопка <code>Setup</code> или <code>Information</code>).
+<p>2. На ПК: откройте <code>Панель управления → Устройства и принтеры</code>, ПКМ по принтеру → <code>Свойства принтера → Порты</code> → найдите порт с IP-адресом.</p>
+<p>3. Через командную строку: введите <code>arp -a</code> и ищите MAC-адрес принтера (указан на наклейке).</p></div></details></p>
+
+<h2 id="6-восстановление-удалённой-истории-печати">6. Восстановление удалённой истории печати</h2>
+
+<p>Если стандартные методы не дали результатов, а история печати критически важна (например, для аудита или судебного разбирательства), можно попробовать восстановить данные из системных файлов или резервных копий.</p>
+
+<p><strong>Способы восстановления:</em></p>
+<ul>
+  <li>🔄 <strong>Восстановление системы</em>: Откат Windows 10 к точке восстановления, созданной до очистки логов. Используйте <code>rstrui.exe</code>.</li>
+  <li>💾 <strong>Анализ файлов спала</strong>: Утилиты вроде <em>Autopsy</strong> или <em>FTK Imager</em> могут извлечь фрагменты истории из файла <code>C:\Windows\System32\spool\PRINTERS\*.SPL</code>.</li>
+  <li>📂 <strong>Резервные копии Windows</em>: Если включено архивирование, проверьте папку <code>Windows\System32\winevt\Logs</code> в резервной копии.</li>
+</ul>
+
+<p><strong>Инструкция для <em>FTK Imager</em>:</em></p>
+<ol>
+  <li>Скачайте и установите <em>FTK Imager</strong> с сайта <a href="https://accessdata.com/" target="_blank">AccessData</a>.</li>
+  <li>Выберите <code>File → Add Evidence Item → Logical Drive</code> (укажите диск <code>C:</code>).</li>
+  <li>Перейдите в папку <code>\Windows\System32\winevt\Logs</code> и найдите файл <code>Microsoft-Windows-PrintService%4Operational.evtx</code>.</li>
+  <li>Экспортируйте файл и откройте его в <em>Event Viewer</strong>.</li>
+</ol>
+
+<p>⚠️ <strong>Внимание:</em> Восстановление удалённых логов — сложная процедура, требующая навыков работы с forensic-инструментами. Неправильные действия могут привести к потере данных. Для критических случаев обратитесь к специалистам.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Файлы спала (<code>.SPL</code>) хранят временные данные задач печати, но удаляются после завершения. Их восстановление возможно только до первой перезагрузки ПК.</p></div>
+
+<h2 id="7-настройка-аудита-печати-для-будущего-контроля">7. Настройка аудита печати для будущего контроля</h2>
+
+<p>Чтобы история печати сохранялась автоматически, настройте <strong>аудит событий печати</em> через групповую политику (<em>gpedit.msc</strong>). Это актуально для корпоративных пользователей или тех, кто хочет вести долговременный учёт.</p>
+
+<p><strong>Пошаговая настройка:</em></p>
+<ol>
+  <li>Откройте <code>gpedit.msc</code> (нажмите <code>Win + R</code> и введите команду).</li>
+  <li>Перейдите по пути: <code>Конфигурация компьютера → Конфигурация Windows → Параметры безопасности → Локальные политики → Политика аудита</code>.</li>
+  <li>Дважды кликните по <code>Аудит использования принтеров</code>.</li>
+  <li>Отметьте галочки <code>Успех</code> и <code>Отказ</code>, затем нажмите <code>OK</code>.</li>
+  <li>Примените политику командой <code>gpupdate /force</code> в <code>CMD</code> (от имени администратора).</li>
+</ol>
+
+<p>После этого все события печати будут записываться в <code>Журнал безопасности</code> (<em>Security Log</em>) в <em>Event Viewer</em>. Чтобы просмотреть их:</p>
+<ol>
+  <li>Откройте <code>eventvwr.msc</code>.</li>
+  <li>Перейдите в <code>Журналы Windows → Безопасность</code>.</li>
+  <li>Отфильтруйте события по коду <code>4985</code> (подключение к принтеру) и <code>4986</code> (отключение).</li>
+</ol>
+
+<p>⚠️ <strong>Внимание:</strong> Настройка аудита требует прав администратора и может увеличить нагрузку на систему при большом количестве задач печати. В офисах это обычно настраивается централизованно через <em>Active Directory</em>.</p>
+
+<h2 id="faq-частые-вопросы-о-истории-печати">FAQ: Частые вопросы о истории печати</h2>
+
+<details>
+  <summary>🔍 Можно ли увидеть, какой именно документ печатался, а не только его имя?</summary>
+  <p>В стандартных логах Windows 10 отображается только имя файла (например, <code>document.pdf</code>). Чтобы увидеть содержимое, нужны специализированные утилиты вроде <em>PrinterActivityMonitor</em> (показывает превью) или настройка сохранения спала-файлов (<code>.SPL</code>) с последующим их анализом.</p>
+</details>
+
+<details>
+  <summary>🕒 Как увеличить время хранения истории печати?</summary>
+  <p>По умолчанию Windows хранит логи печати 7 дней. Чтобы изменить это:</p>
+  <ol>
+    <li>Откройте <code>eventvwr.msc</code>.</li>
+    <li>ПКМ по <code>Microsoft-Windows-PrintService/Operational</code> → <code>Свойства</code>.</li>
+    <li>Установите флажок <code>Архивировать журнал при достижении максимального размера</code> и укажите лимит (например, 100 МБ).</li>
+  </ol>
+  <p>Для долговременного хранения используйте сторонние программы (см. раздел 4).</p>
+</details>
+
+<details>
+  <summary>🖨️ Почему в очереди печати нет истории, хотя принтер использовался?</summary>
+  <p>Это нормальное поведение Windows 10: очередь очищается после завершения задач или перезагрузки. Чтобы увидеть полную историю:</p>
+  <ul>
+    <li>Проверьте <code>Журнал событий</code> (раздел 2).</li>
+    <li>Используйте <code>PowerShell</code> для извлечения скрытых логов (раздел 3).</li>
+    <li>Настройте аудит печати (раздел 7).</li>
+  </ul>
+</details>
+
+<details>
+  <summary>🔒 Можно ли скрыть историю печати от других пользователей?</summary>
+  <p>Да, если у вас есть права администратора:</p>
+  <ul>
+    <li>Очистите очередь печати вручную (ПКМ по принтеру → <code>Очистить очередь</code>).</li>
+    <li>Удалите логи через <code>PowerShell</code>:
+      <pre><code>Clear-EventLog -LogName "Microsoft-Windows-PrintService/Operational"</code></pre>
+    </li>
+    <li>Отключите аудит печати в <code>gpedit.msc</code> (раздел 7).</li>
+  </ul>
+  <p>⚠️ В корпоративных сетях эти действия могут фиксироваться системой мониторинга (например, <em>SIEM</em>).</p>
+</details>
+
+<details>
+  <summary>📱 Как посмотреть историю печати с телефона или планшета?</summary>
+  <p>Если вы печатали с мобильного устройства на сетевой принтер:</p>
+  <ul>
+    <li>Для <em>Android</em>: Используйте приложения принтера (например, <em>HP Smart</em> или <em>Canon PRINT</em>), где есть раздел <code>Job History</code>.</li>
+    <li>Для <em>iOS</em>: В настройках принтера (через <em>AirPrint</em>) история не сохраняется — проверьте веб-интерфейс принтера (раздел 5).</li>
+    <li>Универсальный способ: Подключитесь к принтеру через браузер (введите его IP-адрес).</li>
+  </ul>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#1-просмотр-истории-через-панель-управления-стандартный-метод">1. Просмотр истории через «Панель управления» (стандартный метод)</a></li><li><a href="#2-извлечение-истории-через-журнал-событий-windows">2. Извлечение истории через «Журнал событий Windows»</a></li><li><a href="#3-использование-powershell-для-глубокого-анализа">3. Использование PowerShell для глубокого анализа</a></li><li><a href="#4-сторонние-программы-для-мониторинга-печати">4. Сторонние программы для мониторинга печати</a></li><li><a href="#5-особенности-работы-с-сетевыми-принтерами">5. Особенности работы с сетевыми принтерами</a></li><li><a href="#6-восстановление-удалённой-истории-печати">6. Восстановление удалённой истории печати</a></li><li><a href="#7-настройка-аудита-печати-для-будущего-контроля">7. Настройка аудита печати для будущего контроля</a></li><li><a href="#faq-частые-вопросы-о-истории-печати">FAQ: Частые вопросы о истории печати</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-najti-printer-hp.html" class="related-card">Как найти принтер HP: поиск в сети, драйверы и устранение неполадок</a></li><li><a href="/articles/k/ka/kak-nastroit-razmer-fotografii-dlya-pechati-na-printere.html" class="related-card">Как настроить размер фото для печати: DPI, пиксели и форматы</a></li><li><a href="/articles/c/ca/canon-g1400-oshibka-5b00-kak-ispravit.html" class="related-card">Ошибка 5B00 Canon G1400: причины, сброс счетчика, ремонт</a></li><li><a href="/articles/k/ka/kak-otpravit-faks-kenon.html" class="related-card">Как отправить факс на принтере Canon: пошаговая инструкция</a></li><li><a href="/articles/k/ka/kakoj-printer-kupit-lazernyj-forum.html" class="related-card">Выбираем лазерный принтер: советы с форумов и экспертов 2026</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-najti-printer-hp.html" class="related-bottom-card"><span class="related-bottom-title">Как найти принтер HP: поиск в сети, драйверы и устранение неполадок</span><span class="related-bottom-desc">Полное руководство по обнаружению принтеров HP в локальной сети, на сайте производителя и через утил</span></a><a href="/articles/k/ka/kak-nastroit-razmer-fotografii-dlya-pechati-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Как настроить размер фото для печати: DPI, пиксели и форматы</span><span class="related-bottom-desc">Полное руководство по настройке размера изображения для печати. Узнайте, как рассчитать разрешение, </span></a><a href="/articles/c/ca/canon-g1400-oshibka-5b00-kak-ispravit.html" class="related-bottom-card"><span class="related-bottom-title">Ошибка 5B00 Canon G1400: причины, сброс счетчика, ремонт</span><span class="related-bottom-desc">Полное руководство по устранению ошибки 5B00 на принтере Canon G1400. Инструкция по обнулению сервис</span></a><a href="/articles/k/ka/kak-otpravit-faks-kenon.html" class="related-bottom-card"><span class="related-bottom-title">Как отправить факс на принтере Canon: пошаговая инструкция</span><span class="related-bottom-desc">Узнайте, как отправить факс с МФУ Canon. Полная инструкция по настройке телефонной линии, отправке д</span></a><a href="/articles/k/ka/kakoj-printer-kupit-lazernyj-forum.html" class="related-bottom-card"><span class="related-bottom-title">Выбираем лазерный принтер: советы с форумов и экспертов 2026</span><span class="related-bottom-desc">Полный гайд по выбору лазерного принтера. Разбор мнений пользователей форумов, сравнение брендов, ан</span></a><a href="/articles/p/pr/printer-3160-kakoj-kartridzh.html" class="related-bottom-card"><span class="related-bottom-title">Какой картридж для принтера 3160: совместимость и замена</span><span class="related-bottom-desc">Полный обзор картриджей для принтера 3160. Совместимые аналоги, оригинальные расходники и пошаговая </span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

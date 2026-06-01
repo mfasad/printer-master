@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Ошибка «Приостановка принтера»: причины, диагностика и способы решения — Принтер Мастер</title>
+    <meta name="description" content="Почему принтер завис в режиме приостановки и как вернуть его в работу? Полный разбор причин, удаление очереди печати и настройка службы Spooler.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/c/ch/chto-znachit-printer-priostanovka.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Ошибка «Приостановка принтера»: причины, диагностика и способы решения">
+    <meta property="og:description" content="Почему принтер завис в режиме приостановки и как вернуть его в работу? Полный разбор причин, удаление очереди печати и настройка службы Spooler.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/remont-i-oshibki/">Ремонт и ошибки</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Ошибка «Приостановка принтера»: причины, диагностика и способы решения</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Что значит статус «Приостановка» у принтера и как его исправить</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#введение">Введение</a></li><li><a href="#причины-возникновения-статуса-приостановки">Причины возникновения статуса приостановки</a></li><li><a href="#проверка-очереди-печати-и-ручное-снятие-паузы">Проверка очереди печати и ручное снятие паузы</a></li><li><a href="#работа-со-службой-диспетчера-печати-spooler">Работа со службой диспетчера печати (Spooler)</a></li><li><a href="#очистка-очереди-печати-через-командную-строку">Очистка очереди печати через командную строку</a></li><li><a href="#диагностика-драйверов-и-обновлений">Диагностика драйверов и обновлений</a></li><li><a href="#сетевые-настройки-и-статус-оффлайн">Сетевые настройки и статус оффлайн</a></li><li><a href="#частые-вопросы-пользователей">Частые вопросы пользователей</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="введение">Введение</h2>
+
+<p>Ситуация, когда устройство вывода документов внезапно перестает работать, а в операционной системе появляется статус <strong>«Приостановлена»</strong> или <strong>«Пауза»</strong>, вызывает у пользователей легкую панику. Это не всегда означает физическую поломку механизма или выход из строя печатающей головки. В большинстве случаев <em>статус приостановки</em> — это программный сигнал, блокирующий отправку новых заданий в очередь на печать до получения соответствующей команды от пользователя или системной службы.</p>
+
+<p>Функция <strong>паузы печати</strong> изначально задумывалась как полезный инструмент для управления очередью документов, позволяющий временно остановить процесс для смены бумаги или картриджа без потери текущего задания. Однако, если <em>принтер завис в режиме приостановки</em> и не реагирует на попытки возобновления работы, это свидетельствует о сбое в коммуникации между драйвером и оборудованием, либо о накоплении ошибок в буфере обмена.</p>
+
+<p>Игнорирование этой проблемы может привести к полному зависанию очереди печати, из-за чего последующие документы будут бесконечно висеть в статусе <strong>«Ожидание»</strong> или <strong>«Ошибка печати»</strong>. Чтобы исключить необходимость переустановки драйверов или обращения в сервисный центр, важно понимать механизмы работы <em>очереди печати</em> и уметь применять правильные методы сброса статуса устройства.</p>
+
+<h2 id="причины-возникновения-статуса-приостановки">Причины возникновения статуса приостановки</h2>
+
+<p>Понимание того, почему устройство перешло в режим ожидания, является первым шагом к устранению неполадки. Чаще всего статус <strong>«Приостановка»</strong> активируется неспроста, а в ответ на определенные условия среды или действия пользователя. Иногда это происходит автоматически, когда <em>принтер сообщает</em> о нехватке ресурсов или критической ошибке, которую он не может обработать самостоятельно.</p>
+
+<p>Одной из распространенных причин является случайное нажатие комбинации клавиш или клик мыши в меню контекстного вызова очереди печати. Пользователь может неосознанно поставить галочку напротив пункта <strong>«Приостановить печать»</strong>, что мгновенно блокирует все дальнейшие действия устройства. В этом случае проблема решается элементарно, но часто люди тратят время на поиск сложных причин, упуская очевидное.</p>
+
+<p>Другой сценарий связан с особенностями работы <strong>службы диспетчера печати</strong> в Windows. Если служба зависла, произошел сбой сети или драйвер <em>потерял связь</em> с устройством, система может автоматически перевести принтер в безопасный режим ожидания. Это защитный механизм, предотвращающий отправку битых данных на печатающую головку, что могло бы привести к серьезным аппаратным сбоям.</p>
+
+<ul>
+<li>🔹 <strong>Случайная активация</strong> опции паузы в меню очереди печати пользователем.</li>
+<li>🔹 <strong>Критическая ошибка</strong> оборудования (отсутствие бумаги, открытая крышка), которую драйвер интерпретирует как паузу.</li>
+<li>🔹 <strong>Сбой службы Spooler</strong>, из-за чего команда на возобновление работы не доходит до принтера.</li>
+<li>🔹 <strong>Превышение лимита</strong> на количество ошибок в очереди, когда система блокирует новые задания.</li>
+</ul>
+
+<blockquote>
+<p>⚠️ <strong>Внимание:</strong> Если принтер находится в режиме приостановки из-за физического отсутствия расходных материалов (картриджа или бумаги), программное снятие паузы не поможет. Система продолжит выдавать ошибку до устранения физической причины.</p>
+</blockquote>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Самая частая причина приостановки — это не аппаратная поломка, а программная блокировка или сбой в работе службы диспетчера печати Windows.</p></div>
+
+<h2 id="проверка-очереди-печати-и-ручное-снятие-паузы">Проверка очереди печати и ручное снятие паузы</h2>
+
+<p>Первым делом при обнаружении статуса <strong>«Приостановлена»</strong> необходимо проверить интерфейс очереди печати. Именно здесь находится основной рычаг управления состоянием устройства. Зайдите в <code>Панель управления → Устройства и принтеры</code> и найдите свой <em>принтер</em> в списке.</p>
+
+<p>Дважды щелкните по иконке устройства, чтобы открыть окно очереди. В верхней части этого окна находится меню <strong>«Принтер»</strong>. Если вы видите, что напротив пункта <strong>«Приостановить печать»</strong> стоит галочка, это и есть причина проблемы. Просто кликните по этому пункту еще раз, чтобы снять отметку, и статус изменится на <strong>«Готов»</strong>.</p>
+
+<p>Иногда галочка может стоять, но при клике она не снимается. Это указывает на более глубокий сбой. Попробуйте закрыть окно очереди и открыть его снова. Если проблема сохраняется, возможно, процесс <strong>Spooler</strong> завис и требует перезапуска. В этом случае не стоит пытаться решить проблему через интерфейс, лучше перейти к системным методам.</p>
+
+<div class="poll-widget" id="poll-b1076b84"><div class="poll-widget-question">📊 Какой статус отображается у вашего принтера?</div><div class="poll-widget-option" data-poll="b1076b84" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Готов</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="b1076b84" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Приостановлена</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="b1076b84" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Оффлайн</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="b1076b84" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Ошибка печати</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<details class="faq-item"><summary>Что делать, если меню «Принтер» неактивно?</summary><div class="faq-answer"><p>Если пункт меню «Приостановить печать» серого цвета и на него нельзя нажать, это значит, что драйвер принтера перестал корректно общаться с системой. В таком случае необходимо проверить подключение кабеля или перезагрузить саму печатающую технику перед повторной проверкой настроек.</p></div></details>
+
+<h2 id="работа-со-службой-диспетчера-печати-spooler">Работа со службой диспетчера печати (Spooler)</h2>
+
+<p>Если ручное снятие паузы не помогает, необходимо вмешаться в работу системных служб Windows. <strong>Диспетчер печати</strong> (Print Spooler) — это фоновый процесс, который управляет всеми заданиями печати. Если этот процесс завис, принтер будет продолжать отображать статус <strong>«Приостановка»</strong> несмотря на любые попытки пользователя.</p>
+
+<p>Для решения проблемы нажмите комбинацию клавиш <code>Win + R</code>, введите команду <code>services.msc</code> и нажмите Enter. В открывшемся списке служб найдите строку <strong>«Диспетчер печати»</strong> (или <em>Print Spooler</em>). Кликните по ней правой кнопкой мыши и выберите <strong>«Перезапустить»</strong>.</p>
+
+<p>После перезапуска службы вернитесь в очередь печати и проверьте статус устройства. Часто бывает, что автоматическая настройка службы сбрасывает зависшие команды. Если служба не запускается или выдает ошибку, возможно, повреждены файлы системных библиотек или драйверы. В таком случае потребуется более тщательная диагностика.</p>
+
+<ul>
+<li>🔹 Нажмите <code>Win + R</code> и введите <code>services.msc</code> для открытия управления службами.</li>
+<li>🔹 Найдите службу <strong>«Диспетчер печати»</strong> и проверьте её статус.</li>
+<li>🔹 Если статус <strong>«Запущена»</strong>, выберите <strong>«Перезапустить»</strong> из контекстного меню.</li>
+<li>🔹 Убедитесь, что тип запуска службы установлен в режим <strong>«Автоматически»</strong>.</li>
+</ul>
+
+<div class="checklist-block"><h4>☑️ Алгоритм перезапуска Spooler</h4><label class="check-item"><input type="checkbox"><span>Открыть службы (services.msc)</span></label><label class="check-item"><input type="checkbox"><span>Найти Print Spooler</span></label><label class="check-item"><input type="checkbox"><span>Остановить службу</span></label><label class="check-item"><input type="checkbox"><span>Удалить файлы в spool</span></label><label class="check-item"><input type="checkbox"><span>Запустить службу заново</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 5</div></div>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Перед перезапуском службы Spooler закройте все программы, использующие печать, например Word или браузеры, чтобы избежать конфликта блокировок файлов.</p></div>
+
+<h2 id="очистка-очереди-печати-через-командную-строку">Очистка очереди печати через командную строку</h2>
+
+<p>В случаях, когда стандартные методы не устраняют статус <strong>«Приостановка»</strong>, необходимо принудительно очистить очередь печати. Иногда в буфере накапливаются «битые» файлы, которые блокируют отправку новых заданий. Это можно сделать через <strong>командную строку</strong>, используя специальные системные утилиты.</p>
+
+<p>Запустите командную строку от имени администратора. Введите по очереди следующие команды, нажимая Enter после каждой. Сначала остановите службу печати: <pre><code>net stop spooler</code></pre> Затем удалите все временные файлы очереди: <pre><code>del /Q /F /S "%systemroot%\System32\spool\printers\<em>.</em>"</code></pre> И наконец, запустите службу обратно: <pre><code>net start spooler</code></pre></p>
+
+<p>Эта процедура полностью сбрасывает состояние очереди и принудительно переводит принтер в режим готовности. Если после очистки очередь снова заполняется или статус <strong>«Приостановка»</strong> возвращается мгновенно, проблема может быть в драйвере <em>конкретной модели</em> или в сетевом подключении, если принтер сетевой.</p>
+
+<table>
+<thead>
+<tr>
+<th>Действие</th>
+<th>Команда</th>
+<th>Результат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Остановка службы</td>
+<td><code>net stop spooler</code></td>
+<td>Блокировка доступа к очереди</td>
+</tr>
+<tr>
+<td>Удаление файлов</td>
+<td><code>del ...printers\<em>.</em></code></td>
+<td>Очистка временных заданий</td>
+</tr>
+<tr>
+<td>Запуск службы</td>
+<td><code>net start spooler</code></td>
+<td>Возобновление работы печати</td>
+</tr>
+<tr>
+<td>Проверка статуса</td>
+<td><code>sc query spooler</code></td>
+<td>Подтверждение работы службы</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+<p>⚠️ <strong>Внимание:</strong> Команды удаления файлов в папке spooler выполняются мгновенно и без возможности восстановления. Убедитесь, что вы не пытаетесь сохранить важные документы, которые еще не успели распечататься, если они не были сохранены в исходной программе.</p>
+</blockquote>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Принудительная очистка очереди через командную строку — это самый радикальный и эффективный способ сбросить зависший статус приостановки, который не поддается решению через графический интерфейс.</p></div>
+
+<h2 id="диагностика-драйверов-и-обновлений">Диагностика драйверов и обновлений</h2>
+
+<p>Если проблема с <strong>приостановкой</strong> возникает регулярно, причиной может быть некорректно работающий драйвер устройства. Драйвер — это программа, которая переводит команды компьютера на язык, понятный принтеру. Если версия драйвера устарела или повреждена, он может неправильно интерпретировать сигналы от принтера, приводя к ложному статусу <strong>«Пауза»</strong>.</p>
+
+<p>Зайдите в <code>Диспетчер устройств</code> (нажмите <code>Win + X</code> и выберите соответствующий пункт). Найдите раздел <strong>«Очереди печати»</strong> или <strong>«Устройства»</strong>, раскройте его и найдите название своего принтера. Если рядом с иконкой стоит желтый восклицательный знак, драйвер требует обновления или переустановки.</p>
+
+<p>Для обновления нажмите правой кнопкой мыши на устройство и выберите <strong>«Обновить драйвер»</strong>. Система автоматически попытается найти подходящее решение. Однако надежнее скачать свежую версию драйвера с официального сайта производителя <em>Canon, HP, Brother</em> и установить её вручную. Это часто решает проблемы совместимости с новыми обновлениями Windows.</p>
+
+<ul>
+<li>🔹 Проверьте наличие <strong>желтых значков</strong> в Диспетчере устройств.</li>
+<li>🔹 Скачайте актуальный драйвер с <strong>официального сайта</strong> производителя.</li>
+<li>🔹 Удалите старый драйвер через <strong>«Удаление устройства»</strong> перед установкой нового.</li>
+<li>🔹 После установки <strong>перезагрузите компьютер</strong> для применения изменений.</li>
+</ul>
+
+<details class="faq-item"><summary>Как проверить версию драйвера?</summary><div class="faq-answer"><p>В свойствах принтера в Диспетчере устройств перейдите на вкладку «Драйвер». Там будет указана дата выпуска и версия. Сравните её с версией на сайте производителя. Если дата выпуска на сайте новее, драйвер устарел.</p></div></details>
+
+<h2 id="сетевые-настройки-и-статус-оффлайн">Сетевые настройки и статус оффлайн</h2>
+
+<p>Для сетевых принтеров статус <strong>«Приостановка»</strong> часто маскирует проблему потери соединения. Если компьютер не может связаться с устройством по сети, он может автоматически перевести его в режим ожидания, полагая, что принтер недоступен. Это характерно для устройств, подключенных через <strong>Ethernet</strong> или <strong>Wi-Fi</strong>.</p>
+
+<p>Проверьте, видит ли компьютер принтер в сети. Попробуйте пропинговать его IP-адрес. Если пакет не проходит, проблема в роутере или кабеле. Также проверьте настройки <strong>«Использовать принтер в автономном режиме»</strong> в меню очереди печати. Если эта галочка стоит, принтер будет работать только с локальными кэшированными данными и игнорировать сеть.</p>
+
+<p>Иногда помогает сброс сетевого стека. В командной строке введите команды <code>ipconfig /release</code> и <code>ipconfig /renew</code>, а затем переподключите кабель или переподключитесь к Wi-Fi сети. Убедитесь, что статический IP-адрес принтера не изменился, если он был задан вручную.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если принтер находится в другой комнате или офисе, попробуйте временно подключить его через USB-кабель для проверки. Если проблема исчезнет, значит, дело не в самом принтере, а в сетевом оборудовании.</p></div>
+
+<h2 id="частые-вопросы-пользователей">Частые вопросы пользователей</h2>
+
+<details>
+<summary>Почему принтер сам ставится на паузу после каждого задания?</summary>
+<p>Это может быть связано с настройкой безопасной печати или функцией «Запрос перед печатью». Проверьте настройки драйвера в разделе «Дополнительно» или «Параметры печати». Также проверьте, не стоит ли галочка «Приостановить печать при отсутствии бумаги» в свойствах устройства.</p>
+</details>
+
+<details>
+<summary>Можно ли снять паузу, если принтер выключен?</summary>
+<p>Нет. Если принтер выключен, он находится в состоянии «Оффлайн» или «Не готов». Команда на снятие паузы не достигнет устройства. Сначала включите принтер и дождитесь его полной инициализации, затем проверьте статус в очереди печати.</p>
+</details>
+
+<details>
+<summary>Что делать, если статус «Приостановка» не снимается никаким способом?</summary>
+<p>Попробуйте удалить принтер полностью из системы («Устройства и принтеры» → «Удалить устройство»), затем перезагрузите компьютер и добавьте его заново. Это сбросит все внутренние настройки и кэш, которые могут блокировать работу.</p>
+</details>
+
+<details>
+<summary>Влияет ли режим энергосбережения на приостановку печати?</summary>
+<p>Да. Если принтер ушел в глубокий сон и не может быстро проснуться по команде сети, система может посчитать его недоступным и поставить в очередь на паузу. Отключите режим энергосбережения в настройках устройства или проверьте настройки тайм-аута в драйвере.</p>
+</details>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если все методы не помогают, а принтер все равно встает на паузу, проблема может быть в аппаратном контроллере самого принтера, и потребуется диагностика в сервисном центре.</p></div>
+
+<blockquote>
+<p>⚠️ <strong>Внимание:</strong> Интерфейсы и названия меню могут отличаться в зависимости от версии Windows (10, 11) и модели принтера. Всегда сверяйтесь с официальной документацией производителя для точного описания пунктов меню.</p>
+</blockquote></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#введение">Введение</a></li><li><a href="#причины-возникновения-статуса-приостановки">Причины возникновения статуса приостановки</a></li><li><a href="#проверка-очереди-печати-и-ручное-снятие-паузы">Проверка очереди печати и ручное снятие паузы</a></li><li><a href="#работа-со-службой-диспетчера-печати-spooler">Работа со службой диспетчера печати (Spooler)</a></li><li><a href="#очистка-очереди-печати-через-командную-строку">Очистка очереди печати через командную строку</a></li><li><a href="#диагностика-драйверов-и-обновлений">Диагностика драйверов и обновлений</a></li><li><a href="#сетевые-настройки-и-статус-оффлайн">Сетевые настройки и статус оффлайн</a></li><li><a href="#частые-вопросы-пользователей">Частые вопросы пользователей</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-prochistit-golovku-printera-canon-pixma-g1400.html" class="related-card">Как прочистить головку принтера Canon Pixma G1400: пошаговая инструкция</a></li><li><a href="/articles/o/os/oshibka-e05-canon-mp250-kak-ispravit-video.html" class="related-card">Ошибка E05 на Canon MP250: как исправить + видеоинструкция</a></li><li><a href="/articles/k/ka/kak-pomenyat-krasku-na-printere-canon-mg2540s.html" class="related-card">Замена чернил и картриджей в Canon MG2540s: полная инструкция</a></li><li><a href="/articles/k/ka/kak-samomu-pochistit-golovki-na-printere.html" class="related-card">Как почистить печатающие головки принтера самостоятельно: пошаговая инструкция</a></li><li><a href="/articles/c/ca/canon-mp280-oshibka-e05-kak-sbrosit.html" class="related-card">Ошибка E05 на Canon MP280: Полное руководство по сбросу и устранению</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-prochistit-golovku-printera-canon-pixma-g1400.html" class="related-bottom-card"><span class="related-bottom-title">Как прочистить головку принтера Canon Pixma G1400: пошаговая инструкция</span><span class="related-bottom-desc">Полное руководство по очистке печатающей головки Canon Pixma G1400. Автоматические и ручные методы, </span></a><a href="/articles/o/os/oshibka-e05-canon-mp250-kak-ispravit-video.html" class="related-bottom-card"><span class="related-bottom-title">Ошибка E05 на Canon MP250: как исправить + видеоинструкция</span><span class="related-bottom-desc">Пошаговое руководство по устранению ошибки E05 на принтере Canon MP250 с видео, причинами и советами</span></a><a href="/articles/k/ka/kak-pomenyat-krasku-na-printere-canon-mg2540s.html" class="related-bottom-card"><span class="related-bottom-title">Замена чернил и картриджей в Canon MG2540s: полная инструкция</span><span class="related-bottom-desc">Пошаговое руководство по замене картриджей в принтере Canon MG2540s. Разбор цикла промывки, сброс сч</span></a><a href="/articles/k/ka/kak-samomu-pochistit-golovki-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Как почистить печатающие головки принтера самостоятельно: пошаговая инструкция</span><span class="related-bottom-desc">Узнайте, как почистить головки на принтере без помощи мастера. Эффективные методы очистки, предотвра</span></a><a href="/articles/c/ca/canon-mp280-oshibka-e05-kak-sbrosit.html" class="related-bottom-card"><span class="related-bottom-title">Ошибка E05 на Canon MP280: Полное руководство по сбросу и устранению</span><span class="related-bottom-desc">Узнайте, как быстро исправить ошибку E05 на принтере Canon MP280. Пошаговая инструкция сброса чипа, </span></a><a href="/articles/k/ka/kak-zaryazhat-canon-eos-650d.html" class="related-bottom-card"><span class="related-bottom-title">Как заряжать Canon EOS 650D: способы, время и советы</span><span class="related-bottom-desc">Полное руководство по зарядке аккумулятора Canon EOS 650D. Разбор штатного зарядного устройства, зар</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

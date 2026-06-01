@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как открыть сетевой доступ к принтеру: настройка Windows и Linux — Принтер Мастер</title>
+    <meta name="description" content="Пошаговая инструкция по настройке общего доступа к принтеру в локальной сети. Отключение брандмауэра, настройка SMB и решение частых проблем.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-otkryt-dostup-po-seti-na-printer.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как открыть сетевой доступ к принтеру: настройка Windows и Linux">
+    <meta property="og:description" content="Пошаговая инструкция по настройке общего доступа к принтеру в локальной сети. Отключение брандмауэра, настройка SMB и решение частых проблем.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как открыть сетевой доступ к принтеру: настройка Windows и Linux</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как открыть доступ по сети на принтер</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#введение-в-настройку-сетевого-доступа">Введение в настройку сетевого доступа</a></li><li><a href="#базовая-настройка-общего-доступа-на-хост-компьютере">Базовая настройка общего доступа на хост-компьютере</a></li><li><a href="#настройка-параметров-обнаружения-и-брандмауэра">Настройка параметров обнаружения и брандмауэра</a></li><li><a href="#подключение-принтера-на-клиентских-компьютерах">Подключение принтера на клиентских компьютерах</a></li><li><a href="#таблица-параметров-сети-и-портов">Таблица параметров сети и портов</a></li><li><a href="#решение-проблем-с-ошибками-подключения">Решение проблем с ошибками подключения</a></li><li><a href="#настройка-для-устройств-на-базе-linux-и-macos">Настройка для устройств на базе Linux и macOS</a></li><li><a href="#faq-часто-задаваемые-вопросы">FAQ: Часто задаваемые вопросы</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="введение-в-настройку-сетевого-доступа">Введение в настройку сетевого доступа</h2>
+<p>Подключение принтера к локальной сети позволяет всем сотрудникам или членам семьи использовать одно устройство без необходимости физической переноски документов. Это особенно актуально для офисов с высокой загрузкой, где ожидание очереди к одному устройству снижает общую эффективность работы.</p>
+<p>Процесс настройки требует корректной конфигурации как самого печатного устройства, так и операционной системы компьютера, на котором оно подключено физически. Современные операционные системы, такие как <strong>Windows 10</strong> или <strong>Windows 11</strong>, предлагают встроенные инструменты для разделения ресурсов, но они часто требуют ручной корректировки параметров безопасности.</p>
+
+<p>Главная задача администратора — обеспечить бесшовную передачу данных от отправителя к принтеру. Для этого необходимо правильно настроить <code>Параметры общего доступа</code>, убедиться в стабильности соединения и разрешить соответствующие порты в брандмауэре. Игнорирование этих шагов часто приводит к ошибкам под кодом <code>0x0000011b</code> или невозможности обнаружения устройства другими ПК в сети.</p>
+
+<h2 id="базовая-настройка-общего-доступа-на-хост-компьютере">Базовая настройка общего доступа на хост-компьютере</h2>
+<p>Первым этапом является включение функции общего доступа на том компьютере, к которому физически подключен принтер через USB-кабель. Без этой настройки устройство будет доступно только текущему пользователю. Вам следует перейти в <code>Панель управления → Оборудование и звук → Устройства и принтеры</code>.</p>
+<p>Найдите иконку вашего устройства, нажмите на нее правой кнопкой мыши и выберите пункт <strong>Свойства принтера</strong>. Именно здесь, а не в обычных свойствах, находится вкладка доступа. Важно различать эти два меню, так как стандартные свойства отвечают за драйверы и настройки печати, а свойства принтера — за сетевое взаимодействие.</p>
+
+<p>Перейдите на вкладку <code>Доступ</code> и установите галочку напротив пункта «Общий доступ к данному принтеру». В поле «Имя» можно задать понятное название, которое увидят другие пользователи в сети, например, <strong>Office_Printer_HP</strong>. Не используйте пробелы или специальные символы, чтобы избежать проблем на старых рабочих станциях.</p>
+
+<p>После нажатия кнопки <strong>Применить</strong> и <strong>ОК</strong> система может запросить подтверждение изменения настроек брандмауэра. Разрешите доступ к частной сети, иначе другие компьютеры не смогут увидеть ваш принтер. Если вы используете профиль «Общедоступная сеть», функция общего доступа будет заблокирована по соображениям безопасности.</p>
+
+<blockquote>⚠️ Внимание: При изменении настроек сети убедитесь, что ваш компьютер находится в доверенной сети (Частная или Рабочая), а не в Общедоступной. В последних версиях Windows функция общего доступа отключается в публичных профилях автоматически.</blockquote>
+
+<div class="poll-widget" id="poll-60468c5d"><div class="poll-widget-question">📊 Какая операционная система используется на вашем основном ПК?</div><div class="poll-widget-option" data-poll="60468c5d" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Windows 10</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="60468c5d" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Windows 11</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="60468c5d" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">macOS</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="60468c5d" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Linux</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="настройка-параметров-обнаружения-и-брандмауэра">Настройка параметров обнаружения и брандмауэра</h2>
+<p>Часто проблема заключается не в самом принтере, а в настройках безопасности операционной системы. Брандмауэр Windows блокирует входящие подключения по умолчанию. Необходимо добавить исключения для протоколов File and Printer Sharing. Это критически важный шаг для работы протокола <strong>SMB</strong>.</p>
+<p>Откройте <code>Панель управления → Система и безопасность → Брандмауэр Защитника Windows</code>. В левом меню выберите раздел «Разрешение взаимодействия с приложением или компонентом». Найдите в списке пункты, связанные с <strong>Общим доступом к файлам и принтерам</strong>, и убедитесь, что галочки стоят напротив «Частная» и «Доменная» сети.</p>
+<p>Если принтер все еще не виден, возможно, отключено автоматическое обнаружение сетевых устройств. Зайдите в <code>Параметры → Сеть и Интернет → Состояние → Настройка параметров общего доступа</code>. В разделе «Частная» включите опцию «Включить обнаружение сети» и «Включить автоматическую настройку устройств».</p>
+<p>Также проверьте настройки в разделе «Все сети». Здесь необходимо активировать пункт «Отключить общий доступ с парольной защитой», если вы хотите, чтобы доступ был свободным. Однако для офисной среды рекомендуется оставлять парольную защиту включенной и создавать учетные записи для сотрудников, чтобы повысить безопасность данных.</p>
+
+<div class="checklist-block"><h4>☑️ Проверка настроек безопасности</h4><label class="check-item"><input type="checkbox"><span>Проверка профиля сети (Частный)</span></label><label class="check-item"><input type="checkbox"><span>Включение общего доступа к файлам</span></label><label class="check-item"><input type="checkbox"><span>Разрешение SMB в брандмауэре</span></label><label class="check-item"><input type="checkbox"><span>Отключение парольной защиты (если нужно)</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="подключение-принтера-на-клиентских-компьютерах">Подключение принтера на клиентских компьютерах</h2>
+<p>После того как хост-компьютер настроен, можно подключить принтер с других машин. Самый простой способ работает через стандартный интерфейс Windows. Откройте <code>Параметры → Устройства → Принтеры и сканеры</code> и нажмите «Добавить принтер или сканер».</p>
+<p>Система начнет поиск доступных устройств в локальной подсети. Если принтер найден, он появится в списке с именем, заданным ранее на хосте. Нажмите «Добавить устройство», и драйверы будут автоматически установлены из базы Microsoft или с хост-машины. Этот процесс может занять время.</p>
+
+<p>Если автоматический поиск не сработал, используйте метод подключения по IP-адресу хоста. Нажмите ссылку «Необходимый принтер отсутствует в списке». Выберите пункт «Выбрать общедоступный принтер по имени» и введите путь в формате <code>\\Имя_Компьютера\Имя_Принтера</code> или <code>\\192.168.1.5\Office_Printer</code>.</p>
+<p>Важно, что на клиентских машинах должны быть установлены совместимые драйверы. В некоторых случаях Windows не находит драйвер автоматически и требует его ручной загрузки. Используйте утилиты от производителя, например, <em>HP Smart</em> или <em>Epson iPrint</em>, для корректной установки.</p>
+
+<details class="faq-item"><summary>Что делать, если драйвер не находится автоматически?</summary><div class="faq-answer"><p>Если Windows не может найти драйвер автоматически, зайдите на сайт производителя принтера. Скачайте полный пакет драйверов для вашей модели и версии ОС. При установке выберите опцию «Сеть» или «Сетевое подключение», даже если принтер подключен локально, и укажите путь к сетевому порту.</p></div></details>
+
+<blockquote>⚠️ Внимание: Устаревшие версии Windows (например, Windows 7) могут некорректно работать с протоколом SMBv2/v3, используемым в новых системах. В таких случаях необходимо вручную включить SMBv1 на старом ПК или обновить его до более современной версии ОС.</blockquote>
+
+<h2 id="таблица-параметров-сети-и-портов">Таблица параметров сети и портов</h2>
+<p>Для успешной настройки сети критически важно знать, какие порты должны быть открыты. Ниже приведена таблица основных протоколов и портов, используемых для печати и обнаружения устройств в локальной сети.</p>
+
+<table>
+<thead>
+<tr>
+<th>Протокол</th>
+<th>Порт</th>
+<th>Назначение</th>
+<th>Статус</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SMB/CIFS</td>
+<td>445</td>
+<td>Общий доступ к файлам и принтерам</td>
+<td>Обязательно</td>
+</tr>
+<tr>
+<td>NetBIOS</td>
+<td>137-139</td>
+<td>Обнаружение устройств в сети (старые системы)</td>
+<td>Рекомендуется</td>
+</tr>
+<tr>
+<td>IPP/HTTP</td>
+<td>80, 631</td>
+<td>Протокол интернет-печати</td>
+<td>Опционально</td>
+</tr>
+<tr>
+<td>LPD</td>
+<td>515</td>
+<td>Устаревший протокол печати Unix</td>
+<td>Редко</td>
+</tr>
+</tbody>
+</table>
+
+<p>Проверка этих портов поможет локализовать проблему, если соединение устанавливается, но печать не происходит. Используйте команду <code>telnet</code> или <code>Test-NetConnection</code> в PowerShell для проверки доступности порта 445 на хост-машине с клиентского компьютера.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Для ускорения поиска принтера в сети убедитесь, что все компьютеры находятся в одной рабочей группе. Стандартное имя рабочей группы — WORKGROUP, его можно изменить в свойствах системы, если в сети используются разные домены или группы.</p></div>
+
+<h2 id="решение-проблем-с-ошибками-подключения">Решение проблем с ошибками подключения</h2>
+<p>Одна из самых частых проблем — ошибка <code>0x0000011b</code>, возникающая после обновлений безопасности Windows. Она блокирует удаленную печать из-за новых требований к аутентификации. <mark>Для исправления этой ошибки необходимо внести изменения в реестр хост-машины, добавив ключ RpcAuthnLevelPrivacyEnabled со значением 0.</mark></p>
+<p>Чтобы внести правку, откройте <code>regedit</code> и перейдите по пути <code>HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Print</code>. Создайте новый параметр DWORD (32 бита) с указанным именем и установите значение <strong>1</strong>. Перезагрузка службы печати (Spooler) обязательна после изменения.</p>
+<p>Другой распространенной проблемой является смена IP-адреса хост-компьютера по DHCP. Если адрес изменится, клиенты потеряют принтер. Решением является настройка статического IP-адреса для компьютера, к которому подключен принтер, или использование его NetBIOS-имени вместо IP-адреса в путях подключения.</p>
+<p>Также стоит проверить службу <strong>Print Spooler</strong> на обоих компьютерах. Убедитесь, что она запущена и работает в автоматическом режиме. Остановка этой службы делает невозможным как локальную, так и сетевую печать. Перезапуск службы часто решает временные сбои очереди печати.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Использование статического IP-адреса для хост-машины — это лучший способ гарантировать стабильность сетевого принтера в долгосрочной перспективе, избегая проблем с DHCP-сервером.</p></div>
+
+<h2 id="настройка-для-устройств-на-базе-linux-и-macos">Настройка для устройств на базе Linux и macOS</h2>
+<p>Подключение к сетевому принтеру, расшаренному через Windows, возможно и с других операционных систем, хотя процесс отличается. В Linux для этого используется система печати CUPS. Необходимо установить пакеты <code>samba-common</code> и <code>gnome-printers</code>.</p>
+<p>В настройках принтера выберите «Windows Printer via Samba» и введите путь в формате <code>smb://IP_адрес/Имя_Принтера</code>. Система запросит учетные данные пользователя Windows, имеющего права на печать. В macOS процесс проще: через <code>Системные настройки → Принтеры и сканеры → Добавить принтер</code>.</p>
+<p>Выберите IP-принтер или сетевой, если он появился в списке Bonjour. Если автоматическое обнаружение не работает, выберите протокол <strong>SMB</strong> и вручную введите адрес хоста. macOS требует создания учетной записи на хосте Windows, даже если парольная защита отключена, для корректной аутентификации.</p>
+
+<p>Иногда возникают проблемы с совместимостью драйверов PostScript и PCL. Убедитесь, что на клиентских машинах (Linux/macOS) установлен соответствующий драйвер, поддерживаемый вашим принтером. Обычно универсальные драйверы от <em>HP</em> или <em>Xerox</em> работают стабильно на всех платформах.</p>
+
+<details class="faq-item"><summary>Особенности работы с macOS и Apple AirPrint</summary><div class="faq-answer"><p>Если ваш принтер поддерживает AirPrint, настройка через Windows не требуется. Просто подключите принтер к той же Wi-Fi сети, и Mac обнаружит его автоматически. Для старых моделей без AirPrint придется настраивать CUPS и драйверы вручную.</p></div></details>
+
+<blockquote>⚠️ Внимание: При использовании Linux убедитесь, что в файле <code>/etc/samba/smb.conf</code> разрешены подключения. Иногда настройки безопасности Samba блокируют анонимный доступ к принтерам, даже если на Windows это разрешено.</blockquote>
+
+<h2 id="faq-часто-задаваемые-вопросы">FAQ: Часто задаваемые вопросы</h2>
+<details>
+<summary>Почему другие компьютеры не видят мой принтер в сети?</summary>
+<p>Чаще всего причина кроется в профиле сети: если сеть определена как «Общедоступная», Windows блокирует обнаружение. Переключите сеть на «Частную» в параметрах сети. Также проверьте, включена ли служба «Обнаружение SSDP» и «Хост поставщика обнаружения функций».</p>
+</details>
+
+<details>
+<summary>Как подключить принтер, если я не знаю пароль от хост-компьютера?</summary>
+<p>Это невозможно, если на хосте включена парольная защита общего доступа. Вам необходимо либо отключить эту защиту в настройках общего доступа, либо добавить учетную запись пользователя на хост-компьютере с известным паролем и использовать ее при подключении.</p>
+</details>
+
+<details>
+<summary>Что делать, если печать идет медленно или с ошибками?</summary>
+<p>Проверьте настройки драйвера на клиентской машине. Попробуйте изменить порт с WSD на стандартный TCP/IP с указанием статического IP-адреса хоста. Убедитесь, что брандмауэр не блокирует трафик порта 9100 или 515, если используется прямой протокол печати.</p>
+</details>
+
+<details>
+<summary>Можно ли печатать с телефона на сетевой принтер?</summary>
+<p>Да, если принтер поддерживает протоколы Mopria или AirPrint, или если на телефоне установлено приложение от производителя. Для Android можно использовать Google Cloud Print (если поддерживается) или приложение «Принтеры», которое сканирует локальную сеть.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#введение-в-настройку-сетевого-доступа">Введение в настройку сетевого доступа</a></li><li><a href="#базовая-настройка-общего-доступа-на-хост-компьютере">Базовая настройка общего доступа на хост-компьютере</a></li><li><a href="#настройка-параметров-обнаружения-и-брандмауэра">Настройка параметров обнаружения и брандмауэра</a></li><li><a href="#подключение-принтера-на-клиентских-компьютерах">Подключение принтера на клиентских компьютерах</a></li><li><a href="#таблица-параметров-сети-и-портов">Таблица параметров сети и портов</a></li><li><a href="#решение-проблем-с-ошибками-подключения">Решение проблем с ошибками подключения</a></li><li><a href="#настройка-для-устройств-на-базе-linux-и-macos">Настройка для устройств на базе Linux и macOS</a></li><li><a href="#faq-часто-задаваемые-вопросы">FAQ: Часто задаваемые вопросы</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/f/fx/fx-10-kartridzh-dlya-kakikh-printerov.html" class="related-card">FX-10 картридж: для каких принтеров подходит и как выбрать</a></li><li><a href="/articles/k/ka/kak-zaryadit-kenon-600-d-bez-zaryadnogo-ustrojstva.html" class="related-card">Как зарядить Canon 600D без зарядного: способы и советы</a></li><li><a href="/articles/p/pr/printery-tsvetnye-strujnye-kakoj-luchshe.html" class="related-card">Какой цветной струйный принтер выбрать: рейтинг лучших моделей 2026</a></li><li><a href="/articles/d/dr/drajvera-na-printer-canon-laserbase-mf3110-kak-ustanovit.html" class="related-card">Драйвера для Canon LaserBase MF3110: установка за 5 минут</a></li><li><a href="/articles/d/do/dokument-majkrosoft-vord-kak-raspechatat-na-printere.html" class="related-card">Как распечатать документ Word на принтере: пошаговая инструкция</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/f/fx/fx-10-kartridzh-dlya-kakikh-printerov.html" class="related-bottom-card"><span class="related-bottom-title">FX-10 картридж: для каких принтеров подходит и как выбрать</span><span class="related-bottom-desc">Подробный гид по совместимости картриджа FX-10. Список моделей Canon, Brother, Kyocera. Инструкция п</span></a><a href="/articles/k/ka/kak-zaryadit-kenon-600-d-bez-zaryadnogo-ustrojstva.html" class="related-bottom-card"><span class="related-bottom-title">Как зарядить Canon 600D без зарядного: способы и советы</span><span class="related-bottom-desc">Узнайте, как зарядить аккумулятор Canon 600D без штатного зарядного устройства. Методы с Power Bank,</span></a><a href="/articles/p/pr/printery-tsvetnye-strujnye-kakoj-luchshe.html" class="related-bottom-card"><span class="related-bottom-title">Какой цветной струйный принтер выбрать: рейтинг лучших моделей 2026</span><span class="related-bottom-desc">Сравниваем струйные принтеры с СНПЧ и картриджные. Узнайте, какой цветной принтер лучше для дома и ф</span></a><a href="/articles/d/dr/drajvera-na-printer-canon-laserbase-mf3110-kak-ustanovit.html" class="related-bottom-card"><span class="related-bottom-title">Драйвера для Canon LaserBase MF3110: установка за 5 минут</span><span class="related-bottom-desc">Пошаговая инструкция по установке драйверов для принтера Canon MF3110 на Windows 10/11, MacOS и Linu</span></a><a href="/articles/d/do/dokument-majkrosoft-vord-kak-raspechatat-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Как распечатать документ Word на принтере: пошаговая инструкция</span><span class="related-bottom-desc">Подробное руководство по печати документов Microsoft Word на любом принтере: от настроек до решения </span></a><a href="/articles/k/ka/kak-obnulit-kartridzh-na-printer-hp-deskjet-2320.html" class="related-bottom-card"><span class="related-bottom-title">Как обнулить картридж на принтер HP DeskJet 2320: Полное руководство</span><span class="related-bottom-desc">Инструкция по сбросу счетчика картриджей HP DeskJet 2320. Узнайте, как обойти блокировку, reset чипы</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

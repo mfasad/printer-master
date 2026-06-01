@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как сделать драйвер для принтера: создание и настройка с нуля — Принтер Мастер</title>
+    <meta name="description" content="Руководство по созданию драйвера принтера с нуля. Обзор API, инструментов разработки, этапов компиляции и отладки. Советы для программистов.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-sdelat-drajver-dlya-printera.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как сделать драйвер для принтера: создание и настройка с нуля">
+    <meta property="og:description" content="Руководство по созданию драйвера принтера с нуля. Обзор API, инструментов разработки, этапов компиляции и отладки. Советы для программистов.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как сделать драйвер для принтера: создание и настройка с нуля</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Разработка драйвера принтера с нуля: полное руководство</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#введение-в-создание-программных-интерфейсов-для-печати">Введение в создание программных интерфейсов для печати</a></li><li><a href="#выбор-архитектурного-подхода-и-api">Выбор архитектурного подхода и API</a></li><li><a href="#инструментарий-разработчика-и-среды-программирования">Инструментарий разработчика и среды программирования</a></li><li><a href="#этапы-разработки-и-компиляции-кода">Этапы разработки и компиляции кода</a></li><li><a href="#отладка-и-тестирование-функциональности">Отладка и тестирование функциональности</a></li><li><a href="#подписание-и-сертификация-драйвера">Подписание и сертификация драйвера</a></li><li><a href="#распространение-и-поддержка-пользователей">Распространение и поддержка пользователей</a></li><li><a href="#faq-частые-вопросы-разработчиков">FAQ: Частые вопросы разработчиков</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="введение-в-создание-программных-интерфейсов-для-печати">Введение в создание программных интерфейсов для печати</h2>
+
+<p>Разработка <strong>драйвера принтера</strong> — это сложный инженерный процесс, требующий глубоких знаний архитектуры операционной системы и принципов обработки графических данных. В отличие от пользователей, которые просто устанавливают готовое ПО, разработчики создают мост между приложением и физическим устройством. Этот мост переводит абстрактные команды печати в конкретные сигналы для печатающей головки.</p>
+
+<p>Процесс начинается с понимания того, как операционная система управляет очередью печати. Вам необходимо определиться с целевой платформой, будь то <em>Windows</em> с её моделью GDI или <em>Linux</em>, использующая CUPS. Ошибки на этом этапе могут привести к тому, что устройство будет работать нестабильно или вообще не распознается системой.</p>
+
+<p>Создание собственного драйвера часто требуется для специализированного оборудования, уникальных 3D-принтеров или при разработке встроенных систем. В таких случаях готовые решения от производителей могут отсутствовать или не подходить под ваши уникальные требования к производительности.</p>
+
+<h2 id="выбор-архитектурного-подхода-и-api">Выбор архитектурного подхода и API</h2>
+
+<p>Первым критическим шагом является выбор <strong>модуля обработки печати</strong>. В экосистеме Windows это может быть классический <em>XPS</em> драйвер или современный <em>Universal Print Driver</em>. Выбор зависит от того, насколько адаптивным должно быть решение и какие возможности аппаратного обеспечения вы планируете задействовать.</p>
+
+<p>Для Linux-систем фундаментом служит архитектура <em>CUPS</em> (Common Unix Printing System). Здесь драйвер часто представляет собой фильтр, который конвертирует данные в язык описания страниц, понятный принтеру. Вам потребуется изучить документацию <code>PPD</code> (PostScript Printer Description) и уметь создавать спецификации для устройств.</p>
+
+<p>Необходимо также учитывать протокол связи. Большинство современных устройств используют <strong>USB</strong> или <em>TCP/IP</em> для передачи данных. Если вы пишете драйвер для старого принтера, вам, возможно, придется реализовать поддержку параллельного порта <code>LPT1</code>, что значительно усложняет задачу из-за специфики прямого доступа к портам.</p>
+
+<blockquote>⚠️ Внимание: Выбор между пользовательским режимом и ядром системы критичен для стабильности. Ошибки в драйверах уровня ядра могут привести к мгновенному зависанию всей операционной системы, в то время как ошибки в пользовательском режиме обычно вызывают лишь сбой службы печати.</blockquote>
+
+<h2 id="инструментарий-разработчика-и-среды-программирования">Инструментарий разработчика и среды программирования</h2>
+
+<p>Для написания кода драйвера вам понадобятся специализированные инструменты от производителя операционной системы. В случае с Windows это <em>Windows Driver Kit (WDK)</em>, который включает в себя заголовочные файлы, библиотеки и компиляторы. Без этого набора разработка практически невозможна.</p>
+
+<p>Язык программирования для таких задач — преимущественно <strong>C</strong> или <em>C++</em>. Эти языки позволяют работать с памятью на низком уровне, управлять буферами и обрабатывать прерывания. Использование языков высокого уровня, таких как Python или Java, допустимо только для написания вспомогательных утилит, но не самого ядра драйвера.</p>
+
+<p>Тестирование требует использования виртуальных машин или <em>специального отладочного оборудования</em>. Вам нужно будет эмулировать поведение принтера, чтобы проверить, как драйвер реагирует на некорректные данные или прерывание соединения.</p>
+
+<div class="poll-widget" id="poll-d19cd650"><div class="poll-widget-question">📊 Какую операционную систему вы используете?</div><div class="poll-widget-option" data-poll="d19cd650" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Windows</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="d19cd650" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Linux</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="d19cd650" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">macOS</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="d19cd650" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Другая</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="этапы-разработки-и-компиляции-кода">Этапы разработки и компиляции кода</h2>
+
+<p>Процесс разработки начинается с создания описания устройства. В Windows это <em>INF-файл</em>, который сообщает системе, как установить устройство и какие файлы загрузить. В Linux это конфигурационный файл для CUPS, описывающий возможности принтера и поддерживаемые типы бумаги.</p>
+
+<p>Далее следует написание кода, который обрабатывает графические вызовы. Драйвер должен уметь конвертировать растры или векторную графику в <strong>PCL</strong> или <em>PostScript</em>. Если принтер поддерживает собственный язык команд, вам придется реализовать его интерпретатор внутри драйвера, чтобы данные передавались в правильном формате.</p>
+
+<p>После написания кода необходимо выполнить <strong>компиляцию</strong>. Для Windows это происходит через <code>build</code> или <code>msbuild</code> с использованием конфигураций WDK. Результатом станет файл с расширением <code>.sys</code> или <code>.dll</code>, который должен быть подписан цифровым сертификатом для запуска на современных системах.</p>
+
+<div class="checklist-block"><h4>☑️ Подготовка к разработке</h4><label class="check-item"><input type="checkbox"><span>Установить WDK или CUPS</span></label><label class="check-item"><input type="checkbox"><span>Настроить среду компиляции</span></label><label class="check-item"><input type="checkbox"><span>Создать INF-файл</span></label><label class="check-item"><input type="checkbox"><span>Написать код драйвера</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<h2 id="отладка-и-тестирование-функциональности">Отладка и тестирование функциональности</h2>
+
+<p>Тестирование — самый трудоемкий этап. Вам нужно проверить работу драйвера с различными типами данных: текстовыми документами, изображениями высокого разрешения и сложными векторными макетами. Любая ошибка может привести к появлению "артефактов" на печати или зависанию очереди заданий.</p>
+
+<p>Используйте инструменты трассировки, такие как <em>Traceview</em> в Windows или логи <code>syslog</code> в Linux. Они покажут, на каком этапе происходит сбой. Часто проблемы связаны с неправильным управлением памятью или переполнением буфера передачи данных.</p>
+
+<p>Особое внимание уделите <strong>обработке ошибок</strong>. Если принтер закончилась бумага или возникла замятие, драйвер должен корректно сообщить об этом пользователю и остановить передачу данных, чтобы не усугубить ситуацию.</p>
+
+<details class="faq-item"><summary>Что делать, если драйвер вызывает синий экран?</summary><div class="faq-answer"><p>Если драйвер вызывает критическую ошибку (BSOD), немедленно отключите устройство. Используйте утилиту WinDbg для анализа дампа памяти и поиска неисправного модуля.</p></div></details>
+
+<h2 id="подписание-и-сертификация-драйвера">Подписание и сертификация драйвера</h2>
+
+<p>В современных операционных системах, таких как <em>Windows 10</em> и <em>Windows 11</em>, установлены строгие требования к подписи драйверов. Система не позволит загрузить код, который не имеет доверенной цифровой подписи. Это мера безопасности, предотвращающая запуск вредоносного ПО.</p>
+
+<p>Для тестирования можно использовать режим отладки, который временно отключает проверку подписи, но для релиза вам потребуется настоящий <strong>сертификат</strong> от доверенного центра сертификации (CA). Этот процесс платный и требует прохождения верификации разработчика.</p>
+
+<p>В Linux ситуация проще, но если вы хотите включить драйвер в репозитории дистрибутива, код должен соответствовать лицензии GPL и пройти проверку сообществом. Однако многие пользователи предпочитают устанавливать драйверы вручную, что снимает необходимость в сложной сертификации, но снижает уровень безопасности.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Платформа</th>
+      <th>Основной инструмент</th>
+      <th>Формат файла</th>
+      <th>Требование подписи</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Windows 10/11</td>
+      <td>Windows Driver Kit</td>
+      <td>.sys, .inf</td>
+      <td>Обязательно (WHQL)</td>
+    </tr>
+    <tr>
+      <td>Linux</td>
+      <td>CUPS, Foomatic</td>
+      <td>.ppd, .so</td>
+      <td>Опционально (для репозиториев)</td>
+    </tr>
+    <tr>
+      <td>macOS</td>
+      <td>CUPS, Xcode</td>
+      <td>.driver</td>
+      <td>Обязательно (Notarization)</td>
+    </tr>
+    <tr>
+      <td>Android</td>
+      <td>Android Print Service</td>
+      <td>.apk</td>
+      <td>Подпись приложения</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>⚠️ Внимание: Форматы файлов и требования к подписи могут различаться в зависимости от конкретной версии операционной системы. Всегда сверяйте актуальные требования в документации Microsoft или Linux Foundation перед началом релиза.</blockquote>
+
+<h2 id="распространение-и-поддержка-пользователей">Распространение и поддержка пользователей</h2>
+
+<p>После успешного тестирования и подписания драйвер готов к распространению. Вы можете создать установочный пакет, который автоматически обнаружит устройство и настроит его. Важно предусмотреть сценарий отката, если установка пройдет неудачно.</p>
+
+<p>Поддержка пользователей включает в себя создание документации, где описаны известные ограничения и возможные проблемы. Для разработчиков драйверов это критически важно, так как пользователи часто путают проблемы с драйвером с неисправностью самого принтера.</p>
+
+<p>Регулярные обновления драйвера необходимы для исправления найденных ошибок и добавления поддержки новых версий операционных систем. Если вы не обновляете драйвер, он может перестать работать после выхода крупного обновления Windows или Linux.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Ключевой вывод:Разработка драйвера — это не только написание кода, но и строгое соблюдение правил безопасности, процедур сертификации и постоянной поддержки пользователей.</p></div>
+
+<h2 id="faq-частые-вопросы-разработчиков">FAQ: Частые вопросы разработчиков</h2>
+
+<details>
+  <summary>Можно ли использовать готовые библиотеки для ускорения разработки?</summary>
+  <p><p>Да, существуют библиотеки, такие как <em>Ghostscript</em> или <em>LibUSB</em>, которые упрощают работу с языками описания страниц и протоколами передачи данных. Однако их использование требует внимания к лицензированию и совместимости с вашей архитектурой.</p></p>
+</details>
+
+<details>
+  <summary>Сложно ли написать драйвер для 3D-принтера?</summary>
+  <p><p>Это даже сложнее, чем для обычного принтера, так как 3D-принтеру требуется не просто печать страницы, а управление движением осей, температурой и скоростью экструзии. Обычно для этого пишут <strong>сервер печати</strong>, который обрабатывает G-код, а не драйвер в классическом понимании.</p></p>
+</details>
+
+<details>
+  <summary>Что делать, если драйвер работает нестабильно?</summary>
+  <p><p>Проверьте логи системы на наличие ошибок памяти. Убедитесь, что драйвер корректно обрабатывает прерывания и освобождает ресурсы после завершения печати. Если проблема не решается, используйте инструменты отладки ядра для поиска утечек памяти.</p></p>
+</details>
+
+<blockquote>⚠️ Внимание: Если вы обнаружите критическую уязвимость в вашем драйвере, немедленно выпустите патч. Уязвимости в драйверах могут быть использованы злоумышленниками для получения полного контроля над системой.</blockquote>
+
+<details>
+  <summary>Нужен ли опыт работы с ядром ОС для создания драйвера?</summary>
+  <p><p>Опыт работы с ядром желателен, но не обязателен, если вы используете высокоуровневые модели драйверов (например, Class Driver в Windows). Однако понимание того, как работает планировщик задач и управление памятью, значительно повысит качество вашего продукта.</p></p>
+</details>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Перед запуском финальной сборки протестируйте драйвер на устройстве с минимальным количеством памяти — это поможет выявить скрытые утечки ресурсов, которые на мощных машинах могут остаться незамеченными.</p></div></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#введение-в-создание-программных-интерфейсов-для-печати">Введение в создание программных интерфейсов для печати</a></li><li><a href="#выбор-архитектурного-подхода-и-api">Выбор архитектурного подхода и API</a></li><li><a href="#инструментарий-разработчика-и-среды-программирования">Инструментарий разработчика и среды программирования</a></li><li><a href="#этапы-разработки-и-компиляции-кода">Этапы разработки и компиляции кода</a></li><li><a href="#отладка-и-тестирование-функциональности">Отладка и тестирование функциональности</a></li><li><a href="#подписание-и-сертификация-драйвера">Подписание и сертификация драйвера</a></li><li><a href="#распространение-и-поддержка-пользователей">Распространение и поддержка пользователей</a></li><li><a href="#faq-частые-вопросы-разработчиков">FAQ: Частые вопросы разработчиков</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-pravilno-pechatat-buklet-na-printere.html" class="related-card">Как печатать буклет на принтере: пошаговая инструкция 2026</a></li><li><a href="/articles/k/ka/kak-podklyuchit-skan-na-printere.html" class="related-card">Как подключить скан на принтере: Полное руководство по настройке</a></li><li><a href="/articles/k/ka/kak-ubrat-avtofokus-na-canon.html" class="related-card">Как отключить автофокус на камерах Canon: Полное руководство</a></li><li><a href="/articles/p/pr/printer-otkryta-dvertsa-chto-delat.html" class="related-card">Принтер открыта дверца: что делать и как быстро исправить ошибку</a></li><li><a href="/articles/k/ka/kak-vliyaet-kachestvo-bumagi-na-printer.html" class="related-card">Влияние качества бумаги на принтер: риски, поломки и советы</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-pravilno-pechatat-buklet-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Как печатать буклет на принтере: пошаговая инструкция 2026</span><span class="related-bottom-desc">Подробное руководство по печати буклетов на любом принтере: настройки Word, параметры страницы, выбо</span></a><a href="/articles/k/ka/kak-podklyuchit-skan-na-printere.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить скан на принтере: Полное руководство по настройке</span><span class="related-bottom-desc">Пошаговая инструкция: как подключить сканер на МФУ, настроить драйверы и использовать Wi-Fi. Решаем </span></a><a href="/articles/k/ka/kak-ubrat-avtofokus-na-canon.html" class="related-bottom-card"><span class="related-bottom-title">Как отключить автофокус на камерах Canon: Полное руководство</span><span class="related-bottom-desc">Пошаговая инструкция: как выключить автофокус на Canon в режиме Live View и через видоискатель. Наст</span></a><a href="/articles/p/pr/printer-otkryta-dvertsa-chto-delat.html" class="related-bottom-card"><span class="related-bottom-title">Принтер открыта дверца: что делать и как быстро исправить ошибку</span><span class="related-bottom-desc">Полное руководство по устранению ошибки &#x27;Дверца открыта&#x27; на принтере. Причины, пошаговая диагностика</span></a><a href="/articles/k/ka/kak-vliyaet-kachestvo-bumagi-na-printer.html" class="related-bottom-card"><span class="related-bottom-title">Влияние качества бумаги на принтер: риски, поломки и советы</span><span class="related-bottom-desc">Узнайте, как плохая бумага ломает принтеры. Разбор факторов качества, риски замятия и износа, таблиц</span></a><a href="/articles/p/pr/printer-canon-pixma-mp230-kak-polzovatsya.html" class="related-bottom-card"><span class="related-bottom-title">Canon PIXMA MP230: полная инструкция по настройке и печати</span><span class="related-bottom-desc">Как подключить и пользоваться принтером Canon PIXMA MP230: установка драйверов, заправка картриджей,</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

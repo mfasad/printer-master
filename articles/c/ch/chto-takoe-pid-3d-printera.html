@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>PID-автонастройка 3D принтера: что это и как настроить — Принтер Мастер</title>
+    <meta name="description" content="Разбираем принцип работы PID в 3D принтерах. Узнайте, как провести автотюнинг нагревателя, устранить перегрев и добиться идеальной печати.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/c/ch/chto-takoe-pid-3d-printera.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="PID-автонастройка 3D принтера: что это и как настроить">
+    <meta property="og:description" content="Разбираем принцип работы PID в 3D принтерах. Узнайте, как провести автотюнинг нагревателя, устранить перегрев и добиться идеальной печати.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">PID-автонастройка 3D принтера: что это и как настроить</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Что такое PID 3D принтера и зачем настраивать автотюнинг</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#введение-в-терморегуляцию">Введение в терморегуляцию</a></li><li><a href="#расшифровка-аббревиатуры-и-принцип-действия">Расшифровка аббревиатуры и принцип действия</a></li><li><a href="#симптомы-неправильной-настройки">Симптомы неправильной настройки</a></li><li><a href="#процедура-автоматической-калибровки-autotune">Процедура автоматической калибровки (Autotune)</a></li><li><a href="#ручная-настройка-и-сохранение-параметров">Ручная настройка и сохранение параметров</a></li><li><a href="#сравнение-влияния-коэффициентов-на-печать">Сравнение влияния коэффициентов на печать</a></li><li><a href="#особенности-настройки-для-разных-материалов">Особенности настройки для разных материалов</a></li><li><a href="#частые-вопросы-и-ответы">Частые вопросы и ответы</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="введение-в-терморегуляцию">Введение в терморегуляцию</h2>
+<p>В мире аддитивных технологий стабильность температуры — это фундамент качественного результата. Когда вы запускаете процесс печати, экструдер должен поддерживать заданный градус с минимальными отклонениями, иначе слой пластика ляжет неровно. Именно здесь на сцену выходит алгоритм, известный как <strong>PID</strong>, который является сердцем системы управления нагревом.</p>
+<p>Многие пользователи сталкиваются с проблемой"пилы" на графике температуры или с тем, что пластик начинает течь слишком сильно, даже если в слайсере выставлено корректное значение. Это прямое следствие некачественной или отсутствующей калибровки коэффициентов обратной связи.</p>
+
+<h2 id="расшифровка-аббревиатуры-и-принцип-действия">Расшифровка аббревиатуры и принцип действия</h2>
+<p>Аббревиатура <strong>PID</strong> расшифровывается как Proportional-Integral-Derivative, что на русский язык переводится как Пропорционально-Интегрально-Дифференцирующий регулятор. Это классический механизм управления в автоматике, который непрерывно вычисляет ошибку между желаемой температурой и текущим показателем датчика.</p>
+<p>Алгоритм состоит из трех независимых компонентов, каждый из которых отвечает за свою часть задачи управления нагревом. <strong>Пропорциональная составляющая (P)</strong> реагирует на текущую разницу: чем холоднее сопло, тем мощнее греет. <strong>Интегральная составляющая (I)</strong> учитывает накопленную ошибку во времени, устраняя постоянное смещение температуры. <strong>Дифференциальная составляющая (D)</strong> предсказывает будущее поведение системы, предотвращая резкие скачки и перегрев при приближении к целевому значению.</p>
+<p>Если вы используете принтер <em>Ender 3</em> или <em>Prusa i3</em>, по умолчанию в прошивке стоят усредненные значения PID, которые подходят для большинства ситуаций, но не идеальны для вашей конкретной детали. Только индивидуальная настройка позволяет учесть теплоемкость вашего термоблока, качество термопары и вентиляционные потоки.</p>
+<blockquote>⚠️ Внимание: Неправильные значения PID могут привести к тому, что температура будет колебаться на 10-15 градусов выше или ниже целевой, что гарантированно испортит печать.</blockquote>
+
+<h2 id="симптомы-неправильной-настройки">Симптомы неправильной настройки</h2>
+<p>Как понять, что вашему 3D принтеру срочно нужна процедура <code>PID Autotune</code>? Первым и самым очевидным признаком является нестабильность показаний на экране или в мониторинге. Если вы видите, что температура постоянно"прыгает" вверх и вниз, а не держится на одной линии, это верный сигнал.</p>
+<p>Качество отпечатка также страдает от дисбаланса коэффициентов. При слишком низком значении <strong>Proportional</strong> нагрев будет запаздывать, и детали будут недогретыми, с плохим сцеплением слоев. При избыточном значении <strong>Derivative</strong> система будет слишком резко реагировать на малейшие изменения, вызывая перегрев и образование нитей (стрингинга) на модели.</p>
+<p>Особое внимание стоит уделить случаю, когда принтер долго выходит на рабочую температуру. Если вы задали 200 градусов, а сопло нагревается до 210, потом падает до 190 и снова растет — это классический пример плохой работы <strong>Интегральной</strong> части регулятора, которая не может сгладить накопленную погрешность.</p>
+<blockquote>⚠️ Внимание: Если вы слышите частое щелканье реле или тиристора в блоке питания, это может означать, что PID настроен слишком агрессивно и постоянно включает/выключает нагрев на пределе возможностей.</blockquote>
+
+<div class="poll-widget" id="poll-8f087e3d"><div class="poll-widget-question">📊 Наблюдаете ли вы скачки температуры при печати?</div><div class="poll-widget-option" data-poll="8f087e3d" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Постоянно</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="8f087e3d" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Редко</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="8f087e3d" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Никогда</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="8f087e3d" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Не проверял</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="процедура-автоматической-калибровки-autotune">Процедура автоматической калибровки (Autotune)</h2>
+<p>Современные прошивки, такие как <em>Marlin</em>, <em>RepRapFirmware</em> или <em>Klipper</em>, имеют встроенные инструменты для самостоятельного подбора идеальных коэффициентов. Вам не нужно вводить числа вручную наугад; достаточно запустить команду, которая проведет серию циклов нагрева и охлаждения.</p>
+<p>Для запуска процесса через консоль G-code или терминал необходимо отправить команду <code>M303 E0 S200 C8</code>. В этой инструкции <code>E0</code> указывает на первый экструдер, <code>S200</code> — целевая температура (200°C), а <code>C8</code> — количество циклов (обычно достаточно 8). Дайте принтеру поработать во время теста, не отключая его.</p>
+<p>После завершения теста консоль выведет результат с тремя ключевыми значениями: <code>Kp</code>, <code>Ki</code> и <code>Kd</code>. Именно эти цифры нужно сохранить в память устройства. Обычно они выглядят как набор чисел с плавающей точкой, например: <code>Kp: 22.3, Ki: 1.0, Kd: 123.5</code>.</p>
+<p>Убедитесь, что в процессе теста не было ошибок датчика температуры (Error: Thermal Runaway), иначе результат будет неверным. Если печать шла долго, возможно, потребуется повторить процедуру для cooler-а (вентилятора обдува), если он влияет на термоблок.</p>
+<div class="checklist-block"><h4>☑️ Подготовка к PID Autotune</h4><label class="check-item"><input type="checkbox"><span>Проверить, что сопло холодное</span></label><label class="check-item"><input type="checkbox"><span>Убедиться в исправности датчика</span></label><label class="check-item"><input type="checkbox"><span>Открыть терминал</span></label><label class="check-item"><input type="checkbox"><span>Запустить команду M303</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<blockquote>⚠️ Внимание: В некоторых версиях прошивок результат теста сохраняется только временно. Обязательно выполните команду сохранения настроек в EEPROM (обычно <code>M500</code>), иначе после перезагрузки принтер вернется к заводским некачественным значениям.</blockquote>
+
+<h2 id="ручная-настройка-и-сохранение-параметров">Ручная настройка и сохранение параметров</h2>
+<p>После того как вы получили новые значения, их нужно записать в память. В прошивке <em>Marlin</em> для этого используется команда <code>M301 P<значение> I<значение> D<значение></code>. Например: <code>M301 P22.3 I1.0 D123.5</code>. Это мгновенно применит новые коэффициенты без перезагрузки.</p>
+<p>Чтобы изменения стали постоянными, необходимо использовать команду сохранения. Для большинства контроллеров это <code>M500</code>. Если вы не сделаете этого, при следующем включении принтер снова начнет использовать старые, заводские коэффициенты, и проблема нестабильности вернется.</p>
+<p>В некоторых случаях, особенно при использовании <em>RAMPS</em> или <em>SKR</em> плат, может потребоваться редактирование файла конфигурации <code>Configuration.h</code>. Откройте его, найдите секцию <code>#define PIDTEMP</code> и пропишите значения в переменные <code>PID_K1</code>, <code>PID_K2</code> перед пересборкой прошивки.</p>
+<details class="faq-item"><summary>Что делать, если PID Autotune выдает ошибку?|Если тест прерывается с ошибкой, проверьте подключение термопары. Часто проблема в плохом контакте или коротком замыкании на проводе датчика. Также убедитесь, что вентилятор охлаждения электроники работает корректно, так как перегрев драйверов может влиять на показания.-->
+
+<h2 id="сравнение-влияния-коэффициентов-на-печать">Сравнение влияния коэффициентов на печать</h2>
+<p>Понимание того, как каждый коэффициент влияет на физический процесс, поможет вам быстрее диагностировать проблемы в будущем. Ниже приведена таблица, описывающая эффекты от изменения значений.</p>
+
+<table>
+<thead>
+<tr>
+<th>Коэффициент</th>
+<th>Эффект при увеличении</th>
+<th>Эффект при уменьшении</th>
+<th>Основная проблема</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Kp (P)</strong></td>
+<td>Быстрый нагрев, риск перегрева</td>
+<td>Медленный нагрев, недонагрев</td>
+<td>Колебания температуры</td>
+</tr>
+<tr>
+<td><strong>Ki (I)</strong></td>
+<td>Сглаживание ошибки, стабилизация</td>
+<td>Накопление ошибки, дрейф</td>
+<td>Длительное время выхода на температуру</td>
+</tr>
+<tr>
+<td><strong>Kd (D)</strong></td>
+<td>Подавление инерции, плавность</td>
+<td>Резкие скачки,"звон"</td>
+<td>Перегрев при остановке нагрева</td>
+</tr>
+<tr>
+<td><strong>Balanced</strong></td>
+<td>Идеальный баланс</td>
+<td>Идеальный баланс</td>
+<td>Отсутствует</td>
+</tr>
+</tbody>
+</table>
+
+<p>Обратите внимание, что <strong>Kd</strong> особенно важен для с высокой скоростью, так как он предотвращает инерционный перегрев, когда сопло продолжает нагреваться после отключения питания ТЭНа. В то же время, чрезмерное значение <strong>Ki</strong> может привести к тому, что температура будет"плавать" вокруг целевой точки, не застревая на ней.</p>
+
+<!--WIDGET</summary><div class="faq-answer"><p>tip:Перед запуском автотюнига отключите вентилятор обдува модели, если он дует прямо на термоблок. Это исключит влияние сквозняков на результаты теста.</p></div></details>
+
+<h2 id="особенности-настройки-для-разных-материалов">Особенности настройки для разных материалов</h2>
+<p>Если вы планируете печатать разными пластиками, например, <em>PLA</em> и <em>ABS</em> или <em>PETG</em>, вам может потребоваться несколько наборов значений PID. Разные материалы требуют разных температур, и теплоемкость системы может вести себя по-разному на разных диапазонах.</p>
+<p>Для принтеров с возможностью смены сопел или использования <code>Hotend</code> типа <em>Volcano</code>, процедура настройки должна проводиться для каждой конфигурации отдельно. Не полагайтесь на то, что настройки для 200°C подойдут и для 250°C без проверки.</p>
+<p>В современных прошивках, таких как <em>Marlin 2.0+</em>, существует функционал <code>PID_AUTOTUNE_LOOP</code>, позволяющий сразу проверить несколько температурных точек. Это дает более точный результат, усредняющий поведение системы в рабочем диапазоне.</p>
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Наиболее точные настройки PID получаются, если тестировать их на той температуре, на которой вы печатаете чаще всего.</p></div>
+
+<h2 id="частые-вопросы-и-ответы">Частые вопросы и ответы</h2>
+<details>
+<summary>Как часто нужно проводить PID автотюнинг?</summary>
+<p>В идеале — один раз после сборки принтера или замены нагревательного элемента (ТЭНа). Если вы меняли термопару или изоляцию, процедуру нужно повторить. В остальном, если температура держится стабильно, частая калибровка не требуется.</p>
+</details>
+<details>
+<summary>Что делать, если после настройки температура все равно скачет?</summary>
+<p>Попробуйте уменьшить значение <strong>Derivative (D)</strong>. Также проверьте, не слишком ли близко расположено реле к нагревателю, и убедитесь, что датчик температуры плотно прижат к термоблоку.</p>
+</details>
+<details>
+<summary>Можно ли настраивать PID для радиатора обдува?</summary>
+<p>Да, для вентиляторов обдува также существует PID-регулятор, но он настраивается реже. Обычно используется команда <code>M106</code>, но для точного контроля скорости вентилятора в зависимости от температуры можно использовать дополнительные скрипты в слайсере.</p>
+</details>
+<details>
+<summary>Влияет ли PID на скорость печати?</summary>
+<p>Косвенно да. Корректная настройка позволяет быстрее выходить на рабочую температуру и снижает риск ошибок"Thermal Runaway", что позволяет принтеру работать на более высоких скоростях без сбоев.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#введение-в-терморегуляцию">Введение в терморегуляцию</a></li><li><a href="#расшифровка-аббревиатуры-и-принцип-действия">Расшифровка аббревиатуры и принцип действия</a></li><li><a href="#симптомы-неправильной-настройки">Симптомы неправильной настройки</a></li><li><a href="#процедура-автоматической-калибровки-autotune">Процедура автоматической калибровки (Autotune)</a></li><li><a href="#ручная-настройка-и-сохранение-параметров">Ручная настройка и сохранение параметров</a></li><li><a href="#сравнение-влияния-коэффициентов-на-печать">Сравнение влияния коэффициентов на печать</a></li><li><a href="#особенности-настройки-для-разных-материалов">Особенности настройки для разных материалов</a></li><li><a href="#частые-вопросы-и-ответы">Частые вопросы и ответы</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/p/pr/printer-pechataet-odno-i-tozhe-kak-ispravit.html" class="related-card">Принтер печатает одно и то же: как исправить зависание и дублирование печати</a></li><li><a href="/articles/p/po/pochemu-smartfon-ne-vidit-printer.html" class="related-card">Смартфон не видит принтер: 7 причин и как исправить</a></li><li><a href="/articles/k/ka/kak-dobavit-printer-v-ustrojstva.html" class="related-card">Как добавить принтер в устройства: настройка на Windows 10/11, Mac и Linux</a></li><li><a href="/articles/k/ka/kak-snyat-ochered-pechati-na-printere-hp.html" class="related-card">Как снять очередь печати на принтере HP: 5 способов 2026</a></li><li><a href="/articles/k/ka/kak-dobavit-ip-printeru.html" class="related-card">Как добавить IP принтер: пошаговая настройка в Windows и macOS</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/p/pr/printer-pechataet-odno-i-tozhe-kak-ispravit.html" class="related-bottom-card"><span class="related-bottom-title">Принтер печатает одно и то же: как исправить зависание и дублирование печати</span><span class="related-bottom-desc">Почему принтер зацикливает печать? Решаем проблему зависания задания, сбоя драйвера и ошибки подклад</span></a><a href="/articles/p/po/pochemu-smartfon-ne-vidit-printer.html" class="related-bottom-card"><span class="related-bottom-title">Смартфон не видит принтер: 7 причин и как исправить</span><span class="related-bottom-desc">Почему телефон не находит принтер через Wi-Fi, Bluetooth или USB? Пошаговые инструкции для Android и</span></a><a href="/articles/k/ka/kak-dobavit-printer-v-ustrojstva.html" class="related-bottom-card"><span class="related-bottom-title">Как добавить принтер в устройства: настройка на Windows 10/11, Mac и Linux</span><span class="related-bottom-desc">Пошаговая инструкция по добавлению принтера в список устройств. Подключение по USB, Wi-Fi и сети. Ре</span></a><a href="/articles/k/ka/kak-snyat-ochered-pechati-na-printere-hp.html" class="related-bottom-card"><span class="related-bottom-title">Как снять очередь печати на принтере HP: 5 способов 2026</span><span class="related-bottom-desc">Пошаговая инструкция по очистке очереди печати на принтерах HP: через панель управления, командную с</span></a><a href="/articles/k/ka/kak-dobavit-ip-printeru.html" class="related-bottom-card"><span class="related-bottom-title">Как добавить IP принтер: пошаговая настройка в Windows и macOS</span><span class="related-bottom-desc">Полная инструкция по добавлению сетевого принтера через IP-адрес. Настройка портов, драйверов и устр</span></a><a href="/articles/k/ka/kak-rabotaet-pechatnaya-golovka-printera.html" class="related-bottom-card"><span class="related-bottom-title">Принцип работы печатной головки: технологии, устройство и настройка</span><span class="related-bottom-desc">Подробный разбор работы печатной головки принтера. Инструкции по очистке, тестированию и диагностике</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

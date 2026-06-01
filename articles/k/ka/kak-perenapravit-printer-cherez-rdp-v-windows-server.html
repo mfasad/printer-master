@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Перенаправление принтера через RDP в Windows Server: пошагово — Принтер Мастер</title>
+    <meta name="description" content="Как настроить перенаправление локального принтера через удалённый рабочий стол (RDP) в Windows Server 2016/2019/2022. Решение проблем с драйверами и печатью.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/k/ka/kak-perenapravit-printer-cherez-rdp-v-windows-server.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Перенаправление принтера через RDP в Windows Server: пошагово">
+    <meta property="og:description" content="Как настроить перенаправление локального принтера через удалённый рабочий стол (RDP) в Windows Server 2016/2019/2022. Решение проблем с драйверами и печатью.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Перенаправление принтера через RDP в Windows Server: пошагово</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как перенаправить принтер через RDP в Windows Server: полная инструкция</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#введение-зачем-перенаправлять-принтер-через-rdp">Введение: зачем перенаправлять принтер через RDP?</a></li><li><a href="#требования-к-системе-и-оборудованию">Требования к системе и оборудованию</a></li><li><a href="#настройка-перенаправления-принтера-на-клиентском-пк">Настройка перенаправления принтера на клиентском ПК</a></li><li><a href="#настройка-сервера-для-перенаправления-принтеров">Настройка сервера для перенаправления принтеров</a></li><li><a href="#решение-проблем-с-перенаправлением-принтера">Решение проблем с перенаправлением принтера</a></li><li><a href="#перенаправление-принтера-в-терминальных-сессиях-rds">Перенаправление принтера в терминальных сессиях (RDS)</a></li><li><a href="#альтернативные-методы-печати-через-rdp">Альтернативные методы печати через RDP</a></li><li><a href="#безопасность-при-перенаправлении-принтеров-через-rdp">Безопасность при перенаправлении принтеров через RDP</a></li><li><a href="#faq-частые-вопросы-по-перенаправлению-принтеров-через-rdp">FAQ: Частые вопросы по перенаправлению принтеров через RDP</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><h2 id="введение-зачем-перенаправлять-принтер-через-rdp">Введение: зачем перенаправлять принтер через RDP?</h2>
+
+<p>Работа с удалённым рабочим столом (<strong>RDP</strong>) в <em>Windows Server</em> часто требует печати документов на локальном принтере. Без правильной настройки каждый раз приходится сохранять файлы на компьютере, а затем открывать их для печати — это тратит время и увеличивает риск ошибок. Перенаправление принтера через <strong>RDP</strong> решает эту проблему, позволяя отправлять задачи напрямую с сервера на ваше устройство.</p>
+
+<p>Однако не все знают, что настройка зависит от версии <em>Windows Server</em>, модели принтера и даже от драйверов. В этой статье разберём пошаговую инструкцию для <em>Windows Server 2016/2019/2022</em>, а также рассмотрим типичные ошибки и способы их устранения. Если вы администрируете сервер или просто часто работаете удалённо — эта информация сэкономит вам часы на поиск решений.</p>
+
+<p>Особое внимание уделим двум ключевым моментам: <strong>настройке групповой политики</strong> (если вы админ) и <strong>ручному перенаправлению</strong> (если у вас ограниченные права). Также разберём, почему некоторые принтеры (например, <em>HP LaserJet</em> или <em>Canon imageCLASS</em>) могут не определяться через RDP и как это исправить.</p>
+
+<h2 id="требования-к-системе-и-оборудованию">Требования к системе и оборудованию</h2>
+
+<p>Перед настройкой убедитесь, что ваша инфраструктура соответствует минимальным требованиям. Вот что понадобится:</p>
+
+<ul>
+ <li>🖥️ <strong>Сервер:</strong> <em>Windows Server 2016/2019/2022</em> с включённой ролью <code>Удалённые рабочие столы (RDS)</code> или хотя бы разрешённым подключением через <strong>RDP</strong>.</li>
+ <li>💻 <strong>Клиент:</strong> <em>Windows 10/11</em>, <em>macOS</em> (с <em>Microsoft Remote Desktop</em>) или <em>Linux</em> (с <em>Remmina</em> или <em>xfreerdp</em>).</li>
+ <li>🖨️ <strong>Принтер:</strong> локальное устройство, подключённое по <code>USB</code>, <code>Wi-Fi</code> или <code>Ethernet</code>. Драйвер должен быть установлен на <strong>клиентском ПК</strong>.</li>
+ <li>🔌 <strong>Сеть:</strong> стабильное подключение к серверу (желательно по <code>LAN</code> или <code>VPN</code>, если работаете извне).</li>
+</ul>
+
+<p>Важно: если принтер подключён по <strong>USB</strong>, на клиентском ПК должен быть установлен драйвер от производителя (например, для <em>Brother HL-L2350DW</em> или <em>Epson WorkForce</em>). В противном случае сервер не сможет"увидеть" устройство через RDP.</p>
+
+<blockquote>⚠️ <strong>Внимание:</strong> Начиная с <em>Windows Server 2019</em>, Microsoft изменила политики безопасности для перенаправления USB-устройств. Если принтер не определяется, проверьте настройки <code>gpedit.msc</code> на сервере (раздел <code>Конфигурация компьютера → Административные шаблоны → Компоненты Windows → Службы удалённых рабочих столов → Узел сеансов удалённых рабочих столов → Перенаправление устройств и ресурсов</code>).</blockquote>
+
+<p>Также учитывайте, что некоторые корпоративные принтеры (например, <em>Xerox AltaLink</em> или <em>Ricoh MP C3004</em>) могут требовать дополнительных драйверов на стороне сервера. В этом случае придётся устанавливать их вручную через <code>Управление печатью</code>.</p>
+
+<div class="poll-widget" id="poll-4c3c0641"><div class="poll-widget-question">📊 Какой тип принтера вы используете?</div><div class="poll-widget-option" data-poll="4c3c0641" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Лазерный</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="4c3c0641" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">Струйный</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="4c3c0641" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">МФУ</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="4c3c0641" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Термопринтер</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="4c3c0641" data-idx="4" onclick="pbPollVote(this)"><span class="poll-widget-label">Другой</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="настройка-перенаправления-принтера-на-клиентском-пк">Настройка перенаправления принтера на клиентском ПК</h2>
+
+<p>Первый шаг — настроить клиентское подключение к RDP. Это можно сделать через стандартное приложение <strong>Подключение к удалённому рабочему столу</strong> (<code>mstsc.exe</code>) или альтернативные клиенты (например, <em>Royal TS</em> для продвинутых пользователей).</p>
+
+<p>Откройте <code>mstsc.exe</code>, введите IP-адрес или имя сервера, затем нажмите <code>Показать параметры</code>. Перейдите на вкладку <code>Локальные ресурсы</code> и найдите раздел <code>Локальные устройства и ресурсы</code>. Здесь нужно включить опцию <code>Принтеры</code>:</p>
+
+
+<p>Открыть <code>mstsc.exe</code> → Показать параметры|Перейти на вкладку «Локальные ресурсы»|Поставить галочку напротив «Принтеры»|При необходимости выбрать конкретный принтер в списке «Подробнее»|Сохранить настройки в файле <code>.rdp</code> для будущих подключений--></p>
+
+<p>Если вы используете <em>macOS</em> или <em>Linux</em>, процесс будет немного отличаться:</p>
+<ul>
+ <li>🍎 На <em>Mac</em> в <em>Microsoft Remote Desktop</em> перейдите в настройки подключения → <code>Devices & Audio</code> → включите <code>Printers</code>.</li>
+ <li>🐧 В <em>Linux</em> (например, в <em>Remmina</em>) откройте настройки RDP-соединения → вкладка <code>Shared folders</code> → включите <code>Share printers</code>.</li>
+</ul>
+
+<p>После применения настроек сохраните конфигурацию в файле <code>.rdp</code> (в Windows) или в профиле подключения (в альтернативных клиентах). Это избавит вас от повторной настройки при каждом входе.</p>
+
+<blockquote>⚠️ <strong>Внимание:</strong> Если принтер подключён по <strong>USB</strong>, а в списке устройств он не отображается, попробуйте отключить и снова подключить его <strong>до</strong> запуска RDP-сессии. Некоторые клиенты (особенно на <em>Linux</em>) не обновляют список устройств в реальном времени.</blockquote>
+
+<h2 id="настройка-сервера-для-перенаправления-принтеров">Настройка сервера для перенаправления принтеров</h2>
+
+<p>Со стороны сервера также требуется (настройка). Если вы администрируете <em>Windows Server</em>, проверьте следующие параметры:</p>
+
+<ol>
+ <li><strong>Групповая политика (GPO):</strong>
+ <ul>
+ <li>Откройте <code>gpedit.msc</code> (или <code>Групповая политика управления</code> для домена).</li>
+ <li>Перейдите по пути: <code>Конфигурация компьютера → Административные шаблоны → Компоненты Windows → Службы удалённых рабочих столов → Узел сеансов удалённых рабочих столов → Перенаправление устройств и ресурсов</code>.</li>
+ <li>Убедитесь, что параметр <code>Не перенаправлять принтеры</code> отключён (или не настроен).</li>
+ </ol>
+ </li>
+ <li><strong>Правила брандмауэра:</strong>
+ <p>Проверьте, что порты <code>3389</code> (RDP) и <code>139/445</code> (SMB, для некоторых принтеров) открыты для подключения.</p>
+ </li>
+ <li><strong>Драйверы принтера:</strong>
+ <p>Если принтер не определяется, установите драйвер на сервер вручную через <code>Управление печатью</code> (<code>printmanagement.msc</code>).</p>
+ </li>
+</ol>
+
+<p>Для <em>Windows Server 2022</em> добавлен новый параметр политики: <code>Перенаправлять только принтеры по умолчанию</code>. Если он включён, то в RDP-сессии будет доступен только принтер, установленный как основной на клиентском ПК.</p>
+
+<table>
+ <thead>
+ <tr>
+ <th>Версия Windows Server</th>
+ <th>Путь к настройке GPO</th>
+ <th>Особенности</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr>
+ <td>2016</td>
+ <td><code>Конфигурация компьютера → Политики → Административные шаблоны → Компоненты Windows → Службы удалённых рабочих столов → Узел сеансов удалённых рабочих столов → Перенаправление устройств и ресурсов</code></td>
+ <td>Поддержка <strong>Easy Print</strong> (универсальный драйвер).</td>
+ </tr>
+ <tr>
+ <td>2019</td>
+ <td>Тот же путь</td>
+ <td>Улучшенная совместимость с <em>Universal Print</em> (облачная печать).</td>
+ </tr>
+ <tr>
+ <td>2022</td>
+ <td>Тот же путь</td>
+ <td>Новые политики для фильтрации принтеров по умолчанию.</td>
+ </tr>
+ </tbody>
+</table>
+
+<p>Если вы не админ и не имеете доступа к <code>gpedit.msc</code>, попросите системного администратора проверить эти настройки. В корпоративных сетях часто применяются ограничительные политики, блокирующие перенаправление устройств.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Если принтер подключён по сети (Wi-Fi/Ethernet), но не отображается в RDP, попробуйте добавить его вручную через IP-адрес. Для этого на сервере откройте <code>Устройства и принтеры</code> → <code>Добавить принтер</code> → <code>Добавить сетевой принтер по TCP/IP-адресу</code> и укажите IP локального принтера.</p></div>
+
+<h2 id="решение-проблем-с-перенаправлением-принтера">Решение проблем с перенаправлением принтера</h2>
+
+<p>Даже после правильной настройки принтер может не работать. Вот наиболее распространённые проблемы и их решения:</p>
+
+<ul>
+ <li>🔄 <strong>Принтер не отображается в RDP:</strong>
+ <ul>
+ <li>Проверьте, включено ли перенаправление в настройках клиента (<code>mstsc</code>).</li>
+ <li>Перезапустите службу <code>Spooler</code> на сервере: <pre><code>net stop spooler & net start spooler</code></pre></li>
+ <li>Обновите драйвер принтера на <strong>клиентском ПК</strong>.</li>
+ </ul>
+ </li>
+ <li>🖼️ <strong>Печать идёт с ошибками (пустые страницы, иероглифы):</strong>
+ <ul>
+ <li>Установите <strong>точный драйвер</strong> для модели принтера на сервере (не универсальный <em>Microsoft XPS Document Writer</em>).</li>
+ <li>Проверьте кодировку документов (особенно при печати из <em>1C</em> или <em>SAP</em>).</li>
+ </ul>
+ </li>
+ <li>🔒 <strong>Доступ запрещён (ошибка 0x0000000d):</strong>
+ <p>Проблема с правами. На сервере откройте <code>Локальная политика безопасности</code> (<code>secpol.msc</code>) и проверьте, что пользователь имеет право <code>Загрузка и выгрузка драйверов принтера</code>.</p>
+ </li>
+</ul>
+
+<p><mark>Критическая ошибка: если принтер определяется, но при печати выдаёт"Документ не может быть напечатан из-за проблем с конфигурацией принтера", скорее всего, на сервере отсутствует драйвер для вашей модели. Решение — скачать его с сайта производителя и установить вручную через <code>Управление печатью</code>.</mark></p>
+
+<blockquote>⚠️ <strong>Внимание:</strong> При использовании <em>Windows Server 2022</em> с включённым <em>Microsoft Defender Exploit Guard</em> перенаправление USB-устройств (включая принтеры) может блокироваться. Проверьте правила <code>Attack Surface Reduction (ASR)</code> в <em>Defender</em>.</blockquote>
+
+<p>Если проблема не решена, попробуйте альтернативный метод — <strong>печать через сетевой путь</strong>. Для этого:</p>
+<ol>
+ <li>На клиентском ПК найдите IP-адрес принтера (через <code>Панель управления → Устройства и принтеры → Свойства принтера → Порты</code>).</li>
+ <li>На сервере добавьте принтер как сетевой, указав этот IP.</li>
+</ol>
+
+<details class="faq-item"><summary>Что делать, если принтер определяется, но печать идёт очень медленно?</summary><div class="faq-answer"><p>
+<p>Это типичная проблема при перенаправлении через RDP, особенно для больших документов (например, PDF с графикой). Решения:</p>
+<p>1. На сервере откройте <code>Редактор локальной групповой политики</code> и включите параметр <code>Оптимизировать перенаправление принтера для медленных сетей</code>.</p>
+<p>2. Попробуйте печать через <em>Universal Print</em> (если используете <em>Azure AD</em>).</p>
+<p>3. Уменьшите разрешение печати в настройках принтера (например, с <code>600 dpi</code> до <code>300 dpi</code>).</p></div></details></p>
+
+<h2 id="перенаправление-принтера-в-терминальных-сессиях-rds">Перенаправление принтера в терминальных сессиях (RDS)</h2>
+
+<p>Если вы работаете не с обычным RDP, а с <strong>Службами удалённых рабочих столов (RDS)</strong>, настройка будет немного сложнее. В RDS принтеры перенаправляются через <strong>сеансы коллекции</strong>, и здесь важно настроить:</p>
+
+<ol>
+ <li><strong>Публикацию принтеров:</strong>
+ <p>В <code>Диспетчере серверов</code> перейдите в <code>Службы удалённых рабочих столов → Коллекции</code>. Выберите свою коллекцию, откройте <code>Свойства</code> и проверьте, что в разделе <code>Пользовательские настройки</code> включено перенаправление принтеров.</p>
+ </li>
+ <li><strong>Драйверы для RDS:</strong>
+ <p>В RDS используется механизм <em>Easy Print</em>, который автоматически подставляет универсальный драйвер. Однако для некоторых принтеров (например, <em>Kyocera TASKalfa</em> или <em>Oki MC863</em>) требуется установка <strong>родных драйверов</strong> на сервер.</p>
+ </li>
+ <li><strong>Политики коллекции:</strong>
+ <p>В <code>Групповой политике</code> для RDS проверьте параметр <code>Перенаправлять только принтеры клиента по умолчанию</code>. Если он включён, пользователи увидят только основной принтер.</p>
+ </li>
+</ol>
+
+<p>В RDS также можно настроить <strong>фильтрацию принтеров по модели</strong>. Например, если в офисе используются принтеры <em>HP</em> и <em>Canon</em>, а домашние устройства пользователей не должны перенаправляться, это можно запретить через GPO:</p>
+
+<pre><code>Конфигурация компьютера → Административные шаблоны → Компоненты Windows → Службы удалённых рабочих столов → Узел сеансов удалённых рабочих столов → Перенаправление устройств и ресурсов → Не перенаправлять принтеры определенных моделей</code></pre>
+
+<p>В этом параметре можно указать список моделей (например, <code>HP DeskJet 2700;Canon PIXMA MG3640</code>), которые <strong>разрешены</strong> или <strong>запрещены</strong> для перенаправления.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>В RDS перенаправление принтеров работает через механизм <em>Easy Print</em>, но для корректной работы сложных МФУ (например, <em>Xerox VersaLink</em>) требуется установка оригинальных драйверов на сервер.</p></div>
+
+<h2 id="альтернативные-методы-печати-через-rdp">Альтернативные методы печати через RDP</h2>
+
+<p>Если стандартное перенаправление не работает, рассмотрите альтернативные способы:</p>
+
+<ul>
+ <li>📤 <strong>Печать в PDF:</strong>
+ <p>На сервере установите виртуальный принтер (например, <em>Microsoft Print to PDF</em> или <em>CutePDF</em>). Печатайте документы в PDF, затем скачивайте файл на локальный ПК и печатайте оттуда.</p>
+ </li>
+ <li>🌐 <strong>Облачная печать:</strong>
+ <ul>
+ <li>Используйте <em>Google Cloud Print</em> (если принтер поддерживает).</li>
+ <li>Настройте <em>Microsoft Universal Print</em> (требует <em>Azure AD</em>).</li>
+ </ul>
+ </li>
+ <li>🔗 <strong>Сетевой доступ к принтеру:</strong>
+ <p>Если принтер подключён к роутеру (по <code>Ethernet</code> или <code>Wi-Fi</code>), добавьте его на сервер как сетевой, указав IP-адрес.</p>
+ </li>
+ <li>💾 <strong>Локальное сохранение + печать:</strong>
+ <p>Включите в RDP перенаправление <code>Буфера обмена</code> и <code>Локальных дисков</code>. Печатайте документы на сервере в файл (например, <code>.xps</code>), затем копируйте на локальный ПК.</p>
+ </li>
+</ul>
+
+<p>Для корпоративных пользователей лучшим решением часто становится <em>Microsoft Universal Print</em>. Этот сервис позволяет печатать на любые принтеры, зарегистрированные в <em>Azure AD</em>, без привязки к локальной сети. Однако для его настройки потребуется:</p>
+<ol>
+ <li>Подписка на <em>Azure AD</em>.</li>
+ <li>Регистрация принтера в <em>Universal Print</em> (через <code>https://portal.azure.com</code>).</li>
+ <li>Установка коннектора <em>Universal Print</em> на сервер или клиентский ПК.</li>
+</ol>
+
+<p>Если ваша компания использует <em>Google Workspace</em>, альтернативой станет <em>Google Cloud Print</em>. Однако с 2020 года этот сервис официально закрыт, и его поддержка ограничена.</p>
+
+<h2 id="безопасность-при-перенаправлении-принтеров-через-rdp">Безопасность при перенаправлении принтеров через RDP</h2>
+
+<p>Перенаправление устройств через RDP создаёт потенциальные уязвимости. Вот ключевые меры безопасности:</p>
+
+<ul>
+ <li>🔐 <strong>Ограничьте права пользователей:</strong>
+ <p>В <code>Локальной политике безопасности</code> (<code>secpol.msc</code>) проверьте, что только доверенные пользователи имеют право <code>Загрузка и выгрузка драйверов принтера</code>.</p>
+ </li>
+ <li>🛡️ <strong>Обновляйте драйверы:</strong>
+ <p>Устаревшие драйверы принтеров (особенно для <em>HP</em> или <em>Xerox</em>) могут содержать уязвимости. Скачивайте их только с официальных сайтов.</p>
+ </li>
+ <li>🌍 <strong>Используйте VPN:</strong>
+ <p>Если подключаетесь к RDP извне, всегда используйте <code>VPN</code> или <code>RD Gateway</code> для шифрования трафика.</p>
+ </li>
+ <li>📋 <strong>Ведите лог печати:</strong>
+ <p>Включите аудит печати в <code>Групповой политике</code> (<code>Конфигурация компьютера → Политики → Конфигурация Windows → Параметры безопасности → Локальные политики → Политика аудита → Аудит использования принтеров</code>).</p>
+ </li>
+</ul>
+
+<p>Особое внимание уделите принтерам с <strong>встроенной памятью</strong> (например, <em>Xerox AltaLink</em> или <em>Ricoh MP C6004</em>). Злоумышленники могут использовать их для хранения вредоносного ПО или кражи данных. Рекомендуется:</p>
+<ul>
+ <li>Отключить ненужные функции (например, <code>Scan to Email</code> или <code>Fax</code>).</li>
+ <li>Настроить автоматическую очистку очереди печати после завершения задачи.</li>
+</ul>
+
+<blockquote>⚠️ <strong>Внимание:</strong> В <em>Windows Server 2022</em> по умолчанию включена функция <code>Restricted Admin Mode</code> для RDP. Она блокирует перенаправление некоторых устройств (включая принтеры) для пользователей без прав администратора. Чтобы это исправить, отключите параметр <code>Требуется проверка подлинности на уровне сети с ограниченным доступом администратора</code> в <code>Локальной политике безопасности</code>.</blockquote>
+
+<p>Если вы администрируете сервер в медицинской или финансовой организации, ознакомьтесь с требованиями <em>GDPR</em> или <em>ФЗ-152</em> по обработке данных. Печать документов с персональной информацией через RDP должна логироваться и контролироваться.</p>
+
+<h2 id="faq-частые-вопросы-по-перенаправлению-принтеров-через-rdp">FAQ: Частые вопросы по перенаправлению принтеров через RDP</h2>
+
+<details>
+ <summary>Почему принтер не отображается в сессии RDP, хотя в настройках клиента галочка стоит?</summary>
+ <p>Возможные причины:</p>
+ <ol>
+ <li>На сервере отключено перенаправление через <code>Групповую политику</code>.</li>
+ <li>Драйвер принтера не установлен на сервере (требуется ручная установка).</li>
+ <li>Принтер подключён по <strong>USB 3.0</strong>, а RDP поддерживает только <strong>USB 2.0</strong> (попробуйте использовать другой порт).</li>
+ <li>В <em>Windows Server 2022</em> может быть включён <code>Restricted Admin Mode</code>.</li>
+ </ol>
+ <p>Решение: проверьте настройки GPO, обновите драйвер и попробуйте подключить принтер по сети (если возможно).</p>
+</details>
+
+<details>
+ <summary>Как перенаправить принтер через RDP на macOS?</summary>
+ <p>В клиенте <em>Microsoft Remote Desktop</em> для <em>Mac</em>:</p>
+ <ol>
+ <li>Откройте настройки подключения.</li>
+ <li>Перейдите на вкладку <code>Devices & Audio</code>.</li>
+ <li>Включите опцию <code>Printers</code>.</li>
+ <li>Если принтер не отображается, проверьте, установлен ли драйвер на <em>Mac</em> (например, через <em>HP Easy Start</em> или <em>Canon IJ Network Tool</em>).</li>
+ </ol>
+ <p>Для принтеров <em>AirPrint</em> (например, многие модели <em>Epson</em> или <em>Canon</em>) перенаправление может не работать — в этом случае используйте печать через <code>PDF</code>.</p>
+</details>
+
+<details>
+ <summary>Можно ли перенаправить принтер через RDP на Android или iOS?</summary>
+ <p>Официальный клиент <em>Microsoft Remote Desktop</em> для <em>Android</em> и <em>iOS</em> не поддерживает перенаправление принтеров. Альтернативные решения:</p>
+ <ul>
+ <li>Используйте облачную печать (<em>Google Cloud Print</em>, <em>Microsoft Universal Print</em>).</li>
+ <li>Настройте доступ к принтеру через <code>VPN</code> и добавьте его как сетевой на сервере.</li>
+ <li>Печатайте документы в <code>PDF</code> на сервере, затем скачивайте на мобильное устройство и печатайте через локальные приложения (например, <em>Canon PRINT</em> или <em>HP Smart</em>).</li>
+ </ul>
+</details>
+
+<details>
+ <summary>Почему при печати через RDP документ выводится с ошибками (пустые страницы, неправильные шрифты)?</summary>
+ <p>Эта проблема связана с несовместимостью драйверов. Решения:</p>
+ <ol>
+ <li>Установите на сервер <strong>оригинальный драйвер</strong> для вашей модели принтера (не универсальный <em>Microsoft XPS</em>).</li>
+ <li>В настройках принтера на сервере выберите режим <code>Печать как изображение</code> (если доступно).</li>
+ <li>Обновите драйвер на клиентском ПК.</li>
+ <li>Попробуйте печать через <em>Universal Print</em> или <code>PDF</code>.</li>
+ </ol>
+ <p>Если проблема остаётся, проверьте настройки шрифтов в документе (например, в <em>Word</em> или <em>Excel</em> может быть включено сглаживание, которое не поддерживается принтером).</p>
+</details>
+
+<details>
+ <summary>Как запретить перенаправление принтеров для определённых пользователей?</summary>
+ <p>Это настраивается через <code>Групповую политику</code>:</p>
+ <ol>
+ <li>Откройте <code>gpedit.msc</code> (или <code>Управление групповой политикой</code> для домена).</li>
+ <li>Перейдите по пути: <code>Конфигурация пользователя → Административные шаблоны → Компоненты Windows → Службы удалённых рабочих столов → Перенаправление устройств и ресурсов удалённого рабочего стола</code>.</li>
+ <li>Включите параметр <code>Не перенаправлять принтеры</code> и примените политику к нужным пользователям или группам.</li>
+ </ol>
+ <p>Для более гибкой настройки (например, запретить только USB-принтеры) используйте параметр <code>Не перенаправлять указанные принтеры</code> и укажите модели.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#введение-зачем-перенаправлять-принтер-через-rdp">Введение: зачем перенаправлять принтер через RDP?</a></li><li><a href="#требования-к-системе-и-оборудованию">Требования к системе и оборудованию</a></li><li><a href="#настройка-перенаправления-принтера-на-клиентском-пк">Настройка перенаправления принтера на клиентском ПК</a></li><li><a href="#настройка-сервера-для-перенаправления-принтеров">Настройка сервера для перенаправления принтеров</a></li><li><a href="#решение-проблем-с-перенаправлением-принтера">Решение проблем с перенаправлением принтера</a></li><li><a href="#перенаправление-принтера-в-терминальных-сессиях-rds">Перенаправление принтера в терминальных сессиях (RDS)</a></li><li><a href="#альтернативные-методы-печати-через-rdp">Альтернативные методы печати через RDP</a></li><li><a href="#безопасность-при-перенаправлении-принтеров-через-rdp">Безопасность при перенаправлении принтеров через RDP</a></li><li><a href="#faq-частые-вопросы-по-перенаправлению-принтеров-через-rdp">FAQ: Частые вопросы по перенаправлению принтеров через RDP</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/k/ka/kak-podklyuchit-printer-dlya-etiketok.html" class="related-card">Как подключить принтер этикеток: пошаговая инструкция 2026</a></li><li><a href="/articles/k/ka/kak-skachat-drajver-na-noutbuk-dlya-printera-canon.html" class="related-card">Как скачать драйвер для принтера Canon на ноутбук: пошаговое руководство</a></li><li><a href="/articles/k/ka/kak-pochistit-golovku-printera-cherez-kompyuter-vindovs-10.html" class="related-card">Как почистить головку принтера через компьютер на Windows 10: пошагово</a></li><li><a href="/articles/c/ca/canon-pixma-g3411-i-canon-pixma-g3415-v-chem-raznitsa.html" class="related-card">Canon Pixma G3411 vs G3415: ключевые отличия и что выбрать</a></li><li><a href="/articles/k/ka/kak-pereklyuchit-printer-na-pechat-s-kompyutera.html" class="related-card">Как подключить и настроить печать с компьютера: Полная инструкция</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/k/ka/kak-podklyuchit-printer-dlya-etiketok.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить принтер этикеток: пошаговая инструкция 2026</span><span class="related-bottom-desc">Полное руководство по подключению термотранспортных принтеров этикеток. Настройка драйверов, калибро</span></a><a href="/articles/k/ka/kak-skachat-drajver-na-noutbuk-dlya-printera-canon.html" class="related-bottom-card"><span class="related-bottom-title">Как скачать драйвер для принтера Canon на ноутбук: пошаговое руководство</span><span class="related-bottom-desc">Узнайте, как правильно выбрать и установить драйвер для принтера Canon на Windows 10/11 или macOS. О</span></a><a href="/articles/k/ka/kak-pochistit-golovku-printera-cherez-kompyuter-vindovs-10.html" class="related-bottom-card"><span class="related-bottom-title">Как почистить головку принтера через компьютер на Windows 10: пошагово</span><span class="related-bottom-desc">Узнайте, как выполнить программную и ручную очистку дюз принтера на Windows 10. Инструкция с устране</span></a><a href="/articles/c/ca/canon-pixma-g3411-i-canon-pixma-g3415-v-chem-raznitsa.html" class="related-bottom-card"><span class="related-bottom-title">Canon Pixma G3411 vs G3415: ключевые отличия и что выбрать</span><span class="related-bottom-desc">Сравнение принтеров Canon Pixma G3411 и G3415: разница в функциях, скорости печати, расходе чернил и</span></a><a href="/articles/k/ka/kak-pereklyuchit-printer-na-pechat-s-kompyutera.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить и настроить печать с компьютера: Полная инструкция</span><span class="related-bottom-desc">Пошаговое руководство: как переключить принтер на печать с компьютера. Настройка драйверов, LAN, Wi-</span></a><a href="/articles/k/ka/kak-proverit-ispravnost-printera-canon.html" class="related-bottom-card"><span class="related-bottom-title">Как проверить исправность принтера Canon: 7 шагов для диагностики</span><span class="related-bottom-desc">Пошаговая инструкция по проверке работоспособности принтеров Canon: от теста печати до диагностики к</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>

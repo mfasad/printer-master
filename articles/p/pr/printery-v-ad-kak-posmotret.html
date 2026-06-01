@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>📡</text></svg>">
+    <title>Как найти и проверить принтеры в Active Directory: пошаговое руководство — Принтер Мастер</title>
+    <meta name="description" content="Узнайте, как посмотреть список сетевых принтеров в Active Directory через консоль управления и PowerShell. Инструкция для администраторов и пользователей.">
+    <link rel="canonical" href="https://printer-master.vercel.app/articles/p/pr/printery-v-ad-kak-posmotret.html">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Как найти и проверить принтеры в Active Directory: пошаговое руководство">
+    <meta property="og:description" content="Узнайте, как посмотреть список сетевых принтеров в Active Directory через консоль управления и PowerShell. Инструкция для администраторов и пользователей.">
+    <meta property="og:locale" content="ru_RU">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=1780341110">
+    <style>
+    .site-footer-premium {
+        margin-top: 60px; padding: 40px 0 0; background: #1e293b; color: #94a3b8;
+    }
+    .footer-grid {
+        display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+        padding-bottom: 32px; border-bottom: 1px solid #334155;
+    }
+    .footer-brand { font-size: 1.2rem; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .footer-about { font-size: 0.9rem; line-height: 1.6; margin-bottom: 8px; }
+    .footer-updated { font-size: 0.8rem; color: #64748b; }
+    .footer-col h4 { color: #f1f5f9; font-size: 0.95rem; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 8px; }
+    .footer-col a { color: #94a3b8; font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #60a5fa; }
+    .footer-bottom { padding: 20px 0; text-align: center; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+    }
+    .cookie-popup {
+        position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #fff;
+        padding: 16px; transition: transform 0.5s ease; z-index: 9999; border-top: 2px solid #2563eb;
+        transform: translateY(100%);
+    }
+    .cookie-popup.visible { transform: translateY(0); }
+    .cookie-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 0.9rem; }
+    .cookie-btn { background: #2563eb; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .cookie-btn:hover { background: #1d4ed8; }
+    @media (max-width: 640px) {
+        .cookie-inner { flex-direction: column; text-align: center; }
+    }
+</style>
+    
+    <!--#include virtual="/ssi/head.html" -->
+</head>
+<body>
+        <!--#include virtual="/ssi/body_top.html" -->
+    <style>
+    .nav-dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle {
+        background: none; border: none; cursor: pointer;
+        font: inherit; color: inherit; padding: 8px 12px;
+        border-radius: 8px; transition: background 0.2s;
+    }
+    .dropdown-toggle:hover { background: rgba(0,0,0,0.05); }
+    .dropdown-menu {
+        display: none; position: absolute; right: 0; top: 100%;
+        min-width: 240px; max-height: 70vh; overflow-y: auto;
+        background: var(--card-bg, #fff); border: 1px solid var(--border, #e5e7eb);
+        border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        padding: 8px 0; z-index: 1000;
+    }
+    .nav-dropdown::after {
+        content: ''; position: absolute; left: 0; right: 0;
+        top: 100%; height: 12px;
+    }
+    .nav-dropdown:hover .dropdown-menu,
+    .nav-dropdown:focus-within .dropdown-menu { display: block; }
+    .dropdown-item {
+        display: block; padding: 10px 20px; color: var(--text, #1f2937);
+        text-decoration: none; font-size: 0.95rem; transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .dropdown-item:hover { background: rgba(37,99,235,0.06); color: var(--primary, #2563eb); }
+    @media (max-width: 768px) {
+        .main-nav > .nav-link { display: none; }
+        .dropdown-toggle { display: none; }
+        .dropdown-menu {
+            display: block !important; position: static;
+            box-shadow: none; border: none; border-radius: 0;
+            min-width: auto; max-height: none; padding: 0;
+            background: transparent;
+        }
+        .dropdown-item {
+            padding: 8px 0; font-size: 1rem;
+        }
+    }
+    </style>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="/" class="logo">
+                <span class="logo-icon">📡</span>
+                <span>Принтер Мастер</span>
+            </a>
+            <button class="mobile-menu-btn" aria-label="Меню" id="menuBtn">☰</button>
+            <nav class="main-nav" id="mainNav">
+                <a href="/category/podklyuchenie-ustrojstv/" class="nav-link">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="nav-link">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="nav-link">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="nav-link">🔋 Сброс и чипы</a>
+<div class="nav-dropdown">
+            <button class="nav-link dropdown-toggle">📂 Все разделы ▾</button>
+            <div class="dropdown-menu"><a href="/category/podklyuchenie-ustrojstv/" class="dropdown-item">🔌 Подключение устройств</a>
+<a href="/category/ustanovka-drajverov/" class="dropdown-item">💿 Установка драйверов</a>
+<a href="/category/zapravka-kartridzhej/" class="dropdown-item">🖊️ Заправка картриджей</a>
+<a href="/category/sbros-i-chipy/" class="dropdown-item">🔋 Сброс и чипы</a>
+<a href="/category/remont-i-oshibki/" class="dropdown-item">🛠️ Ремонт и ошибки</a>
+<a href="/category/skanirovanie-i-kopirovanie/" class="dropdown-item">📄 Сканирование и копирование</a>
+<a href="/category/3d-pechat/" class="dropdown-item">🧊 3D-печать</a>
+<a href="/category/obsluzhivanie-i-ukhod/" class="dropdown-item">🧼 Обслуживание и уход</a>
+<a href="/category/setevaya-pechat/" class="dropdown-item">🌐 Сетевая печать</a>
+<a href="/category/vybor-i-pokupka/" class="dropdown-item">🛒 Выбор и покупка</a>
+<a href="/category/raskhodnye-materialy/" class="dropdown-item">📦 Расходные материалы</a>
+<a href="/category/utilizatsiya-i-prodazha/" class="dropdown-item">♻️ Утилизация и продажа</a>
+<a href="/category/drugoe/" class="dropdown-item">📁 Другое</a></div>
+        </div>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="breadcrumbs" aria-label="Навигация">
+        <div class="container"><a href="/">Главная</a><span class="breadcrumb-sep">›</span><a href="/category/drugoe/">Другое</a><span class="breadcrumb-sep">›</span><span class="breadcrumb-current">Как найти и проверить принтеры в Active Directory: пошаговое руководство</span></div>
+    </nav>
+
+    <main class="site-main">
+        <div class="container">
+            <div class="article-layout">
+                <article class="article-main">
+                    
+                    <h1>Как посмотреть принтеры в Active Directory: полное руководство администратора</h1>
+                    <nav class="mobile-toc"><details><summary>📋 Содержание</summary><ul><li><a href="#методы-публикации-принтеров-в-каталог">Методы публикации принтеров в каталог</a></li><li><a href="#поиск-через-оснастку-управление-печатью">Поиск через оснастку «Управление печатью»</a></li><li><a href="#использование-powershell-для-глубокого-анализа">Использование PowerShell для глубокого анализа</a></li><li><a href="#поиск-для-обычных-пользователей-через-устройства-и-принтеры">Поиск для обычных пользователей через «Устройства и принтеры»</a></li><li><a href="#таблица-атрибутов-принтеров-в-active-directory">Таблица атрибутов принтеров в Active Directory</a></li><li><a href="#резервное-копирование-и-восстановление-конфигурации">Резервное копирование и восстановление конфигурации</a></li><li><a href="#частые-ошибки-и-способы-их-решения">Частые ошибки и способы их решения</a></li><li><a href="#заключение-и-лучшие-практики">Заключение и лучшие практики</a></li></ul></details></nav>
+                    <!--#include virtual="/ssi/article_before.html" -->
+                    <div class="article-body"><p>Поиск и управление печатной инфраструктурой в крупном корпоративном сегменте невозможны без использования централизованных служб каталогов. <strong>Active Directory</strong> (AD) выступает ключевым инструментом для автоматизации развертывания устройств печати, позволяя администраторам и пользователям находить необходимое оборудование по локациям или названиям.</p>
+
+<p>Понимание того, <strong>как посмотреть принтеры в Active Directory</strong>, критически важно для поддержания работоспособности офиса. Неправильная настройка публикации или потеря связи между сервером печати и каталогом может парализовать документооборот. В этой статье мы разберем методы просмотра, фильтрации и диагностики состояния сетевых принтеров.</p>
+
+<h2 id="методы-публикации-принтеров-в-каталог">Методы публикации принтеров в каталог</strong></h2>
+
+<p>Прежде чем искать устройства, необходимо убедиться, что они корректно опубликованы. По умолчанию в современных версиях Windows Server <em>Print Service</em> автоматически добавляет принтеры в AD при их создании, если включена групповая политика соответствующего уровня.</p>
+
+<p>Процесс публикации часто требует ручного вмешательства, особенно если используется устаревшее оборудование или специфические драйверы. <strong>Администратор домена</strong> должен проверить настройки на сервере печати, чтобы убедиться, что атрибут <code>printIsPublished</code> установлен в значение <code>true</code>.</p>
+
+<p>Иногда автоматическая публикация отключается для снижения нагрузки на глобальный каталог. В таких случаях принтеры можно добавлять вручную через оснастку <code>Управление печатью</code>. Здесь важно не перепутать локальные устройства с сетевыми, доступными для всех пользователей домена.</p>
+
+<blockquote>
+<p>⚠️ <strong>Внимание:</strong> Если принтер не отображается в глобальном поиске, проверьте, не заблокирован ли он групповой политикой "Не разрешать публикацию принтеров в Active Directory". Это частая причина исчезновения устройств из каталога.</p>
+</blockquote>
+
+<h2 id="поиск-через-оснастку-управление-печатью">Поиск через оснастку «Управление печатью»</strong></h2>
+
+<p>Самый наглядный способ визуализации печатной инфраструктуры — использование графического интерфейса <em>Print Management</em>. Эта консоль позволяет администраторам видеть не только список устройств, но и их статус, очередь заданий и драйверы в едином окне.</p>
+
+<p>Для запуска откройте меню «Пуск», введите <code>printmanagement.msc</code> и нажмите Enter. В левом дереве навигации разверните узел <strong>Печатные серверы</strong>, затем выберите нужный сервер и перейдите в раздел <code>Принтеры</code>. Здесь вы увидите полный список всех подключенных и опубликованных устройств.</p>
+
+<p>Чтобы отфильтровать именно опубликованные в AD принтеры, нажмите правой кнопкой мыши на узел <code>Принтеры</code> и выберите <code>Фильтр принтеров</code>. Установите галочку напротив пункта <strong>Только опубликованные принтеры</strong>. Это позволит мгновенно увидеть, какие устройства доступны пользователям через поиск в домене.</p>
+
+<div class="checklist-block"><h4>☑️ Проверка публикации принтера</h4><label class="check-item"><input type="checkbox"><span>Открыть консоль Управления печатью</span></label><label class="check-item"><input type="checkbox"><span>Развернуть узел Серверы печати</span></label><label class="check-item"><input type="checkbox"><span>Выбрать фильтр «Только опубликованные»</span></label><label class="check-item"><input type="checkbox"><span>Проверить статус драйверов</span></label><div class="check-progress">Выполнено: <span class="check-count">0</span> / 4</div></div>
+
+<p>Интерфейс консоли позволяет также массово удалять или перемещать принтеры между серверами. Это значительно ускоряет миграцию оборудования при переезде офиса или замене парка техники на более современные модели <em>Hewlett-Packard</em> или <em>Xerox</em>.</p>
+
+<h2 id="использование-powershell-для-глубокого-анализа">Использование PowerShell для глубокого анализа</strong></h2>
+
+<p>Для автоматизации и получения детальной информации графического интерфейса может быть недостаточно. <strong>PowerShell</strong> предоставляет мощные инструменты для выборки данных из Active Directory напрямую через модули AD и Printers.</p>
+
+<p>Чтобы получить список всех опубликованных принтеров, откройте окно PowerShell от имени администратора и выполните команду, использующую <code>Get-ADObject</code>. Этот метод позволит вытащить атрибуты, которые скрыты в графическом интерфейсе, например, IP-адреса или уникальные идентификаторы устройств.</p>
+
+<p>Основной скрипт для поиска выглядит следующим образом. Он ищет объекты класса <code>printQueue</code> и фильтрует их по атрибуту публикации.</p>
+
+<pre><code>Get-ADObject -Filter {objectClass -eq "printQueue" -and printIsPublished -eq $true} -Properties * | Select-Object Name, Location, comment, dnshostname</code></pre>
+
+<p>Результат выполнения команды выведет на экран список имен принтеров, их расположение и комментарии, введенные администратором. Это особенно полезно для аудита, когда нужно проверить, сколько устройств <em>Kyocera</em> работает на конкретном этаже здания.</p>
+
+<details class="faq-item"><summary>Дополнительные команды для PowerShell</summary><div class="faq-answer"><p>Если вам нужно найти принтеры по конкретному расположению, добавьте параметр -Filter {Location -like "<em>Офис</em>"}. Для экспорта списка в CSV используйте пайплайн | Export-Csv printers.csv -NoTypeInformation.</p></div></details>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Используйте команду Get-ADPrintServer для проверки статуса самого сервера печати перед выполнением сложных скриптов, чтобы убедиться в доступности службы.</p></div>
+
+<h2 id="поиск-для-обычных-пользователей-через-устройства-и-принтеры">Поиск для обычных пользователей через «Устройства и принтеры»</strong></h2>
+
+<p>Обычным сотрудникам не нужны сложные консоли управления. Чтобы посмотреть принтеры в Active Directory, достаточно использовать стандартный интерфейс Windows. Это метод «поиска в домене», который подключает доступные устройства к локальной машине пользователя.</p>
+
+<p>Откройте <strong>Панель управления</strong> и перейдите в раздел <code>Устройства и принтеры</code> (или через Параметры -> Устройства -> Принтеры и сканеры). Нажмите на кнопку <strong>Добавить принтер</strong>. Система начнет поиск доступных устройств в сети.</p>
+
+<p>В окне поиска выберите пункт <strong>Необходимый принтер отсутствует в списке</strong>. В открывшемся меню перейдите на вкладку <em>Выбрать общий принтер по имени или IP-адресу</em>. Здесь можно ввести конкретный путь, но интереснее вариант «Поиск принтера в Active Directory».</p>
+
+<p>Активировав эту опцию, вы увидите список всех опубликованных принтеров домена. Система отфильтрует доступные устройства, показывая только те, к которым у вашей учетной записи есть права на печать. Это исключает возможность подключения к закрытым или техническим принтерам.</p>
+
+<blockquote>
+<p>⚠️ <strong>Внимание:</strong> Пользователи могут видеть принтеры не всех серверов печати, если права доступа к объектам AD ограничены. Если вы не видите нужный принтер, обратитесь к системному администратору для проверки прав доступа (ACL).</p>
+</blockquote>
+
+<h2 id="таблица-атрибутов-принтеров-в-active-directory">Таблица атрибутов принтеров в Active Directory</strong></h2>
+
+<p>Понимание структуры данных в каталоге помогает эффективно фильтровать устройства. В таблице ниже приведены ключевые атрибуты объектов принтеров, которые используются при поиске и отрисовке списка.</p>
+
+<table>
+<thead>
+<tr>
+<th>Атрибут</th>
+<th>Описание</th>
+<th>Пример значения</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Name</strong></td>
+<td>Отображаемое имя принтера в списке</td>
+<td><em>HP LaserJet 3050 1Floor</em></td>
+</tr>
+<tr>
+<td><strong>Location</strong></td>
+<td>Физическое расположение устройства</td>
+<td>Бухгалтерия, Комната 204</td>
+</tr>
+<tr>
+<td><strong>comment</strong></td>
+<td>Дополнительная информация о модели или назначении</td>
+<td>Цветной принтер A3</td>
+</tr>
+<tr>
+<td><strong>driverName</strong></td>
+<td>Имя установленного драйвера печати</td>
+<td>HP Universal Printing PCL 6</td>
+</tr>
+<tr>
+<td><strong>printIsPublished</strong></td>
+<td>Флаг публикации в AD (True/False)</td>
+<td>True</td>
+</tr>
+</tbody>
+</table>
+
+<p>Анализ этих полей позволяет быстро понять, почему принтер не появляется в поиске. Если атрибут <code>printIsPublished</code> равен <code>False</code>, устройство будет скрыто для всех пользователей, даже если оно физически доступно в сети.</p>
+
+<h2 id="резервное-копирование-и-восстановление-конфигурации">Резервное копирование и восстановление конфигурации</strong></h2>
+
+<p>Зачастую проблема с видимость принтеров возникает после сбоя сервера печати или неудачного обновления. В таких случаях необходимо восстановить конфигурацию из резервной копии. <strong>Active Directory</strong> хранит состояние объектов принтеров, что упрощает процесс восстановления.</p>
+
+<p>Если принтеры исчезли из каталога, но физически работают, попробуйте выполнить повторную публикацию через консоль управления. Для этого перейдите в свойства принтера, найдите вкладку <strong>Общее</strong> и поставьте галочку <code>Опубликовать в Active Directory</code>.</p>
+
+<p>В случае серьезных проблем с каталогом может потребоваться восстановление объектов из репозитория AD. Используйте утилиту <em>ntdsutil</em> или восстановление из теневой копии, если принтеры были случайно удалены. Это сложная процедура, требующая глубоких знаний архитектуры домена.</p>
+
+<p> Поэтому при восстановлении объектов каталога убедитесь, что сам сервер печати (Print Spooler) работает корректно и имеет доступ к драйверам.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Регулярное резервное копирование состояния Active Directory и конфигурации сервера печати критически важно для быстрого восстановления работы принтеров после сбоев.</p></div>
+
+<h2 id="частые-ошибки-и-способы-их-решения">Частые ошибки и способы их решения</strong></h2>
+
+<p>Администраторы часто сталкиваются с ситуацией, когда принтеры видны в консоли, но не отображаются в поиске пользователей. Первая причина — отсутствие правильной групповой политики (GPO), которая управляет правами доступа к объектам печати.</p>
+
+<p>Вторая распространенная проблема — устаревшие драйверы. Если принтер <em>Konica Minolta</em> использует драйвер, который не совместим с архитектурой <code>x64</code> у большинства рабочих станций, он может быть скрыт из списка доступных для подключения.</p>
+
+<p>Также стоит проверить состояние службы <strong>Print Spooler</strong>. Если она зависла, обновление информации о статусе принтера в AD может происходить с большой задержкой. Перезапуск службы часто решает проблему синхронизации.</p>
+
+<blockquote>
+<p>⚠️ <strong>Внимание:</strong> Не пытайтесь массово удалять и добавлять принтеры вручную через консоль управления, если у вас нет четкой стратегии именования. Это может привести к дублированию объектов и хаосу в каталоге.</p>
+</blockquote>
+
+<p>Для диагностики используйте логи событий Windows. Откройте <code>Журналы Windows</code> -> <code>Службы печати</code>. Здесь можно найти ошибки, связанные с попыткой публикации или обновления информации о принтере в AD.</p>
+
+<div class="poll-widget" id="poll-f8b2b7a1"><div class="poll-widget-question">📊 Как вы обычно находите принтеры в корпоративной сети?</div><div class="poll-widget-option" data-poll="f8b2b7a1" data-idx="0" onclick="pbPollVote(this)"><span class="poll-widget-label">Через стандартный поиск Windows</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="f8b2b7a1" data-idx="1" onclick="pbPollVote(this)"><span class="poll-widget-label">По IP-адресу в браузере</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="f8b2b7a1" data-idx="2" onclick="pbPollVote(this)"><span class="poll-widget-label">Через консоль администратора</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div><div class="poll-widget-option" data-poll="f8b2b7a1" data-idx="3" onclick="pbPollVote(this)"><span class="poll-widget-label">Принтеры подключаются автоматически</span><span class="poll-widget-bar"></span><span class="poll-widget-pct"></span></div></div>
+
+<h2 id="заключение-и-лучшие-практики">Заключение и лучшие практики</strong></h2>
+
+<p>Умение эффективно искать и управлять принтерами в <strong>Active Directory</strong> является базовым навыком для любого системного администратора в корпоративной среде. Правильная настройка публикации, использование PowerShell для аудита и понимание структуры атрибутов позволяет поддерживать порядок в печатной инфраструктуре.</p>
+
+<p>Важно регулярно проводить аудит объектов печати, удаляя устаревшие устройства и обновляя информацию о локациях. Это не только упрощает поиск для пользователей, но и повышает общую безопасность сети, ограничивая доступ к чувствительным устройствам.</p>
+
+<p>Помните, что <mark>принтеры, не опубликованные в Active Directory, не будут видны в глобальном поиске домена</mark>, даже если они физически доступны. Это фундаментальный принцип работы службы каталогов в контексте печати.</p>
+
+<div class="attention-box attention-tip"><span class="attention-icon">💡</span><p>Регулярный аудит и очистка каталога от неработающих принтеров — ключ к стабильной работе системы печати в организации.</p></div>
+
+<details>
+<summary>Какой PowerShell модуль нужен для работы с принтерами в AD?</summary>
+<p>Для работы с Active Directory используется стандартный модуль <code>ActiveDirectory</code>, который должен быть установлен на контроллере домена или машине с RSAT. Для управления самими принтерами также полезен модуль <code>PrintManagement</code>.</p>
+</details>
+
+<details>
+<summary>Почему пользователь не видит принтер в списке «Active Directory»?</summary>
+<p>Причина может быть в том, что у пользователя нет прав на чтение объекта принтера в AD, или атрибут <code>printIsPublished</code> установлен в <code>false</code>. Также возможно, что принтер подключен к серверу, который недоступен в текущем лесу доменов.</p>
+</details>
+
+<details>
+<summary>Можно ли автоматически подключать принтеры при входе в систему?</summary>
+<p>Да, это можно настроить через Групповые политики (GPO). В разделе <code>Конфигурация пользователя -> Политики -> Настройки -> Параметры Windows -> Принтеры</code> можно настроить автоматическое подключение принтеров в зависимости от расположения или имени компьютера.</p>
+</details>
+
+<details>
+<summary>Как проверить статус публикации принтера через консоль?</summary>
+<p>В оснастке <em>Print Management</em> кликните правой кнопкой на принтере, выберите «Свойства». На вкладке «Общие» должна стоять галочка «Опубликовать в Active Directory». Если она снята, принтер не будет виден в поиске домена.</p>
+</details></div>
+                    <!--#include virtual="/ssi/article_after.html" -->
+
+                </article>
+                <aside class="article-sidebar"><!--#include virtual="/ssi/sidebar_top.html" --><nav class="sidebar-search"><div class="sidebar-search-box"><input type="text" id="globalSearchInput" placeholder="🔍 Поиск статей..." autocomplete="off"><div class="search-dropdown" id="globalSearchDropdown"></div></div></nav><!--#include virtual="/ssi/sidebar_before_toc.html" --><nav class="sidebar-toc" id="sidebarToc"><h3>Содержание</h3><ul><li><a href="#методы-публикации-принтеров-в-каталог">Методы публикации принтеров в каталог</a></li><li><a href="#поиск-через-оснастку-управление-печатью">Поиск через оснастку «Управление печатью»</a></li><li><a href="#использование-powershell-для-глубокого-анализа">Использование PowerShell для глубокого анализа</a></li><li><a href="#поиск-для-обычных-пользователей-через-устройства-и-принтеры">Поиск для обычных пользователей через «Устройства и принтеры»</a></li><li><a href="#таблица-атрибутов-принтеров-в-active-directory">Таблица атрибутов принтеров в Active Directory</a></li><li><a href="#резервное-копирование-и-восстановление-конфигурации">Резервное копирование и восстановление конфигурации</a></li><li><a href="#частые-ошибки-и-способы-их-решения">Частые ошибки и способы их решения</a></li><li><a href="#заключение-и-лучшие-практики">Заключение и лучшие практики</a></li></ul></nav><!--#include virtual="/ssi/sidebar_before_related.html" --><nav class="sidebar-related"><h3>Похожие статьи</h3><ul><li><a href="/articles/c/ch/chto-takoe-gdi-printery.html" class="related-card">GDI принтеры: что это такое, плюсы, минусы и особенности драйверов</a></li><li><a href="/articles/c/ca/canon-600-d-kakoj-obektiv.html" class="related-card">Какой объектив выбрать для Canon 600D: лучшие варианты и советы</a></li><li><a href="/articles/p/po/pochemu-printer-ne-vidit-drajvera.html" class="related-card">Принтер не видит драйвер: 7 причин и способы исправления</a></li><li><a href="/articles/k/ka/kak-ustanovit-printer-laserjet-p1102.html" class="related-card">Как установить принтер HP LaserJet P1102: пошаговая инструкция</a></li><li><a href="/articles/k/ka/kakie-obektivy-luchshe-canon-nikon.html" class="related-card">Canon vs Nikon: как выбрать лучшие объективы для вашей камеры</a></li></ul></nav><!--#include virtual="/ssi/sidebar_after_related.html" --></aside>
+            </div>
+        </div>
+    </main>
+
+    <!--#include virtual="/ssi/before_related_bottom.html" -->
+    <section class="related-bottom">
+        <div class="container">
+            <h2 class="related-bottom-heading">📖 Читайте также</h2>
+            <div class="related-bottom-grid"><a href="/articles/c/ch/chto-takoe-gdi-printery.html" class="related-bottom-card"><span class="related-bottom-title">GDI принтеры: что это такое, плюсы, минусы и особенности драйверов</span><span class="related-bottom-desc">Полный разбор технологии GDI. Узнайте, чем отличаются GDI принтеры от стандартных, как работают их д</span></a><a href="/articles/c/ca/canon-600-d-kakoj-obektiv.html" class="related-bottom-card"><span class="related-bottom-title">Какой объектив выбрать для Canon 600D: лучшие варианты и советы</span><span class="related-bottom-desc">Полный гид по выбору оптики для зеркальной камеры Canon 600D. Рассмотрены портретные, пейзажные и ун</span></a><a href="/articles/p/po/pochemu-printer-ne-vidit-drajvera.html" class="related-bottom-card"><span class="related-bottom-title">Принтер не видит драйвер: 7 причин и способы исправления</span><span class="related-bottom-desc">Принтер не видит драйвер? Узнайте основные причины конфликта ПО, как проверить порт и переустановить</span></a><a href="/articles/k/ka/kak-ustanovit-printer-laserjet-p1102.html" class="related-bottom-card"><span class="related-bottom-title">Как установить принтер HP LaserJet P1102: пошаговая инструкция</span><span class="related-bottom-desc">Подробное руководство по подключению и настройке принтера HP LaserJet P1102 на Windows, Mac и Linux.</span></a><a href="/articles/k/ka/kakie-obektivy-luchshe-canon-nikon.html" class="related-bottom-card"><span class="related-bottom-title">Canon vs Nikon: как выбрать лучшие объективы для вашей камеры</span><span class="related-bottom-desc">Сравнение оптики Canon и Nikon. Полный разбор характеристик, автофокуса и совместимости. Узнайте, ка</span></a><a href="/articles/k/ka/kak-podklyuchit-setevoj-printer-v-windows-11.html" class="related-bottom-card"><span class="related-bottom-title">Как подключить сетевой принтер в Windows 11: пошаговая инструкция</span><span class="related-bottom-desc">Подробное руководство по подключению принтера через Wi-Fi, Ethernet и USB в Windows 11. Решение ошиб</span></a></div>
+        </div>
+    </section>
+    <!--#include virtual="/ssi/after_related_bottom.html" -->
+
+    <footer class="site-footer-premium">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-brand">📡 Принтер Мастер</div>
+                    <p class="footer-about">Находите точные ответы по настройке сканеров, ремонту принтеров и диагностике авто здесь.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Разделы</h4>
+                    <ul><li><a href="/category/podklyuchenie-ustrojstv/">🔌 Подключение устройств</a></li>
+<li><a href="/category/ustanovka-drajverov/">💿 Установка драйверов</a></li>
+<li><a href="/category/zapravka-kartridzhej/">🖊️ Заправка картриджей</a></li>
+<li><a href="/category/sbros-i-chipy/">🔋 Сброс и чипы</a></li>
+<li><a href="/category/remont-i-oshibki/">🛠️ Ремонт и ошибки</a></li>
+<li><a href="/category/skanirovanie-i-kopirovanie/">📄 Сканирование и копирование</a></li></ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Информация</h4>
+                    <ul>
+                        <li><a href="/">Главная</a></li>
+                        <li><a href="/about.html">О проекте</a></li>
+                        <li><a href="/categories.html">Все разделы</a></li>
+                        <li><a href="/contact.html">Контакты</a></li>
+                        <li><a href="/privacy.html">Конфиденциальность</a></li>
+                        <li><a href="/sitemap.xml">Карта сайта</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© Принтер Мастер. Все права защищены.</p>
+                <!--LiveInternet counter--><div style="margin-top:10px;"><a href="https://www.liveinternet.ru/click"
+                target="_blank"><img id="licnt06C4" width="88" height="15" style="border:0" 
+                title="LiveInternet: показано число посетителей за сегодня"
+                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAEALAAAAAABAAEAAAIBTAA7"
+                alt=""/></a><script>(function(d,s){d.getElementById("licnt06C4").src=
+                "https://counter.yadro.ru/hit?t26.5;r"+escape(d.referrer)+
+                ((typeof(s)=="undefined")?"":";s"+s.width+"*"+s.height+"*"+
+                (s.colorDepth?s.colorDepth:s.pixelDepth))+";u"+escape(d.URL)+
+                ";h"+escape(d.title.substring(0,150))+";"+Math.random()})(document,screen)</script></div><!--/LiveInternet-->
+            </div>
+        </div>
+    </footer>
+    <div id="cookie-consent" class="cookie-popup">
+        <div class="cookie-inner">
+            <span>🍪 Мы используем файлы cookie для улучшения работы сайта.</span>
+            <button id="cookie-accept" class="cookie-btn">Принять</button>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+    <script>
+    (function() {
+        const popup = document.getElementById('cookie-consent');
+        const btn = document.getElementById('cookie-accept');
+        if (popup && btn && !localStorage.getItem('cookie-accepted')) {
+            popup.classList.add('visible');
+            btn.onclick = () => {
+                localStorage.setItem('cookie-accepted', 'true');
+                popup.classList.remove('visible');
+            };
+        }
+    })();
+    </script>
+    <script>
+    function pbPollVote(el) {
+        var poll = el.closest('.poll-widget');
+        if (poll.classList.contains('voted')) return;
+        poll.classList.add('voted');
+        el.classList.add('selected');
+        var opts = poll.querySelectorAll('.poll-widget-option');
+        var n = opts.length;
+        var raw = [];
+        var sum = 0;
+        for (var i = 0; i < n; i++) {
+            var v = Math.random() * 50 + 5;
+            if (opts[i] === el) v += 30;
+            raw.push(v);
+            sum += v;
+        }
+        var pcts = raw.map(function(v) { return Math.round(v / sum * 100); });
+        var diff = 100 - pcts.reduce(function(a,b){ return a+b; }, 0);
+        pcts[Array.from(opts).indexOf(el)] += diff;
+        setTimeout(function() {
+            opts.forEach(function(opt, i) {
+                opt.querySelector('.poll-widget-bar').style.width = pcts[i] + '%';
+                opt.querySelector('.poll-widget-pct').textContent = pcts[i] + '%';
+            });
+        }, 50);
+    }
+    </script>
+    <!--#include virtual="/ssi/body_bottom.html" -->
+    <script src="/static/js/inject.js" defer></script>
+</body>
+</html>
